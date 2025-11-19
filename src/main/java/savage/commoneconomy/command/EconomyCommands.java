@@ -1,4 +1,4 @@
-package savage.commoneconomy;
+package savage.commoneconomy.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -11,6 +11,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import savage.commoneconomy.EconomyManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

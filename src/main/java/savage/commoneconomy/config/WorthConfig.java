@@ -1,4 +1,4 @@
-package savage.commoneconomy;
+package savage.commoneconomy.config;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

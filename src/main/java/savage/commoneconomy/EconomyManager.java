@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
+import savage.commoneconomy.config.EconomyConfig;
+import savage.commoneconomy.config.WorthConfig;
 
 import java.io.File;
 import java.io.FileReader;

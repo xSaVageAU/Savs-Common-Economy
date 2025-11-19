@@ -10,6 +10,8 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import savage.commoneconomy.command.EconomyCommands;
+import savage.commoneconomy.command.SellCommands;
 
 public class SavsCommonEconomy implements ModInitializer {
 	public static final String MOD_ID = "savs-common-economy";
