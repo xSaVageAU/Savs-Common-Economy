@@ -100,9 +100,11 @@ public class SavsCommonEconomy implements ModInitializer {
 						if (shop != null) {
 							// Check if player is in remove mode
 							if (ShopCommands.isInRemoveMode(serverPlayer.getUuid())) {
-								// Check if player owns the shop or is admin
-								if (shop.getOwnerId().equals(serverPlayer.getUuid()) || 
-									serverPlayer.hasPermissionLevel(2)) {
+								// Check if player owns the shop or has admin permission
+								boolean isOwner = shop.getOwnerId().equals(serverPlayer.getUuid());
+								boolean isAdmin = savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
+								
+								if (isOwner || isAdmin) {
 									// Remove the shop
 									ShopManager.getInstance().removeShop(chestPos);
 									savage.commoneconomy.shop.ShopSignHelper.removeSign(world, pos);
@@ -246,7 +248,13 @@ public class SavsCommonEconomy implements ModInitializer {
 						
 						if (shop != null) {
 							// Only owner or admin can break shop sign
-							if (!shop.getOwnerId().equals(player.getUuid()) && !player.hasPermissionLevel(2)) {
+							boolean isOwner = shop.getOwnerId().equals(player.getUuid());
+							boolean isAdmin = false;
+							if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayerEntity) {
+								isAdmin = savage.commoneconomy.util.PermissionsHelper.check(serverPlayerEntity, "savscommoneconomy.admin", 2);
+							}
+							
+							if (!isOwner && !isAdmin) {
 								player.sendMessage(net.minecraft.text.Text.literal("§cYou cannot break this shop sign! Use /shop remove instead."), false);
 								return false;
 							}

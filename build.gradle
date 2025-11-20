@@ -33,6 +33,14 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	
+	// Fabric Permissions API
+	modImplementation "me.lucko:fabric-permissions-api:0.5.0"
+	include "me.lucko:fabric-permissions-api:0.5.0"
+}
+
+repositories {
+	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+	maven { url 'https://maven.terraformersmc.com/releases/' }
 }
 
 processResources {

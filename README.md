@@ -108,6 +108,28 @@ Bank notes are physical representations of currency that can be traded between p
 *   Can be stacked if same value
 *   Server-side validation prevents duplication
 
+## Permissions
+This mod supports the [Fabric Permissions API](https://github.com/lucko/fabric-permissions-api). If installed, you can use the following permission nodes. If not installed, the mod falls back to vanilla OP levels (Level 2 for admin commands).
+
+### Player Permissions (Default: true)
+*   `savscommoneconomy.command.bal`: Access to `/bal` (self).
+*   `savscommoneconomy.command.bal.others`: Access to `/bal <player>`.
+*   `savscommoneconomy.command.pay`: Access to `/pay`.
+*   `savscommoneconomy.command.withdraw`: Access to `/withdraw`.
+*   `savscommoneconomy.command.baltop`: Access to `/baltop`.
+*   `savscommoneconomy.command.worth`: Access to `/worth`.
+*   `savscommoneconomy.command.sell`: Access to `/sell`.
+*   `savscommoneconomy.shop.create`: Access to `/shop create`.
+*   `savscommoneconomy.shop.remove`: Access to `/shop remove` (own shops).
+*   `savscommoneconomy.shop.info`: Access to `/shop info`.
+*   `savscommoneconomy.shop.list`: Access to `/shop list`.
+
+### Admin Permissions (Default: OP Level 2)
+*   `savscommoneconomy.admin`: Grants access to all admin features:
+    *   `/givemoney`, `/takemoney`, `/setmoney`, `/resetmoney`
+    *   `/shop admin` (create admin shops)
+    *   **Shop Removal Override**: Ability to remove ANY player's shop.
+
 ## To-Do / Future Improvements
 
 ### Planned Features

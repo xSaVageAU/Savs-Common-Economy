@@ -31,56 +31,64 @@ public class EconomyCommands {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("bal")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.bal", true))
                 .executes(EconomyCommands::checkSelfBalance)
                 .then(CommandManager.argument("target", StringArgumentType.string())
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.bal.others", true))
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .executes(EconomyCommands::checkOtherBalance)));
 
         dispatcher.register(CommandManager.literal("withdraw")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.withdraw", true))
                 .then(CommandManager.argument("amount", DoubleArgumentType.doubleArg(1))
                         .executes(EconomyCommands::withdraw)));
 
         dispatcher.register(CommandManager.literal("givemoney")
-                .requires(source -> source.hasPermissionLevel(2))
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
                 .then(CommandManager.argument("target", StringArgumentType.string())
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .then(CommandManager.argument("amount", DoubleArgumentType.doubleArg(0))
                                 .executes(EconomyCommands::giveMoney))));
 
         dispatcher.register(CommandManager.literal("takemoney")
-                .requires(source -> source.hasPermissionLevel(2))
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
                 .then(CommandManager.argument("target", StringArgumentType.string())
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .then(CommandManager.argument("amount", DoubleArgumentType.doubleArg(0))
                                 .executes(EconomyCommands::takeMoney))));
 
         dispatcher.register(CommandManager.literal("setmoney")
-                .requires(source -> source.hasPermissionLevel(2))
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
                 .then(CommandManager.argument("target", StringArgumentType.string())
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .then(CommandManager.argument("amount", DoubleArgumentType.doubleArg(0))
                                 .executes(EconomyCommands::setMoney))));
 
         dispatcher.register(CommandManager.literal("resetmoney")
-                .requires(source -> source.hasPermissionLevel(2))
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
                 .then(CommandManager.argument("target", StringArgumentType.string())
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .executes(EconomyCommands::resetMoney)));
 
         dispatcher.register(CommandManager.literal("baltop")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.baltop", true))
                 .executes(EconomyCommands::balTop));
         dispatcher.register(CommandManager.literal("balancetop")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.baltop", true))
                 .executes(EconomyCommands::balTop));
 
         dispatcher.register(CommandManager.literal("pay")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.pay", true))
                 .then(CommandManager.argument("target", StringArgumentType.string())
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .then(CommandManager.argument("amount", DoubleArgumentType.doubleArg(0))
                                 .executes(EconomyCommands::pay))));
 
         dispatcher.register(CommandManager.literal("balance")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.bal", true))
                 .executes(EconomyCommands::checkSelfBalance)
                 .then(CommandManager.argument("target", StringArgumentType.string())
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.bal.others", true))
                         .suggests(PLAYER_SUGGESTION_PROVIDER)
                         .executes(EconomyCommands::checkOtherBalance)));
     }

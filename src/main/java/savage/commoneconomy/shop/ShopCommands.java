@@ -25,6 +25,7 @@ public class ShopCommands {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("shop")
                 .then(CommandManager.literal("create")
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
                         .then(CommandManager.literal("sell")
                                 .then(CommandManager.argument("price", DoubleArgumentType.doubleArg(0))
                                         .executes(ctx -> createShop(ctx, false))))
@@ -32,16 +33,20 @@ public class ShopCommands {
                                 .then(CommandManager.argument("price", DoubleArgumentType.doubleArg(0))
                                         .executes(ctx -> createShop(ctx, true)))))
                 .then(CommandManager.literal("remove")
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.remove", true))
                         .executes(ShopCommands::enterRemoveMode))
                 .then(CommandManager.literal("info")
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.info", true))
                         .executes(ShopCommands::shopInfo))
                 .then(CommandManager.literal("setprice")
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
                         .then(CommandManager.argument("price", DoubleArgumentType.doubleArg(0))
                                 .executes(ShopCommands::setPrice)))
                 .then(CommandManager.literal("admin")
-                        .requires(source -> source.hasPermissionLevel(2))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
                         .executes(ShopCommands::makeAdmin))
                 .then(CommandManager.literal("list")
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.list", true))
                         .executes(ShopCommands::listShops)));
     }
 
@@ -169,7 +174,7 @@ public class ShopCommands {
             return 0;
         }
 
-        if (!shop.getOwnerId().equals(player.getUuid()) && !context.getSource().hasPermissionLevel(2)) {
+        if (!shop.getOwnerId().equals(player.getUuid()) && !savage.commoneconomy.util.PermissionsHelper.check(context.getSource(), "savscommoneconomy.admin", 2)) {
             context.getSource().sendError(Text.literal("You don't own this shop!"));
             return 0;
         }

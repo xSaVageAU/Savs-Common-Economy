@@ -23,6 +23,7 @@ public class SellCommands {
         if (!EconomyManager.getInstance().isSellEnabled()) return;
 
         dispatcher.register(CommandManager.literal("worth")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.worth", true))
                 .executes(SellCommands::checkHandWorth)
                 .then(CommandManager.literal("all")
                         .executes(SellCommands::checkAllWorth))
@@ -32,6 +33,7 @@ public class SellCommands {
                         .executes(SellCommands::checkItemWorth)));
 
         dispatcher.register(CommandManager.literal("sell")
+                .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.command.sell", true))
                 .executes(SellCommands::sellHand)
                 .then(CommandManager.literal("all")
                         .executes(SellCommands::sellAll)));
