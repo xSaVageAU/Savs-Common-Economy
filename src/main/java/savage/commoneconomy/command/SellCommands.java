@@ -143,6 +143,7 @@ public class SellCommands {
         EconomyManager.getInstance().addBalance(player.getUuid(), totalValue);
 
         context.getSource().sendFeedback(() -> Text.literal("Sold " + count + "x " + itemId + " for " + EconomyManager.getInstance().format(totalValue)), false);
+        savage.commoneconomy.util.TransactionLogger.log("COMMAND_SELL", player.getName().getString(), "Server", totalValue, "Sold " + count + "x " + itemId);
         return 1;
     }
 
@@ -177,6 +178,7 @@ public class SellCommands {
 
         int finalTotalCount = totalCount;
         context.getSource().sendFeedback(() -> Text.literal("Sold all " + finalTotalCount + "x " + itemId + " for " + EconomyManager.getInstance().format(totalValue)), false);
+        savage.commoneconomy.util.TransactionLogger.log("COMMAND_SELL", player.getName().getString(), "Server", totalValue, "Sold all " + finalTotalCount + "x " + itemId);
         return 1;
     }
 }

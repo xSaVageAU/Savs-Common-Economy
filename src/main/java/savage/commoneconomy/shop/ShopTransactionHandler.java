@@ -73,6 +73,9 @@ public class ShopTransactionHandler {
         
         player.sendMessage(Text.literal("§aBought " + amount + "x " + shop.getItem().getName().getString() + 
                 " for " + EconomyManager.getInstance().format(totalPrice)), false);
+        
+        String targetName = shop.isAdmin() ? "Admin Shop" : shop.getOwnerId().toString();
+        savage.commoneconomy.util.TransactionLogger.log("SHOP_BUY", player.getName().getString(), targetName, totalPrice, "Bought " + amount + "x " + shop.getItem().getName().getString());
     }
     
     public static void handleSellTransaction(World world, ServerPlayerEntity player, Shop shop, int amount) {
@@ -138,6 +141,9 @@ public class ShopTransactionHandler {
         
         player.sendMessage(Text.literal("§aSold " + amount + "x " + shop.getItem().getName().getString() + 
                 " for " + EconomyManager.getInstance().format(totalPrice)), false);
+
+        String sourceName = shop.isAdmin() ? "Admin Shop" : shop.getOwnerId().toString();
+        savage.commoneconomy.util.TransactionLogger.log("SHOP_SELL", sourceName, player.getName().getString(), totalPrice, "Sold " + amount + "x " + shop.getItem().getName().getString());
     }
     
     private static int countItemInInventory(ServerPlayerEntity player, ItemStack template) {

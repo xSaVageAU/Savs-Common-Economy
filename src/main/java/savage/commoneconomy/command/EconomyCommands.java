@@ -179,6 +179,7 @@ public class EconomyCommands {
             if (target != null) {
                 target.sendMessage(Text.literal("Received " + formattedAmount + " from " + sourcePlayer.getName().getString()));
             }
+            savage.commoneconomy.util.TransactionLogger.log("PAY", sourcePlayer.getName().getString(), displayName, amount, "Payment");
             return 1;
         } else {
             context.getSource().sendError(Text.literal("Insufficient funds."));
@@ -207,6 +208,7 @@ public class EconomyCommands {
         if (target != null) {
             target.sendMessage(Text.literal("Received " + formattedAmount + " (Admin Gift)"));
         }
+        savage.commoneconomy.util.TransactionLogger.log("ADMIN_GIVE", context.getSource().getName(), displayName, amount, "Admin Gift");
         return 1;
     }
 
@@ -230,6 +232,7 @@ public class EconomyCommands {
         } else {
             context.getSource().sendFeedback(() -> Text.literal("Took " + formattedAmount + " from " + displayName), true);
         }
+        savage.commoneconomy.util.TransactionLogger.log("ADMIN_TAKE", context.getSource().getName(), displayName, amount, "Admin Take");
         return 1;
     }
 
@@ -254,6 +257,7 @@ public class EconomyCommands {
         if (target != null) {
             target.sendMessage(Text.literal("Your balance has been set to " + formattedAmount));
         }
+        savage.commoneconomy.util.TransactionLogger.log("ADMIN_SET", context.getSource().getName(), displayName, amount, "Set Balance");
         return 1;
     }
 
@@ -304,6 +308,7 @@ public class EconomyCommands {
 
             player.getInventory().offerOrDrop(note);
             context.getSource().sendFeedback(() -> Text.literal("Withdrew " + EconomyManager.getInstance().format(amount) + " as a bank note."), false);
+            savage.commoneconomy.util.TransactionLogger.log("WITHDRAW", player.getName().getString(), "Bank Note", amount, "Withdrawal");
             return 1;
         } else {
             context.getSource().sendError(Text.literal("Insufficient funds."));

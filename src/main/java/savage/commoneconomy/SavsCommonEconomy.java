@@ -23,6 +23,7 @@ public class SavsCommonEconomy implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			EconomyCommands.register(dispatcher);
 			SellCommands.register(dispatcher);
+			savage.commoneconomy.command.LogCommand.register(dispatcher);
 			if (EconomyManager.getInstance().getConfig().enableChestShops) {
 				ShopCommands.register(dispatcher);
 			}
@@ -62,6 +63,7 @@ public class SavsCommonEconomy implements ModInitializer {
 							java.math.BigDecimal value = java.math.BigDecimal.valueOf(valueDouble);
 							EconomyManager.getInstance().addBalance(player.getUuid(), value);
 							player.sendMessage(net.minecraft.text.Text.literal("Redeemed bank note for " + EconomyManager.getInstance().format(value)).formatted(net.minecraft.util.Formatting.GREEN), true);
+							savage.commoneconomy.util.TransactionLogger.log("DEPOSIT", "Bank Note", player.getName().getString(), value, "Redeemed Note");
 							stack.decrement(1);
 							return net.minecraft.util.ActionResult.SUCCESS;
 						}
