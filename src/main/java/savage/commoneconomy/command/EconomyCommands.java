@@ -178,6 +178,20 @@ public class EconomyCommands {
             ServerPlayerEntity target = context.getSource().getServer().getPlayerManager().getPlayer(targetUUID);
             if (target != null) {
                 target.sendMessage(Text.literal("Received " + formattedAmount + " from " + sourcePlayer.getName().getString()));
+            } else {
+                // Player not on this server, publish to Redis
+                try {
+                    BigDecimal newBalance = EconomyManager.getInstance().getBalance(targetUUID);
+                    savage.commoneconomy.util.RedisManager.getInstance().publishTransaction(
+                        targetUUID,
+                        newBalance,
+                        "pay",
+                        sourcePlayer.getName().getString(),
+                        "Received " + formattedAmount + " from " + sourcePlayer.getName().getString()
+                    );
+                } catch (Exception e) {
+                    // Redis is optional
+                }
             }
             savage.commoneconomy.util.TransactionLogger.log("PAY", sourcePlayer.getName().getString(), displayName, amount, "Payment");
             return 1;
@@ -207,6 +221,20 @@ public class EconomyCommands {
             ServerPlayerEntity target = context.getSource().getServer().getPlayerManager().getPlayer(targetUUID);
             if (target != null) {
                 target.sendMessage(Text.literal("Received " + formattedAmount + " (Admin Gift)"));
+            } else {
+                // Player not on this server, publish to Redis
+                try {
+                    BigDecimal newBalance = EconomyManager.getInstance().getBalance(targetUUID);
+                    savage.commoneconomy.util.RedisManager.getInstance().publishTransaction(
+                        targetUUID,
+                        newBalance,
+                        "give",
+                        context.getSource().getName(),
+                        "Received " + formattedAmount + " (Admin Gift)"
+                    );
+                } catch (Exception e) {
+                    // Redis is optional
+                }
             }
             savage.commoneconomy.util.TransactionLogger.log("ADMIN_GIVE", context.getSource().getName(), displayName, amount, "Admin Gift");
             return 1;

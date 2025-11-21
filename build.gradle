@@ -57,6 +57,18 @@ dependencies {
 	// Caffeine (Caching)
 	modImplementation "com.github.ben-manes.caffeine:caffeine:3.1.8"
 	include "com.github.ben-manes.caffeine:caffeine:3.1.8"
+
+	// Reactive Streams (required by Lettuce)
+	modImplementation "org.reactivestreams:reactive-streams:1.0.4"
+	include "org.reactivestreams:reactive-streams:1.0.4"
+
+	// Reactor Core (required by Lettuce)
+	modImplementation "io.projectreactor:reactor-core:3.5.11"
+	include "io.projectreactor:reactor-core:3.5.11"
+
+	// Lettuce (Redis Client)
+	modImplementation "io.lettuce:lettuce-core:6.3.0.RELEASE"
+	include "io.lettuce:lettuce-core:6.3.0.RELEASE"
 }
 
 repositories {

@@ -156,13 +156,12 @@ public class EconomyManager {
                     data.version++;
                     accountCache.put(uuid, data);
                 } else {
-                    // New account created implicitly? Storage.setBalance usually updates existing.
-                    // If account didn't exist, optimistic locking with version 0 might fail or succeed depending on implementation.
-                    // Our SQL implementation handles insert if version is 0? No, it uses UPDATE.
-                    // So we probably need createAccount first if data is null.
-                    // But for now, let's just invalidate.
                     accountCache.invalidate(uuid);
                 }
+                
+                // NOTE: Redis publishing is handled by commands, not here
+                // This allows commands to include proper transaction context (who sent it, custom messages, etc.)
+                
                 return true;
             }
             // On failure, invalidate cache to ensure we get fresh data from DB next retry
@@ -196,6 +195,9 @@ public class EconomyManager {
                     } else {
                         accountCache.invalidate(uuid);
                     }
+                    
+                    // NOTE: Redis publishing is handled by commands, not here
+                    
                     return true;
                 }
             } else {
@@ -249,6 +251,10 @@ public class EconomyManager {
             uuidCache.invalidate(data.name.toLowerCase());
         }
         offlineNamesCache.invalidateAll();
+    }
+    
+    public void invalidateCache(UUID uuid) {
+        accountCache.invalidate(uuid);
     }
 
     public void resetBalance(UUID uuid) {

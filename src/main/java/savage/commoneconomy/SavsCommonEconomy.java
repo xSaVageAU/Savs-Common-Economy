@@ -36,6 +36,11 @@ public class SavsCommonEconomy implements ModInitializer {
 			if (EconomyManager.getInstance().getConfig().enableChestShops) {
 				ShopManager.getInstance().load();
 			}
+			// Initialize Redis connection if enabled
+			if (EconomyManager.getInstance().getConfig().redis.enabled) {
+				savage.commoneconomy.util.RedisManager redis = savage.commoneconomy.util.RedisManager.getInstance();
+				redis.setServer(server);
+			}
 		});
 
 		// Save economy data when server stops

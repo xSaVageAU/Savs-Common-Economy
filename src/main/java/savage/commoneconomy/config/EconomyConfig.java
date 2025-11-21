@@ -25,4 +25,15 @@ public class EconomyConfig {
         public long connectionTimeout = 30000; // 30 seconds
         public long idleTimeout = 600000; // 10 minutes
     }
+    
+    public RedisConfig redis = new RedisConfig();
+    
+    public static class RedisConfig {
+        public boolean enabled = false;
+        public String host = "localhost";
+        public int port = 6379;
+        public String password = "";
+        public String channel = "savs-economy-updates";
+        public boolean debugLogging = false; // Set to true to see detailed Redis messages in logs
+    }
 }
