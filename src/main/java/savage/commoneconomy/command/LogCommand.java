@@ -14,6 +14,8 @@ import java.util.List;
 
 public class LogCommand {
 
+    private static final int RESULTS_PER_PAGE = 6;
+
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("ecolog")
                 .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
@@ -26,10 +28,12 @@ public class LogCommand {
                         .then(CommandManager.argument("time", IntegerArgumentType.integer(1))
                                 .then(CommandManager.argument("unit", StringArgumentType.string())
                                         .suggests((context, builder) -> net.minecraft.command.CommandSource.suggestMatching(new String[]{"s", "m", "h", "d"}, builder))
-                                        .executes(LogCommand::executeLogSearch)))));
+                                        .executes(context -> executeLogSearch(context, 1))
+                                        .then(CommandManager.argument("page", IntegerArgumentType.integer(1))
+                                                .executes(context -> executeLogSearch(context, IntegerArgumentType.getInteger(context, "page"))))))));
     }
 
-    private static int executeLogSearch(CommandContext<ServerCommandSource> context) {
+    private static int executeLogSearch(CommandContext<ServerCommandSource> context, int page) {
         String target = StringArgumentType.getString(context, "target");
         int time = IntegerArgumentType.getInteger(context, "time");
         String unit = StringArgumentType.getString(context, "unit");
@@ -59,25 +63,72 @@ public class LogCommand {
 
         // Run search asynchronously to avoid lag
         new Thread(() -> {
-            List<String> results = TransactionLogger.searchLogs(target, cutoff);
+            List<TransactionLogger.LogEntry> results = TransactionLogger.searchLogs(target, cutoff);
             
             if (results.isEmpty()) {
                 context.getSource().sendFeedback(() -> Text.literal("No transactions found."), false);
                 return;
             }
 
-            context.getSource().sendFeedback(() -> Text.literal("--- Found " + results.size() + " transactions ---"), false);
+            int totalPages = (int) Math.ceil((double) results.size() / RESULTS_PER_PAGE);
+            int currentPage = Math.min(page, totalPages);
             
-            // Limit to last 20 entries to avoid spam
-            int limit = 20;
-            for (int i = 0; i < Math.min(results.size(), limit); i++) {
-                String line = results.get(i);
-                context.getSource().sendFeedback(() -> Text.literal(line), false);
+            context.getSource().sendFeedback(() -> Text.literal("--- Found " + results.size() + " transactions (Page " + currentPage + "/" + totalPages + ") ---"), false);
+            
+            int startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+            int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, results.size());
+            
+            for (int i = startIndex; i < endIndex; i++) {
+                TransactionLogger.LogEntry entry = results.get(i);
+                
+                // Format: [Time] [TYPE] Source -> Target: $Amount (Details)
+                // Colors: Time=Gray, Type=Color, Source/Target=White, Amount=Yellow, Details=Gray Italic
+                
+                net.minecraft.util.Formatting typeColor = net.minecraft.util.Formatting.WHITE;
+                if (entry.type.contains("PAY")) typeColor = net.minecraft.util.Formatting.GREEN;
+                else if (entry.type.contains("ADMIN")) typeColor = net.minecraft.util.Formatting.RED;
+                else if (entry.type.contains("SHOP")) typeColor = net.minecraft.util.Formatting.GOLD;
+                else if (entry.type.contains("WITHDRAW")) typeColor = net.minecraft.util.Formatting.AQUA;
+
+                Text logText = Text.empty()
+                        .append(Text.literal("[" + entry.timestamp.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")) + "] ")
+                                .formatted(net.minecraft.util.Formatting.GRAY))
+                        .append(Text.literal("[" + entry.type + "] ")
+                                .formatted(typeColor))
+                        .append(Text.literal(entry.source)
+                                .formatted(net.minecraft.util.Formatting.RED))
+                        .append(Text.literal(" -> ")
+                                .formatted(net.minecraft.util.Formatting.WHITE))
+                        .append(Text.literal(entry.target)
+                                .formatted(net.minecraft.util.Formatting.GREEN))
+                        .append(Text.literal(": $" + entry.amount.toPlainString() + " ")
+                                .formatted(net.minecraft.util.Formatting.YELLOW))
+                        .append(Text.literal("(" + entry.details + ")")
+                                .formatted(net.minecraft.util.Formatting.GRAY, net.minecraft.util.Formatting.ITALIC));
+
+                context.getSource().sendFeedback(() -> logText, false);
             }
             
-            if (results.size() > limit) {
-                context.getSource().sendFeedback(() -> Text.literal("... and " + (results.size() - limit) + " more."), false);
+            // Navigation buttons
+            net.minecraft.text.MutableText navText = Text.empty();
+            if (currentPage > 1) {
+                navText.append(Text.literal("[< Previous] ")
+                        .formatted(net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.BOLD)
+                        .styled(style -> style.withClickEvent(new net.minecraft.text.ClickEvent.RunCommand(
+                                "/ecolog " + target + " " + time + " " + unit + " " + (currentPage - 1)))));
             }
+            
+            if (currentPage < totalPages) {
+                navText.append(Text.literal("[Next >]")
+                        .formatted(net.minecraft.util.Formatting.AQUA, net.minecraft.util.Formatting.BOLD)
+                        .styled(style -> style.withClickEvent(new net.minecraft.text.ClickEvent.RunCommand(
+                                "/ecolog " + target + " " + time + " " + unit + " " + (currentPage + 1)))));
+            }
+            
+            if (totalPages > 1) {
+                context.getSource().sendFeedback(() -> navText, false);
+            }
+
         }).start();
 
         return 1;
