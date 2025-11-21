@@ -71,6 +71,20 @@ public class ShopTransactionHandler {
             }
         }
         
+        // Publish Redis notification to buyer (silent update for cache invalidation)
+        try {
+            BigDecimal buyerBalance = EconomyManager.getInstance().getBalance(player.getUuid());
+            savage.commoneconomy.util.RedisManager.getInstance().publishTransaction(
+                player.getUuid(),
+                buyerBalance,
+                "shop_buy",
+                "Shop",
+                null // Silent update
+            );
+        } catch (Exception e) {
+            // Redis is optional
+        }
+        
         // Give items to player
         ItemStack itemToGive = shop.getItem().copy();
         itemToGive.setCount(amount);
