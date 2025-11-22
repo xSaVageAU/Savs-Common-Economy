@@ -1,12 +1,13 @@
 # Savs Common Economy
 
-A lightweight, **server-side only** economy mod for Minecraft 1.21.10 (Fabric). This mod provides a simple yet robust economy system with JSON persistence, offline player support, leaderboards, physical bank notes, and player chest shops. No client installation required!
+A lightweight, **server-side only** economy mod for Minecraft 1.21.10 (Fabric), designed for SMP servers and multi-server networks. It provides a robust and modern economy system with support for JSON, SQLite, MySQL, and PostgreSQL storage, offline player support, leaderboards, physical bank notes, and player chest shops. No client installation required!
 
 ## Features
 
 *   **Economy System**: Tracks player balances with flexible storage options (JSON, SQLite, MySQL, PostgreSQL).
 *   **Server-Side Only**: No client installation required - fully compatible with vanilla clients.
 *   **Offline Support**: Supports payments and administrative actions for offline players who have joined the server at least once.
+*   **Common Economy API**: Full support for the [Common Economy API](https://github.com/Patbox/common-economy-api), allowing seamless integration with other mods like [Universal Shops](https://modrinth.com/mod/universal-shops), and other mods using the API.
 *   **Configuration**: Customizable default starting balance and currency formatting (symbol, position).
 *   **Autocompletion**: Smart tab completion for both online and offline player names.
 *   **Leaderboard**: View the top 10 richest players with `/baltop`.
@@ -17,7 +18,11 @@ A lightweight, **server-side only** economy mod for Minecraft 1.21.10 (Fabric). 
 *   **Database Support**: Choose between JSON (default), SQLite, MySQL, or PostgreSQL for data storage.
 *   **Multi-Server Ready**: Optimistic locking prevents race conditions, connection pooling for high-traffic networks.
 *   **Performance Caching**: Caffeine-based caching for instant balance lookups and reduced database load.
-*   **Redis Pub/Sub** (Optional): Real-time cross-server cache synchronization and transaction notifications. **(Enhanced in v1.3.3)**
+*   **Redis Pub/Sub** (Optional): Real-time cross-server cache synchronization and transaction notifications.
+
+
+## Confirmed compatability:
+[Universal Shops](https://modrinth.com/mod/universal-shops)
 
 ## Commands
 
@@ -249,22 +254,3 @@ If no permissions mod is installed, the mod falls back to vanilla OP levels (Lev
     *   `/ecodebug verify` and `/ecodebug cleanup` (database testing)
     *   `/shop admin` (create admin shops)
     *   **Shop Removal Override**: Ability to remove ANY player's shop.
-
-## To-Do / Future Improvements
-
-### Planned Features
-*   [ ] **Common Economy API Support**: Implement compatibility with the Common Economy API for cross-mod integration
-*   [x] **Remote Database Storage**: Add support for MySQL/PostgreSQL databases as an alternative to JSON files
-*   [x] **Enhanced Multi-Server Support**: Improve cross-server functionality for Velocity networks:
-    *   [x] Transaction safety (optimistic locking to prevent race conditions)
-    *   [ ] Shared shop data across servers
-    *   [x] Centralized transaction logging in database
-    *   [x] Connection pool tuning options
-    *   [x] Redis Pub/Sub for real-time cache synchronization
-    *   [x] Performance caching with Caffeine
-
-### Minor Improvements
-*   [ ] Full selector support (e.g., `@p`, `@a`, `@r`) for economy commands
-*   [x] Transaction history/logs
-*   [ ] Configurable transaction fees
-*   [ ] Economy statistics and analytics
