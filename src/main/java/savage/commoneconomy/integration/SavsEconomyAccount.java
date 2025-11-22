@@ -63,6 +63,36 @@ public class SavsEconomyAccount implements EconomyAccount {
     }
 
     @Override
+    public EconomyTransaction decreaseBalance(long value) {
+        long current = balance();
+        if (EconomyManager.getInstance().removeBalance(profile.id(), BigDecimal.valueOf(value))) {
+            sendFeedback("§e[Economy] §c-" + currency.formatValue(value, true));
+            return new EconomyTransaction.Simple(true, Text.of("Success"), current - value, value, current, this);
+        }
+        return new EconomyTransaction.Simple(false, Text.of("Insufficient funds"), current, value, current, this);
+    }
+
+    @Override
+    public EconomyTransaction increaseBalance(long value) {
+        long current = balance();
+        if (EconomyManager.getInstance().addBalance(profile.id(), BigDecimal.valueOf(value))) {
+            sendFeedback("§e[Economy] §a+" + currency.formatValue(value, true));
+            return new EconomyTransaction.Simple(true, Text.of("Success"), current + value, value, current, this);
+        }
+        return new EconomyTransaction.Simple(false, Text.of("Failed"), current, value, current, this);
+    }
+
+    private void sendFeedback(String message) {
+        net.minecraft.server.MinecraftServer server = EconomyManager.getInstance().getServer();
+        if (server != null) {
+            net.minecraft.server.network.ServerPlayerEntity player = server.getPlayerManager().getPlayer(profile.id());
+            if (player != null) {
+                player.sendMessage(Text.literal(message), false);
+            }
+        }
+    }
+
+    @Override
     public EconomyTransaction canIncreaseBalance(long value) {
         long current = balance();
         return new EconomyTransaction.Simple(true, Text.of("Success"), current + value, value, current, this);

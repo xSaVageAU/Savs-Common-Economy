@@ -136,16 +136,29 @@ public class EconomyManager {
         }
     }
 
+    private net.minecraft.server.MinecraftServer server;
+
+    public void setServer(net.minecraft.server.MinecraftServer server) {
+        this.server = server;
+    }
+
+    public net.minecraft.server.MinecraftServer getServer() {
+        return server;
+    }
+
     public void setBalance(UUID uuid, BigDecimal amount) {
         storage.setBalance(uuid, amount);
-        accountCache.invalidate(uuid); // Invalidate to force reload next time (or we could update it if we knew the version)
+        accountCache.invalidate(uuid); 
+        if (config.redis.enabled) {
+            savage.commoneconomy.util.RedisManager.getInstance().publishBalanceUpdate(uuid, amount);
+        }
     }
 
     public boolean addBalance(UUID uuid, BigDecimal amount) {
         int retries = 10;
         while (retries > 0) {
             // Reload account data to get latest version
-            AccountData data = getAccountData(uuid); // This now checks cache first
+            AccountData data = getAccountData(uuid); 
             BigDecimal current = data != null ? data.balance : config.defaultBalance;
             long version = data != null ? data.version : 0;
             
@@ -159,8 +172,9 @@ public class EconomyManager {
                     accountCache.invalidate(uuid);
                 }
                 
-                // NOTE: Redis publishing is handled by commands, not here
-                // This allows commands to include proper transaction context (who sent it, custom messages, etc.)
+                if (config.redis.enabled) {
+                    savage.commoneconomy.util.RedisManager.getInstance().publishBalanceUpdate(uuid, current.add(amount));
+                }
                 
                 return true;
             }
@@ -196,7 +210,9 @@ public class EconomyManager {
                         accountCache.invalidate(uuid);
                     }
                     
-                    // NOTE: Redis publishing is handled by commands, not here
+                    if (config.redis.enabled) {
+                        savage.commoneconomy.util.RedisManager.getInstance().publishBalanceUpdate(uuid, current.subtract(amount));
+                    }
                     
                     return true;
                 }
