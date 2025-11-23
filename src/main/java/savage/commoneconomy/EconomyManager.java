@@ -64,7 +64,7 @@ public class EconomyManager {
                 .expireAfterWrite(1, java.util.concurrent.TimeUnit.MINUTES)
                 .build();
         
-        String type = config.storage.type.name().toUpperCase();
+        String type = config.storage.type.toUpperCase();
         switch (type) {
             case "MYSQL":
                 storage = new savage.commoneconomy.storage.MysqlStorage(this, config.storage.host, config.storage.port, config.storage.database, config.storage.user, config.storage.password, config.storage.tablePrefix);

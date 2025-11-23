@@ -12,7 +12,7 @@ public class EconomyConfig {
     public StorageConfig storage = new StorageConfig();
 
     public static class StorageConfig {
-        public StorageType type = StorageType.JSON;
+        public String type = "JSON";
         public String host = "localhost";
         public int port = 3306;
         public String database = "savs_economy";
