@@ -5,8 +5,6 @@ This guide documents how to integrate the **Common Economy API** into a Fabric m
 ## 1. Dependency Setup
 Add the Common Economy API to your `build.gradle`.
 
-**Note:** As of writing, many mods (like Universal Shops) use version `1.1.1`. However, `1.1.1` has compatibility issues with Minecraft 1.21 (see Troubleshooting).
-
 ```gradle
 dependencies {
     // Common Economy API
