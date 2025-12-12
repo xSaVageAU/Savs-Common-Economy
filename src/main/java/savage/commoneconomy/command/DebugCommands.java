@@ -21,7 +21,7 @@ public class DebugCommands {
     
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("ecodebug")
-                .requires(source -> source.hasPermissionLevel(4))
+                .requires(source -> source.getPermissions().hasPermission(new net.minecraft.command.permission.Permission.Level(net.minecraft.command.permission.PermissionLevel.fromLevel(4))))
                 .then(CommandManager.literal("verify")
                         .executes(DebugCommands::runVerification))
                 .then(CommandManager.literal("cleanup")

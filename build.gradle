@@ -35,12 +35,12 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	
 	// Fabric Permissions API
-	modImplementation "me.lucko:fabric-permissions-api:0.5.0"
-	include "me.lucko:fabric-permissions-api:0.5.0"
+	modImplementation "me.lucko:fabric-permissions-api:0.6.1"
+	include "me.lucko:fabric-permissions-api:0.6.1"
 
 	// Savs DB Core - provides database and Redis functionality (includes Caffeine, HikariCP, etc.)
-	modImplementation "com.github.xSaVageAU:SavDBCore:v1.0.0"
-	include "com.github.xSaVageAU:SavDBCore:v1.0.0"
+	modImplementation "com.github.xSaVageAU:SavDBCore:v1.1.0"
+	include "com.github.xSaVageAU:SavDBCore:v1.1.0"
 
 	// Compile-time dependencies (provided by savdbcore at runtime via JAR-in-JAR)
 	// These are needed for compilation but NOT included separately
