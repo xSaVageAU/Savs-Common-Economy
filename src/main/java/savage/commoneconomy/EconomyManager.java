@@ -63,22 +63,54 @@ public class EconomyManager {
                 .maximumSize(1) // Singleton cache
                 .expireAfterWrite(1, java.util.concurrent.TimeUnit.MINUTES)
                 .build();
-        
+    }
+    
+    public void initStorage() {
+        if (storage != null) return; // Already initialized
+
         String type = config.storage.type.toUpperCase();
-        switch (type) {
-            case "MYSQL":
-                storage = new savage.commoneconomy.storage.MysqlStorage(this, config.storage.host, config.storage.port, config.storage.database, config.storage.user, config.storage.password, config.storage.tablePrefix);
+        int maxRetries = 10;
+        int attempt = 0;
+        
+        while (attempt < maxRetries) {
+            try {
+                switch (type) {
+                    case "MYSQL":
+                        storage = new savage.commoneconomy.storage.MysqlStorage(this, config.storage.host, config.storage.port, config.storage.database, config.storage.user, config.storage.password, config.storage.tablePrefix);
+                        break;
+                    case "SQLITE":
+                        storage = new savage.commoneconomy.storage.SqliteStorage(this, config.storage.tablePrefix);
+                        break;
+                    case "POSTGRES":
+                    case "POSTGRESQL":
+                        storage = new savage.commoneconomy.storage.PostgresStorage(this, config.storage.host, config.storage.port, config.storage.database, config.storage.user, config.storage.password, config.storage.tablePrefix);
+                        break;
+                    default:
+                        storage = new JsonStorage(this);
+                        break;
+                }
+                // If successful, break loop
+                savage.commoneconomy.SavsCommonEconomy.LOGGER.info("Economy Storage initialized successfully: " + type);
                 break;
-            case "SQLITE":
-                storage = new savage.commoneconomy.storage.SqliteStorage(this, config.storage.tablePrefix);
-                break;
-            case "POSTGRES":
-            case "POSTGRESQL":
-                storage = new savage.commoneconomy.storage.PostgresStorage(this, config.storage.host, config.storage.port, config.storage.database, config.storage.user, config.storage.password, config.storage.tablePrefix);
-                break;
-            default:
-                storage = new JsonStorage(this);
-                break;
+            } catch (Exception e) {
+                attempt++;
+                savage.commoneconomy.SavsCommonEconomy.LOGGER.warn("Failed to initialize economy storage (Attempt " + attempt + "/" + maxRetries + "). Retrying in 2 seconds...", e);
+                
+                if (attempt >= maxRetries) {
+                    savage.commoneconomy.SavsCommonEconomy.LOGGER.error("Could not initialize economy storage after " + maxRetries + " attempts. Falling back to JSON/Disable.");
+                    // Fallback to JSON or throw?
+                    // Let's fallback to JSON to prevent crash but data might be split.
+                    // Actually, if DB fails, JSON fallback is risky for sync. Better to crash or disable.
+                    throw new RuntimeException("Failed to connect to economy database", e);
+                }
+                
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
         }
     }
 

@@ -37,6 +37,7 @@ public class SavsCommonEconomy implements ModInitializer {
 
 		// Load economy data when server starts
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+			EconomyManager.getInstance().initStorage();
 			EconomyManager.getInstance().setServer(server);
 			EconomyManager.getInstance().load();
 			if (EconomyManager.getInstance().getConfig().enableChestShops) {
