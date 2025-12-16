@@ -28,9 +28,7 @@ public class EconomyConfig {
     
     public static class RedisConfig {
         public boolean enabled = false;
-        public String host = "localhost";
-        public int port = 6379;
-        public String password = "";
+
         public String channel = "savs-economy-updates";
         public boolean debugLogging = false; 
     }
