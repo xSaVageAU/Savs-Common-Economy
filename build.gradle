@@ -40,8 +40,8 @@ dependencies {
 	include "me.lucko:fabric-permissions-api:0.6.1"
 
 	// Savs DB Core
-	modImplementation "savage.savdbcore:savdbcore:1.2.0"
-	include "savage.savdbcore:savdbcore:1.2.0"
+	modImplementation "com.github.xSaVageAU:savdbcore:1.2.0"
+	include "com.github.xSaVageAU:savdbcore:1.2.0"
 
 	// Savs Redis Lib (Soft Dependency)
 	modImplementation "com.savage.redislib:savs-redis-lib:1.0.0"
