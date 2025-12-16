@@ -44,7 +44,7 @@ dependencies {
 	include "com.github.xSaVageAU:savdbcore:1.2.0"
 
 	// Savs Redis Lib (Soft Dependency)
-	modImplementation "com.savage.redislib:savs-redis-lib:1.0.0"
+	modImplementation "com.github.xSaVageAU:Savs-Redis-Lib:1.0.0"
 
 	// Compile-time dependencies (provided by savdbcore at runtime via JAR-in-JAR)
 	// These are needed for compilation but NOT included separately
