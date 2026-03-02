@@ -25,7 +25,8 @@ public class ShopCommands {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("shop")
                 .then(CommandManager.literal("create")
-                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source,
+                                "savscommoneconomy.shop.create", true))
                         .then(CommandManager.literal("sell")
                                 .then(CommandManager.argument("price", DoubleArgumentType.doubleArg(0))
                                         .executes(ctx -> createShop(ctx, false))))
@@ -33,24 +34,30 @@ public class ShopCommands {
                                 .then(CommandManager.argument("price", DoubleArgumentType.doubleArg(0))
                                         .executes(ctx -> createShop(ctx, true)))))
                 .then(CommandManager.literal("remove")
-                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.remove", true))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source,
+                                "savscommoneconomy.shop.remove", true))
                         .executes(ShopCommands::enterRemoveMode))
                 .then(CommandManager.literal("info")
-                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.info", true))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source,
+                                "savscommoneconomy.shop.info", true))
                         .executes(ShopCommands::shopInfo))
                 .then(CommandManager.literal("setprice")
-                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source,
+                                "savscommoneconomy.shop.create", true))
                         .then(CommandManager.argument("price", DoubleArgumentType.doubleArg(0))
                                 .executes(ShopCommands::setPrice)))
                 .then(CommandManager.literal("admin")
-                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source,
+                                "savscommoneconomy.admin", 2))
                         .executes(ShopCommands::makeAdmin))
                 .then(CommandManager.literal("list")
-                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source, "savscommoneconomy.shop.list", true))
+                        .requires(source -> savage.commoneconomy.util.PermissionsHelper.check(source,
+                                "savscommoneconomy.shop.list", true))
                         .executes(ShopCommands::listShops)));
     }
 
-    private static int createShop(CommandContext<ServerCommandSource> context, boolean buying) throws CommandSyntaxException {
+    private static int createShop(CommandContext<ServerCommandSource> context, boolean buying)
+            throws CommandSyntaxException {
         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
         double priceDouble = DoubleArgumentType.getDouble(context, "price");
         BigDecimal price = BigDecimal.valueOf(priceDouble);
@@ -68,7 +75,7 @@ public class ShopCommands {
         }
 
         BlockPos pos = ((BlockHitResult) hitResult).getBlockPos();
-        
+
         if (!(context.getSource().getWorld().getBlockState(pos).getBlock() instanceof net.minecraft.block.ChestBlock)) {
             context.getSource().sendError(Text.literal("You must be looking at a chest!"));
             return 0;
@@ -80,7 +87,7 @@ public class ShopCommands {
         }
 
         String worldId = context.getSource().getWorld().getRegistryKey().getValue().toString();
-        
+
         Shop shop = ShopManager.getInstance().createShop(
                 pos,
                 worldId,
@@ -89,8 +96,7 @@ public class ShopCommands {
                 heldItem.copy(),
                 price,
                 buying,
-                ShopType.PLAYER
-        );
+                ShopType.PLAYER);
 
         if (!ShopSignHelper.placeSign(context.getSource().getWorld(), pos, shop, player.getHorizontalFacing())) {
             context.getSource().sendError(Text.literal("Warning: Could not place sign! Shop created but no sign."));
@@ -98,8 +104,10 @@ public class ShopCommands {
 
         String shopType = buying ? "buying" : "selling";
         context.getSource().sendFeedback(() -> Text.literal(
-                "Shop created! " + shopType + " " + heldItem.getName().getString() + 
-                " for " + EconomyManager.getInstance().format(price) + " each."), false);
+                "Shop created! " + shopType + " " + heldItem.getName().getString() +
+                        " (" + net.minecraft.registry.Registries.ITEM.getId(heldItem.getItem()).toString() + ")" +
+                        " for " + EconomyManager.getInstance().format(price) + " each."),
+                false);
 
         return 1;
     }
@@ -139,13 +147,15 @@ public class ShopCommands {
 
         String shopType = shop.isBuying() ? "Buying" : "Selling";
         String adminStatus = shop.isAdmin() ? " (Admin Shop)" : "";
-        
+
         context.getSource().sendFeedback(() -> Text.literal("=== Shop Info ==="), false);
         context.getSource().sendFeedback(() -> Text.literal("Owner: " + shop.getOwnerName()), false);
         context.getSource().sendFeedback(() -> Text.literal("Type: " + shopType + adminStatus), false);
-        context.getSource().sendFeedback(() -> Text.literal("Item: " + shop.getItem().getName().getString()), false);
-        context.getSource().sendFeedback(() -> Text.literal("Price: " + EconomyManager.getInstance().format(shop.getPrice()) + " each"), false);
-        
+        context.getSource().sendFeedback(() -> Text.literal("Item: " + shop.getItem().getName().getString() +
+                " (" + net.minecraft.registry.Registries.ITEM.getId(shop.getItem().getItem()).toString() + ")"), false);
+        context.getSource().sendFeedback(
+                () -> Text.literal("Price: " + EconomyManager.getInstance().format(shop.getPrice()) + " each"), false);
+
         if (!shop.isAdmin()) {
             context.getSource().sendFeedback(() -> Text.literal("Stock: " + shop.getStock()), false);
         } else {
@@ -174,7 +184,8 @@ public class ShopCommands {
             return 0;
         }
 
-        if (!shop.getOwnerId().equals(player.getUuid()) && !savage.commoneconomy.util.PermissionsHelper.check(context.getSource(), "savscommoneconomy.admin", 2)) {
+        if (!shop.getOwnerId().equals(player.getUuid()) && !savage.commoneconomy.util.PermissionsHelper
+                .check(context.getSource(), "savscommoneconomy.admin", 2)) {
             context.getSource().sendError(Text.literal("You don't own this shop!"));
             return 0;
         }
@@ -216,9 +227,9 @@ public class ShopCommands {
 
     private static int listShops(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
-        
+
         var shops = ShopManager.getInstance().getPlayerShops(player.getUuid());
-        
+
         if (shops.isEmpty()) {
             context.getSource().sendFeedback(() -> Text.literal("You don't own any shops."), false);
             return 1;
@@ -229,10 +240,13 @@ public class ShopCommands {
             BlockPos pos = shop.getChestLocation();
             String shopType = shop.isBuying() ? "Buying" : "Selling";
             String location = "(" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")";
-            
+
             context.getSource().sendFeedback(() -> Text.literal(
-                    shopType + " " + shop.getItem().getName().getString() + 
-                    " at " + location), false);
+                    shopType + " " + shop.getItem().getName().getString() +
+                            " (" + net.minecraft.registry.Registries.ITEM.getId(shop.getItem().getItem()).toString()
+                            + ")" +
+                            " at " + location),
+                    false);
         }
 
         return 1;
