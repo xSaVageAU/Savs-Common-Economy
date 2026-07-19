@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,8 +39,8 @@ public class BankNoteListener {
                             EconomyManager.getInstance().addBalance(player.getUUID(), value).thenAccept(success -> {
                                 server.execute(() -> {
                                     if (success) {
-                                        player.sendSystemMessage(Component.literal("Redeemed bank note for " + EconomyManager.getInstance().format(value))
-                                            .withStyle(ChatFormatting.GREEN));
+                                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("listener.banknote.redeemed", EconomyManager.getInstance().format(value))
+                                            .copy().withStyle(ChatFormatting.GREEN));
                                         TransactionLogger.log("DEPOSIT", "Bank Note", player.getName().getString(), value, "Redeemed Note");
                                     } else {
                                         // Balance add failed — restore the note to prevent item loss
@@ -51,13 +50,12 @@ public class BankNoteListener {
                                         restoreTag.putDouble("Value", valueDouble);
                                         restored.set(DataComponents.CUSTOM_DATA, CustomData.of(restoreTag));
                                         restored.set(DataComponents.CUSTOM_NAME,
-                                            Component.literal("Bank Note: " + EconomyManager.getInstance().format(value))
-                                                .withStyle(ChatFormatting.GREEN));
+                                            savage.commoneconomy.util.TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(value)));
                                         if (!player.getInventory().add(restored)) {
                                             player.drop(restored, false);
                                         }
-                                        player.sendSystemMessage(Component.literal("Failed to deposit bank note! Note has been returned.")
-                                            .withStyle(ChatFormatting.RED));
+                                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("listener.banknote.deposit_failed")
+                                            .copy().withStyle(ChatFormatting.RED));
                                     }
                                 });
                             });

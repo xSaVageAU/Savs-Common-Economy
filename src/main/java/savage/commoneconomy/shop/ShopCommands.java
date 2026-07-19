@@ -7,7 +7,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
@@ -59,13 +58,13 @@ public class ShopCommands {
         ItemStack heldItem = player.getMainHandItem();
 
         if (heldItem.isEmpty()) {
-            context.getSource().sendFailure(Component.literal("§cYou must hold an item to create a shop!"));
+            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.hold_item"));
             return 0;
         }
 
         HitResult hit = player.pick(5.0, 0.0f, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
-            context.getSource().sendFailure(Component.literal("§cYou must look at a chest!"));
+            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.look_at_chest"));
             return 0;
         }
 
@@ -73,12 +72,12 @@ public class ShopCommands {
         BlockEntity be = player.level().getBlockEntity(pos);
 
         if (!(be instanceof Container)) {
-            context.getSource().sendFailure(Component.literal("§cYou must look at a chest or container!"));
+            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.look_at_chest_or_container"));
             return 0;
         }
 
         if (ShopManager.getInstance().getShop(pos) != null) {
-            context.getSource().sendFailure(Component.literal("§cA shop already exists here!"));
+            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.shop_exists"));
             return 0;
         }
 
@@ -86,9 +85,9 @@ public class ShopCommands {
         Shop shop = ShopManager.getInstance().createShop(pos, worldId, player.getUUID(), player.getName().getString(), heldItem.copy(), price, buying, ShopType.PLAYER);
 
         if (ShopSignHelper.placeSign(player.level(), pos, shop, player.getDirection())) {
-            context.getSource().sendSuccess(() -> Component.literal("§aShop created successfully!"), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.create_success"), false);
         } else {
-            context.getSource().sendSuccess(() -> Component.literal("§eShop created, but failed to place sign. Place one manually."), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.create_sign_failed"), false);
         }
 
         return 1;
@@ -98,7 +97,7 @@ public class ShopCommands {
         ServerPlayer player = context.getSource().getPlayerOrException();
         HitResult hit = player.pick(5.0, 0.0f, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
-            context.getSource().sendFailure(Component.literal("§cLook at a shop sign or chest."));
+            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.look_at_sign_or_chest"));
             return 0;
         }
 
@@ -110,18 +109,18 @@ public class ShopCommands {
         }
 
         if (initialShop == null) {
-            context.getSource().sendFailure(Component.literal("§cNo shop found at this location."));
+            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
         }
 
         final Shop shop = initialShop;
 
-        context.getSource().sendSuccess(() -> Component.literal("§6--- Shop info ---"), false);
-        context.getSource().sendSuccess(() -> Component.literal("§eOwner: §f" + shop.getOwnerName()), false);
-        context.getSource().sendSuccess(() -> Component.literal("§eItem: §f" + shop.getItem().getHoverName().getString()), false);
-        context.getSource().sendSuccess(() -> Component.literal("§ePrice: §f" + EconomyManager.getInstance().format(shop.getPrice())), false);
-        context.getSource().sendSuccess(() -> Component.literal("§eType: §f" + (shop.isBuying() ? "Buy" : "Sell")), false);
-        context.getSource().sendSuccess(() -> Component.literal("§eStock: §f" + (shop.isAdmin() ? "Unlimited" : shop.getStock())), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.header"), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.owner", shop.getOwnerName()), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName().getString()), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.price", EconomyManager.getInstance().format(shop.getPrice())), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.type", (shop.isBuying() ? "Buy" : "Sell")), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.stock", (shop.isAdmin() ? "Unlimited" : shop.getStock())), false);
 
         return 1;
     }
@@ -131,13 +130,13 @@ public class ShopCommands {
         Collection<Shop> shops = ShopManager.getInstance().getPlayerShops(player.getUUID());
 
         if (shops.isEmpty()) {
-            context.getSource().sendSuccess(() -> Component.literal("§eYou don't own any shops."), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.none"), false);
             return 1;
         }
 
-        context.getSource().sendSuccess(() -> Component.literal("§6--- Your Shops ---"), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.header"), false);
         for (Shop shop : shops) {
-            context.getSource().sendSuccess(() -> Component.literal("§e" + shop.getItem().getHoverName().getString() + " at " + shop.getChestLocation().toShortString()), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.entry", shop.getItem().getHoverName().getString(), shop.getChestLocation().toShortString()), false);
         }
         return 1;
     }
@@ -152,7 +151,7 @@ public class ShopCommands {
         if (shop != null) {
             shop.setType(ShopType.ADMIN);
             ShopManager.getInstance().save();
-            context.getSource().sendSuccess(() -> Component.literal("§aShop converted to ADMIN shop."), true);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.admin_convert"), true);
             ShopSignHelper.updateSign((net.minecraft.server.level.ServerLevel)player.level(), ShopSignHelper.findSignForChest(player.level(), pos), shop);
         }
         return 1;
@@ -163,10 +162,10 @@ public class ShopCommands {
         UUID uuid = player.getUUID();
         if (removeModePlayers.contains(uuid)) {
             removeModePlayers.remove(uuid);
-            context.getSource().sendSuccess(() -> Component.literal("§eExit remove mode."), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.remove_mode.exit"), false);
         } else {
             removeModePlayers.add(uuid);
-            context.getSource().sendSuccess(() -> Component.literal("§6Entered REMOVE MODE. Right-click a shop sign to remove it."), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.remove_mode.enter"), false);
         }
         return 1;
     }

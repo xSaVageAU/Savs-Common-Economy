@@ -14,6 +14,7 @@ public class EconomyConfig {
     public boolean symbolBeforeAmount = true;
     public boolean enableSellCommands = false;
     public boolean enableChestShops = true;
+    public String language = "en_us";
     
     // --- Storage Settings ---
     public StorageConfig storage = new StorageConfig();

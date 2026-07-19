@@ -28,6 +28,7 @@ public class SavsCommonEconomy implements ModInitializer {
 		
 		// Load Configuration
 		ConfigManager.load();
+		savage.commoneconomy.util.TranslationHelper.initialize();
 
 		// Register Commands
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {

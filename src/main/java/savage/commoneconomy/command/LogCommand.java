@@ -56,26 +56,25 @@ public class LogCommand {
             case "h": cutoff = now.minusHours(time); break;
             case "d": cutoff = now.minusDays(time); break;
             default:
-                context.getSource().sendFailure(Component.literal("Invalid time unit. Use s, m, h, or d."));
+                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.log.invalid_unit"));
                 return 0;
         }
 
-        context.getSource().sendSuccess(() -> Component.literal("Searching logs for " + target + " in the last " + time + unit + "..."), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.log.searching", target, time, unit), false);
 
         // Async execution using the centralized executor to avoid blocking server
         savage.commoneconomy.EconomyManager.getInstance().getIoExecutor().submit(() -> {
             List<TransactionLogger.LogEntry> results = TransactionLogger.searchLogs(target, cutoff);
             
             if (results.isEmpty()) {
-                context.getSource().sendSuccess(() -> Component.literal("No transactions found."), false);
+                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.log.none_found"), false);
                 return;
             }
 
             int totalPages = (int) Math.ceil((double) results.size() / RESULTS_PER_PAGE);
             int currentPage = Math.min(page, totalPages);
             
-            context.getSource().sendSuccess(() -> Component.literal("--- Found " + results.size() + " transactions (Page " + currentPage + "/" + totalPages + ") ---")
-                    .withStyle(ChatFormatting.GOLD), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.log.header", results.size(), currentPage, totalPages), false);
             
             int startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
             int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, results.size());
@@ -111,14 +110,14 @@ public class LogCommand {
             if (totalPages > 1) {
                 MutableComponent navText = Component.empty();
                 if (currentPage > 1) {
-                    navText.append(Component.literal("[< Previous] ")
+                    navText.append(savage.commoneconomy.util.TranslationHelper.translate("command.log.nav_prev").copy()
                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                             .withStyle(style -> style.withClickEvent(new ClickEvent.RunCommand( 
                                     "/ecolog " + target + " " + time + " " + unit + " " + (currentPage - 1)))));
                 }
                 
                 if (currentPage < totalPages) {
-                    navText.append(Component.literal("[Next >]")
+                    navText.append(savage.commoneconomy.util.TranslationHelper.translate("command.log.nav_next").copy()
                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                             .withStyle(style -> style.withClickEvent(new ClickEvent.RunCommand( 
                                     "/ecolog " + target + " " + time + " " + unit + " " + (currentPage + 1)))));
