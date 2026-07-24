@@ -9,12 +9,12 @@ import java.math.BigDecimal;
 public class EconomyConfig {
     
     // --- General Settings ---
+    public String language = "en_us";
     public BigDecimal defaultBalance = BigDecimal.valueOf(1000);
     public String currencySymbol = "$";
     public boolean symbolBeforeAmount = true;
     public boolean enableSellCommands = false;
     public boolean enableChestShops = true;
-    public String language = "en_us";
     
     // --- Storage Settings ---
     public StorageConfig storage = new StorageConfig();
