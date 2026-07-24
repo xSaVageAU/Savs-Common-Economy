@@ -1,6 +1,7 @@
 package savage.commoneconomy.util;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
@@ -11,9 +12,9 @@ import savage.commoneconomy.SavsCommonEconomy;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Handles server-side translations, including embedded jar lang files,
@@ -22,14 +23,21 @@ import java.util.Map;
 public class TranslationHelper {
     private static final Map<String, String> translations = new HashMap<>();
     private static final Gson GSON = new Gson();
+    private static final Gson PRETTY_GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .disableHtmlEscaping()
+            .create();
 
     public static void initialize() {
+        // 1. Automatically sync all embedded language files to external lang folder & merge missing keys
+        syncEmbeddedLanguages();
+
         translations.clear();
 
-        // 1. Load embedded en_us.json as fallback
+        // 2. Load embedded en_us.json as baseline fallback
         loadEmbedded("en_us");
 
-        // 2. Load configured language from EconomyConfig
+        // 3. Load configured language from EconomyConfig if different
         String configLanguage = savage.commoneconomy.config.ConfigManager.getConfig().language;
         if (configLanguage == null || configLanguage.trim().isEmpty()) {
             configLanguage = "en_us";
@@ -40,8 +48,109 @@ public class TranslationHelper {
             loadEmbedded(configLanguage);
         }
 
-        // 3. Load external language overrides from config directory if present
+        // 4. Load external language overrides from config/savs-common-economy/lang/<configLanguage>.json
         loadExternal(configLanguage);
+    }
+
+    /**
+     * Auto-syncs all embedded language files inside the mod JAR to the external lang folder.
+     * Extracts missing files and merges any newly added keys from mod updates without overwriting existing admin edits.
+     */
+    private static void syncEmbeddedLanguages() {
+        Path externalLangDir = FabricLoader.getInstance().getConfigDir().resolve("savs-common-economy").resolve("lang");
+        File dir = externalLangDir.toFile();
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        List<String> langCodes = new ArrayList<>();
+
+        // Dynamically discover all embedded .json lang files from JAR resources using FabricLoader
+        Optional<Path> langFolderPath = FabricLoader.getInstance().getModContainer("savs-common-economy")
+                .flatMap(container -> container.findPath("assets/savs-common-economy/lang"));
+
+        if (langFolderPath.isPresent()) {
+            try (var stream = Files.list(langFolderPath.get())) {
+                stream.filter(p -> p.getFileName().toString().endsWith(".json"))
+                        .forEach(p -> {
+                            String filename = p.getFileName().toString();
+                            langCodes.add(filename.substring(0, filename.length() - 5));
+                        });
+            } catch (Exception e) {
+                SavsCommonEconomy.LOGGER.warn("Could not list embedded lang folder paths, using fallback list.", e);
+            }
+        }
+
+        // Fallback if dynamic discovery found no files
+        if (langCodes.isEmpty()) {
+            langCodes.add("en_us");
+            langCodes.add("zh_cn");
+        }
+
+        Type mapType = new TypeToken<LinkedHashMap<String, String>>() {}.getType();
+
+        for (String langCode : langCodes) {
+            String resourcePath = "/assets/savs-common-economy/lang/" + langCode + ".json";
+            LinkedHashMap<String, String> embeddedMap = null;
+
+            try (InputStream is = TranslationHelper.class.getResourceAsStream(resourcePath)) {
+                if (is != null) {
+                    try (Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                        embeddedMap = GSON.fromJson(reader, mapType);
+                    }
+                }
+            } catch (Exception e) {
+                SavsCommonEconomy.LOGGER.error("Failed to read embedded translation resource: " + resourcePath, e);
+            }
+
+            if (embeddedMap == null || embeddedMap.isEmpty()) {
+                continue;
+            }
+
+            File externalFile = externalLangDir.resolve(langCode + ".json").toFile();
+
+            if (!externalFile.exists()) {
+                // Case 1: External file does not exist -> dump template directly to disk
+                try (Writer writer = new OutputStreamWriter(new FileOutputStream(externalFile), StandardCharsets.UTF_8)) {
+                    PRETTY_GSON.toJson(embeddedMap, writer);
+                    SavsCommonEconomy.LOGGER.info("Extracted translation template: lang/" + langCode + ".json");
+                } catch (Exception e) {
+                    SavsCommonEconomy.LOGGER.error("Failed to extract translation template: " + externalFile.getPath(), e);
+                }
+            } else {
+                // Case 2: External file already exists -> check for missing keys from mod updates
+                LinkedHashMap<String, String> externalMap = null;
+                try (Reader reader = new InputStreamReader(new FileInputStream(externalFile), StandardCharsets.UTF_8)) {
+                    externalMap = GSON.fromJson(reader, mapType);
+                } catch (Exception e) {
+                    SavsCommonEconomy.LOGGER.error("Failed to read external translation file: " + externalFile.getPath(), e);
+                }
+
+                if (externalMap == null) {
+                    externalMap = new LinkedHashMap<>();
+                }
+
+                boolean modified = false;
+                int addedCount = 0;
+
+                for (Map.Entry<String, String> entry : embeddedMap.entrySet()) {
+                    if (!externalMap.containsKey(entry.getKey())) {
+                        externalMap.put(entry.getKey(), entry.getValue());
+                        modified = true;
+                        addedCount++;
+                    }
+                }
+
+                if (modified) {
+                    try (Writer writer = new OutputStreamWriter(new FileOutputStream(externalFile), StandardCharsets.UTF_8)) {
+                        PRETTY_GSON.toJson(externalMap, writer);
+                        SavsCommonEconomy.LOGGER.info("Synced " + addedCount + " missing translation key(s) to external lang/" + langCode + ".json");
+                    } catch (Exception e) {
+                        SavsCommonEconomy.LOGGER.error("Failed to update external translation file: " + externalFile.getPath(), e);
+                    }
+                }
+            }
+        }
     }
 
     private static void loadEmbedded(String langCode) {
@@ -66,33 +175,10 @@ public class TranslationHelper {
 
     private static void loadExternal(String langCode) {
         Path externalLangDir = FabricLoader.getInstance().getConfigDir().resolve("savs-common-economy").resolve("lang");
-        File dir = externalLangDir.toFile();
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-
-        // Write a helper README or template if en_us.json doesn't exist externally to make it easy for admins
-        File templateFile = externalLangDir.resolve("en_us.json").toFile();
-        if (!templateFile.exists()) {
-            // Write external en_us template for customizing
-            try (InputStream is = TranslationHelper.class.getResourceAsStream("/assets/savs-common-economy/lang/en_us.json")) {
-                if (is != null) {
-                    try (FileOutputStream fos = new FileOutputStream(templateFile)) {
-                        byte[] buffer = new byte[1024];
-                        int bytesRead;
-                        while ((bytesRead = is.read(buffer)) != -1) {
-                            fos.write(buffer, 0, bytesRead);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                SavsCommonEconomy.LOGGER.warn("Failed to create external translation template file.", e);
-            }
-        }
-
         File externalFile = externalLangDir.resolve(langCode + ".json").toFile();
+
         if (externalFile.exists()) {
-            try (FileReader reader = new FileReader(externalFile, StandardCharsets.UTF_8)) {
+            try (Reader reader = new InputStreamReader(new FileInputStream(externalFile), StandardCharsets.UTF_8)) {
                 Type type = new TypeToken<Map<String, String>>() {}.getType();
                 Map<String, String> loaded = GSON.fromJson(reader, type);
                 if (loaded != null) {
