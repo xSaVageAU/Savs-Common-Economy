@@ -53,8 +53,8 @@ public class ShopTransactionHandler {
                         if (!shop.isAdmin()) {
                             EconomyManager.getInstance().addBalance(shop.getOwnerId(), totalCost);
                         }
-                        String itemName = shop.getItem().getHoverName().getString();
-                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.buy_success", amount, itemName, EconomyManager.getInstance().format(totalCost)));
+                        net.minecraft.network.chat.Component itemComp = shop.getItem().getHoverName();
+                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.buy_success", amount, itemComp, EconomyManager.getInstance().format(totalCost)));
 
                         BlockPos signPos = ShopSignHelper.findSignForChest(world, shop.getChestLocation());
                         if (signPos != null) {
@@ -135,8 +135,8 @@ public class ShopTransactionHandler {
         if (shop.isAdmin()) {
             if (finalizeSale(player, shop, world, amount)) {
                 EconomyManager.getInstance().addBalance(player.getUUID(), totalPayout);
-                String itemName = shop.getItem().getHoverName().getString();
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemName, EconomyManager.getInstance().format(totalPayout)));
+                net.minecraft.network.chat.Component itemComp = shop.getItem().getHoverName();
+                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemComp, EconomyManager.getInstance().format(totalPayout)));
             }
         } else {
             // Check if shop owner can afford it
@@ -147,8 +147,8 @@ public class ShopTransactionHandler {
                             // Pay the seller
                             EconomyManager.getInstance().addBalance(player.getUUID(), finalPayout);
                             
-                            String itemName = shop.getItem().getHoverName().getString();
-                            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.sell_success", finalAmount, itemName, EconomyManager.getInstance().format(finalPayout)));
+                            net.minecraft.network.chat.Component sellItemComp = shop.getItem().getHoverName();
+                            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.sell_success", finalAmount, sellItemComp, EconomyManager.getInstance().format(finalPayout)));
 
                             BlockPos signPos = ShopSignHelper.findSignForChest(world, shop.getChestLocation());
                             if (signPos != null) {

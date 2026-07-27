@@ -21,9 +21,10 @@ public class ShopSignHelper {
                     savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_buying") : 
                     savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_selling");
 
-            String itemName = shop.getItem().getHoverName().getString();
+            Component itemComponent = shop.getItem().getHoverName();
+            String itemName = itemComponent.getString();
             if (itemName.length() > 15) {
-                itemName = itemName.substring(0, 12) + "...";
+                itemComponent = Component.literal(itemName.substring(0, 12) + "...");
             }
 
             String priceText = savage.commoneconomy.EconomyManager.getInstance().format(shop.getPrice());
@@ -46,7 +47,7 @@ public class ShopSignHelper {
 
             sign.setText(sign.getFrontText()
                 .setMessage(0, headerComponent)
-                .setMessage(1, Component.literal(itemName))
+                .setMessage(1, itemComponent)
                 .setMessage(2, priceComponent)
                 .setMessage(3, stockComponent), true);
             

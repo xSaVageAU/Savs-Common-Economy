@@ -195,7 +195,27 @@ public class TranslationHelper {
      * Translates a language key, formatting it with parameters, and parses any legacy color codes.
      */
     public static Component translate(String key, Object... args) {
-        return parseLegacy(translateString(key, args));
+        if (args == null || args.length == 0) {
+            return parseLegacy(translateString(key));
+        }
+
+        Map<String, Component> componentMap = new HashMap<>();
+        Object[] stringArgs = new Object[args.length];
+        boolean hasComponents = false;
+
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof Component comp) {
+                String marker = "__CMP_" + i + "__";
+                componentMap.put(marker, comp);
+                stringArgs[i] = marker;
+                hasComponents = true;
+            } else {
+                stringArgs[i] = args[i];
+            }
+        }
+
+        String formatted = translateString(key, stringArgs);
+        return parseLegacy(formatted, componentMap);
     }
 
     /**
@@ -226,6 +246,13 @@ public class TranslationHelper {
      * Parses legacy formatting codes (& or § followed by 0-9, a-f, k-o, r) into structured Components.
      */
     public static MutableComponent parseLegacy(String text) {
+        return parseLegacy(text, Collections.emptyMap());
+    }
+
+    /**
+     * Parses legacy formatting codes and integrates embedded Component parameters.
+     */
+    public static MutableComponent parseLegacy(String text, Map<String, Component> componentMap) {
         MutableComponent root = Component.literal("");
         if (text == null || text.isEmpty()) return root;
 
@@ -233,7 +260,7 @@ public class TranslationHelper {
         String[] parts = processed.split("§");
 
         if (!parts[0].isEmpty()) {
-            root.append(Component.literal(parts[0]));
+            appendContentWithComponents(root, parts[0], componentMap, null, false, false, false, false, false);
         }
 
         ChatFormatting activeColor = null;
@@ -283,17 +310,67 @@ public class TranslationHelper {
             }
 
             if (!content.isEmpty()) {
-                MutableComponent sub = Component.literal(content);
-                if (activeColor != null) sub.withStyle(activeColor);
-                if (bold) sub.withStyle(ChatFormatting.BOLD);
-                if (italic) sub.withStyle(ChatFormatting.ITALIC);
-                if (underline) sub.withStyle(ChatFormatting.UNDERLINE);
-                if (strikethrough) sub.withStyle(ChatFormatting.STRIKETHROUGH);
-                if (obfuscated) sub.withStyle(ChatFormatting.OBFUSCATED);
-                root.append(sub);
+                appendContentWithComponents(root, content, componentMap, activeColor, bold, italic, underline, strikethrough, obfuscated);
             }
         }
 
         return root;
+    }
+
+    private static void appendContentWithComponents(MutableComponent root, String content, Map<String, Component> componentMap,
+                                                     ChatFormatting activeColor, boolean bold, boolean italic,
+                                                     boolean underline, boolean strikethrough, boolean obfuscated) {
+        if (content.isEmpty()) return;
+
+        if (componentMap == null || componentMap.isEmpty()) {
+            MutableComponent sub = Component.literal(content);
+            applyStyles(sub, activeColor, bold, italic, underline, strikethrough, obfuscated);
+            root.append(sub);
+            return;
+        }
+
+        String matchedMarker = null;
+        for (String marker : componentMap.keySet()) {
+            if (content.contains(marker)) {
+                matchedMarker = marker;
+                break;
+            }
+        }
+
+        if (matchedMarker == null) {
+            MutableComponent sub = Component.literal(content);
+            applyStyles(sub, activeColor, bold, italic, underline, strikethrough, obfuscated);
+            root.append(sub);
+            return;
+        }
+
+        int idx = content.indexOf(matchedMarker);
+        String before = content.substring(0, idx);
+        String after = content.substring(idx + matchedMarker.length());
+
+        if (!before.isEmpty()) {
+            MutableComponent subBefore = Component.literal(before);
+            applyStyles(subBefore, activeColor, bold, italic, underline, strikethrough, obfuscated);
+            root.append(subBefore);
+        }
+
+        Component compArg = componentMap.get(matchedMarker);
+        if (compArg != null) {
+            root.append(compArg);
+        }
+
+        if (!after.isEmpty()) {
+            appendContentWithComponents(root, after, componentMap, activeColor, bold, italic, underline, strikethrough, obfuscated);
+        }
+    }
+
+    private static void applyStyles(MutableComponent sub, ChatFormatting activeColor, boolean bold, boolean italic,
+                                    boolean underline, boolean strikethrough, boolean obfuscated) {
+        if (activeColor != null) sub.withStyle(activeColor);
+        if (bold) sub.withStyle(ChatFormatting.BOLD);
+        if (italic) sub.withStyle(ChatFormatting.ITALIC);
+        if (underline) sub.withStyle(ChatFormatting.UNDERLINE);
+        if (strikethrough) sub.withStyle(ChatFormatting.STRIKETHROUGH);
+        if (obfuscated) sub.withStyle(ChatFormatting.OBFUSCATED);
     }
 }
