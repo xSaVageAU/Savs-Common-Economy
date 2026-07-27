@@ -23,6 +23,18 @@
   "shop.remove.sign_broken": "&e商店已移除（告示牌被破坏）。",
   "shop.protect.break_sign": "&c你无法破坏该商店告示牌！请改用 /shop remove。",
   
+  "shop.sign.admin_header": "&4[系统商店]",
+  "shop.sign.owner_header": "&1%s",
+  "shop.sign.action_buying": "收购",
+  "shop.sign.action_selling": "出售",
+  "shop.sign.price_line": "&0%s: %s",
+  "shop.sign.stock_line": "&0库存: %s",
+  "shop.sign.space_line": "&0空间: %s",
+  "shop.sign.stock_infinite": "&0库存: ∞",
+  
+  "shop.action.verb_buy": "购买",
+  "shop.action.verb_sell": "出售",
+  
   "shop.command.hold_item": "&c你必须手持一个物品才能创建商店！",
   "shop.command.look_at_chest": "&c你必须看着一个箱子！",
   "shop.command.look_at_chest_or_container": "&c你必须看着一个箱子或容器！",

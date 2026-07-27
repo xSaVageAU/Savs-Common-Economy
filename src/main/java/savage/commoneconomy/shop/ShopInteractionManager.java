@@ -78,7 +78,9 @@ public class ShopInteractionManager {
                     // Initiate trade
                     addPendingInteraction(serverPlayer.getUUID(), shop, shop.isBuying());
 
-                    String action = shop.isBuying() ? "sell" : "buy";
+                    String action = shop.isBuying() ? 
+                            savage.commoneconomy.util.TranslationHelper.translateString("shop.action.verb_sell") : 
+                            savage.commoneconomy.util.TranslationHelper.translateString("shop.action.verb_buy");
                     serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.interaction.prompt_amount", action));
                     serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.interaction.prompt_all", action));
                     return InteractionResult.SUCCESS;

@@ -23,6 +23,18 @@
   "shop.remove.sign_broken": "&eShop removed (sign broken).",
   "shop.protect.break_sign": "&cYou cannot break this shop sign! Use /shop remove instead.",
   
+  "shop.sign.admin_header": "&4[Admin Shop]",
+  "shop.sign.owner_header": "&1%s",
+  "shop.sign.action_buying": "Buying",
+  "shop.sign.action_selling": "Selling",
+  "shop.sign.price_line": "&0%s: %s",
+  "shop.sign.stock_line": "&0Stock: %s",
+  "shop.sign.space_line": "&0Space: %s",
+  "shop.sign.stock_infinite": "&0Stock: ∞",
+  
+  "shop.action.verb_buy": "buy",
+  "shop.action.verb_sell": "sell",
+  
   "shop.command.hold_item": "&cYou must hold an item to create a shop!",
   "shop.command.look_at_chest": "&cYou must look at a chest!",
   "shop.command.look_at_chest_or_container": "&cYou must look at a chest or container!",

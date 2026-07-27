@@ -17,7 +17,10 @@ public class ShopSignHelper {
     public static void updateSign(net.minecraft.server.level.ServerLevel world, BlockPos pos, Shop shop) {
         BlockEntity be = world.getBlockEntity(pos);
         if (be instanceof SignBlockEntity sign) {
-            String action = shop.isBuying() ? "Buying" : "Selling";
+            String action = shop.isBuying() ? 
+                    savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_buying") : 
+                    savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_selling");
+
             String itemName = shop.getItem().getHoverName().getString();
             if (itemName.length() > 15) {
                 itemName = itemName.substring(0, 12) + "...";
@@ -26,23 +29,26 @@ public class ShopSignHelper {
             String priceText = savage.commoneconomy.EconomyManager.getInstance().format(shop.getPrice());
             int stock = ShopStockCalculator.calculateStock(world, shop);
             
-            String stockText;
+            Component stockComponent;
             if (stock == -1) {
-                stockText = "Stock: ∞";
+                stockComponent = savage.commoneconomy.util.TranslationHelper.translate("shop.sign.stock_infinite");
             } else {
-                stockText = (shop.isBuying() ? "Space: " : "Stock: ") + stock;
+                String stockKey = shop.isBuying() ? "shop.sign.space_line" : "shop.sign.stock_line";
+                stockComponent = savage.commoneconomy.util.TranslationHelper.translate(stockKey, stock);
                 shop.setStock(stock);
             }
 
-            Component header = shop.isAdmin() ? 
-                    Component.literal("§4[Admin Shop]") : 
-                    Component.literal("§1" + shop.getOwnerName());
+            Component headerComponent = shop.isAdmin() ? 
+                    savage.commoneconomy.util.TranslationHelper.translate("shop.sign.admin_header") : 
+                    savage.commoneconomy.util.TranslationHelper.translate("shop.sign.owner_header", shop.getOwnerName());
+
+            Component priceComponent = savage.commoneconomy.util.TranslationHelper.translate("shop.sign.price_line", action, priceText);
 
             sign.setText(sign.getFrontText()
-                .setMessage(0, header)
+                .setMessage(0, headerComponent)
                 .setMessage(1, Component.literal(itemName))
-                .setMessage(2, Component.literal("§0" + action + ": " + priceText))
-                .setMessage(3, Component.literal("§0" + stockText)), true);
+                .setMessage(2, priceComponent)
+                .setMessage(3, stockComponent), true);
             
             world.sendBlockUpdated(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
         }

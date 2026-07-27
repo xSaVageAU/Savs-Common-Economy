@@ -195,21 +195,24 @@ public class TranslationHelper {
      * Translates a language key, formatting it with parameters, and parses any legacy color codes.
      */
     public static Component translate(String key, Object... args) {
+        return parseLegacy(translateString(key, args));
+    }
+
+    /**
+     * Translates a language key and formats it with parameters, returning the formatted raw String.
+     */
+    public static String translateString(String key, Object... args) {
         String template = translations.get(key);
         if (template == null) {
-            // Fallback to the raw key if not found
-            return Component.literal(key);
+            return key;
         }
 
-        String formatted;
         try {
-            formatted = String.format(template, args);
+            return String.format(template, args);
         } catch (Exception e) {
-            formatted = template;
             SavsCommonEconomy.LOGGER.error("Formatting error for key: " + key, e);
+            return template;
         }
-
-        return parseLegacy(formatted);
     }
 
     /**
