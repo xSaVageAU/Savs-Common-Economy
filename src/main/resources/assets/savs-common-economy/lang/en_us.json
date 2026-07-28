@@ -97,7 +97,7 @@
   "command.log.invalid_unit": "&cInvalid time unit. Use s, m, h, or d.",
   "command.log.searching": "Searching logs for %s in the last %s%s...",
   "command.log.none_found": "No transactions found.",
-  "command.log.header": "--- Found %s transactions (Page %s/%s) ---",
+  "command.log.header": "&6--- Found %s transactions (Page %s/%s) ---",
   "command.log.nav_prev": "[< Previous] ",
   "command.log.nav_next": "[Next >]",
   

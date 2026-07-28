@@ -117,7 +117,7 @@ public class ShopCommands {
 
         context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.header"), false);
         context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.owner", shop.getOwnerName()), false);
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName().getString()), false);
+        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName()), false);
         context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.price", EconomyManager.getInstance().format(shop.getPrice())), false);
         context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.type", (shop.isBuying() ? "Buy" : "Sell")), false);
         context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.stock", (shop.isAdmin() ? "Unlimited" : shop.getStock())), false);
@@ -136,7 +136,7 @@ public class ShopCommands {
 
         context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.header"), false);
         for (Shop shop : shops) {
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.entry", shop.getItem().getHoverName().getString(), shop.getChestLocation().toShortString()), false);
+            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.entry", shop.getItem().getHoverName(), shop.getChestLocation().toShortString()), false);
         }
         return 1;
     }

@@ -97,7 +97,7 @@
   "command.log.invalid_unit": "&c无效的时间单位。请使用 s, m, h 或 d。",
   "command.log.searching": "正在查询过去 %2$s%3$s 内与 %1$s 相关的日志...",
   "command.log.none_found": "未找到交易记录。",
-  "command.log.header": "--- 共找到 %1$s 条交易记录（第 %2$s/%3$s 页）---",
+  "command.log.header": "&6--- 共找到 %1$s 条交易记录（第 %2$s/%3$s 页）---",
   "command.log.nav_prev": "[< 上一页] ",
   "command.log.nav_next": "[下一页 >]",
   
