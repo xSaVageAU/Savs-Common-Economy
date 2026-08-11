@@ -21,11 +21,11 @@ public class ShopSignHelper {
                     savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_buying") : 
                     savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_selling");
 
+            // Left as the item's real translatable Component rather than flattened/truncated:
+            // the server has no way to know how long the name renders in each client's language,
+            // and the previous length-based cutoff replaced it with a hardcoded English literal,
+            // breaking localization for any item with a long English name.
             Component itemComponent = shop.getItem().getHoverName();
-            String itemName = itemComponent.getString();
-            if (itemName.length() > 15) {
-                itemComponent = Component.literal(itemName.substring(0, 12) + "...");
-            }
 
             String priceText = savage.commoneconomy.EconomyManager.getInstance().format(shop.getPrice());
             int stock = ShopStockCalculator.calculateStock(world, shop);
