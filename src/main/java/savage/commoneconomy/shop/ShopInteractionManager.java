@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class ShopInteractionManager {
                     boolean isAdmin = savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
                     
                     if (!isOwner && !isAdmin) {
-                        serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.protect.chest"));
+                        serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.chest"));
                         return InteractionResult.FAIL;
                     }
                 }
@@ -65,11 +66,11 @@ public class ShopInteractionManager {
                         if (shop.getOwnerId().equals(serverPlayer.getUUID()) || savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2)) {
                             ShopManager.getInstance().removeShop(chestPos);
                             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-                            serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.remove.success"));
+                            serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.success"));
                             ShopCommands.exitRemoveMode(serverPlayer.getUUID());
                             return InteractionResult.SUCCESS;
                         } else {
-                            serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.remove.not_owner"));
+                            serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.not_owner"));
                             ShopCommands.exitRemoveMode(serverPlayer.getUUID());
                             return InteractionResult.FAIL;
                         }
@@ -79,10 +80,10 @@ public class ShopInteractionManager {
                     addPendingInteraction(serverPlayer.getUUID(), shop, shop.isBuying());
 
                     String action = shop.isBuying() ? 
-                            savage.commoneconomy.util.TranslationHelper.translateString("shop.action.verb_sell") : 
-                            savage.commoneconomy.util.TranslationHelper.translateString("shop.action.verb_buy");
-                    serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.interaction.prompt_amount", action));
-                    serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.interaction.prompt_all", action));
+                            TranslationHelper.translateString("shop.action.verb_sell") : 
+                            TranslationHelper.translateString("shop.action.verb_buy");
+                    serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.interaction.prompt_amount", action));
+                    serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.interaction.prompt_all", action));
                     return InteractionResult.SUCCESS;
                 }
             }
@@ -108,7 +109,7 @@ public class ShopInteractionManager {
                         amount = Integer.parseInt(content);
                         if (amount <= 0) throw new NumberFormatException();
                     } catch (NumberFormatException e) {
-                        sender.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.interaction.invalid_amount"));
+                        sender.sendSystemMessage(TranslationHelper.translate("shop.interaction.invalid_amount"));
                         removePendingInteraction(sender.getUUID());
                         return false;
                     }
@@ -133,7 +134,7 @@ public class ShopInteractionManager {
                     // Shop sells (Player buys)
                     if (isAll) {
                         if (shop.isAdmin()) {
-                            sender.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.interaction.admin_infinite"));
+                            sender.sendSystemMessage(TranslationHelper.translate("shop.interaction.admin_infinite"));
                             removePendingInteraction(sender.getUUID());
                             return false;
                         }
@@ -160,7 +161,7 @@ public class ShopInteractionManager {
 
             // Protect Shop Chests
             if (ShopManager.getInstance().isShopChest(pos)) {
-                serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.protect.break_chest"));
+                serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.break_chest"));
                 return false;
             }
 
@@ -175,10 +176,10 @@ public class ShopInteractionManager {
 
                     if (isOwner || isAdmin) {
                         ShopManager.getInstance().removeShop(chestPos);
-                        serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.remove.sign_broken"));
+                        serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.sign_broken"));
                         return true; // Allow breaking
                     } else {
-                        serverPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.protect.break_sign"));
+                        serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.break_sign"));
                         return false; // Cancel breaking
                     }
                 }

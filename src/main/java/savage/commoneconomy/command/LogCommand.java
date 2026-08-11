@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import savage.commoneconomy.util.PermissionsHelper;
 import savage.commoneconomy.util.TransactionLogger;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -56,25 +57,25 @@ public class LogCommand {
             case "h": cutoff = now.minusHours(time); break;
             case "d": cutoff = now.minusDays(time); break;
             default:
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.log.invalid_unit"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.log.invalid_unit"));
                 return 0;
         }
 
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.log.searching", target, time, unit), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.log.searching", target, time, unit), false);
 
         // Async execution using the centralized executor to avoid blocking server
         savage.commoneconomy.EconomyManager.getInstance().getIoExecutor().submit(() -> {
             List<TransactionLogger.LogEntry> results = TransactionLogger.searchLogs(target, cutoff);
             
             if (results.isEmpty()) {
-                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.log.none_found"), false);
+                context.getSource().sendSuccess(() -> TranslationHelper.translate("command.log.none_found"), false);
                 return;
             }
 
             int totalPages = (int) Math.ceil((double) results.size() / RESULTS_PER_PAGE);
             int currentPage = Math.min(page, totalPages);
             
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.log.header", results.size(), currentPage, totalPages), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("command.log.header", results.size(), currentPage, totalPages), false);
             
             int startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
             int endIndex = Math.min(startIndex + RESULTS_PER_PAGE, results.size());
@@ -110,14 +111,14 @@ public class LogCommand {
             if (totalPages > 1) {
                 MutableComponent navText = Component.empty();
                 if (currentPage > 1) {
-                    navText.append(savage.commoneconomy.util.TranslationHelper.translate("command.log.nav_prev").copy()
+                    navText.append(TranslationHelper.translate("command.log.nav_prev").copy()
                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                             .withStyle(style -> style.withClickEvent(new ClickEvent.RunCommand( 
                                     "/ecolog " + target + " " + time + " " + unit + " " + (currentPage - 1)))));
                 }
                 
                 if (currentPage < totalPages) {
-                    navText.append(savage.commoneconomy.util.TranslationHelper.translate("command.log.nav_next").copy()
+                    navText.append(TranslationHelper.translate("command.log.nav_next").copy()
                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                             .withStyle(style -> style.withClickEvent(new ClickEvent.RunCommand( 
                                     "/ecolog " + target + " " + time + " " + unit + " " + (currentPage + 1)))));

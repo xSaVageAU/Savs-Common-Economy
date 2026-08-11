@@ -15,6 +15,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import savage.commoneconomy.EconomyManager;
 import savage.commoneconomy.util.PermissionsHelper;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -58,13 +59,13 @@ public class ShopCommands {
         ItemStack heldItem = player.getMainHandItem();
 
         if (heldItem.isEmpty()) {
-            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.hold_item"));
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.hold_item"));
             return 0;
         }
 
         HitResult hit = player.pick(5.0, 0.0f, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
-            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.look_at_chest"));
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.look_at_chest"));
             return 0;
         }
 
@@ -72,12 +73,12 @@ public class ShopCommands {
         BlockEntity be = player.level().getBlockEntity(pos);
 
         if (!(be instanceof Container)) {
-            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.look_at_chest_or_container"));
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.look_at_chest_or_container"));
             return 0;
         }
 
         if (ShopManager.getInstance().getShop(pos) != null) {
-            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.shop_exists"));
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.shop_exists"));
             return 0;
         }
 
@@ -85,9 +86,9 @@ public class ShopCommands {
         Shop shop = ShopManager.getInstance().createShop(pos, worldId, player.getUUID(), player.getName().getString(), heldItem.copy(), price, buying, ShopType.PLAYER);
 
         if (ShopSignHelper.placeSign(player.level(), pos, shop, player.getDirection())) {
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.create_success"), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.create_success"), false);
         } else {
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.create_sign_failed"), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.create_sign_failed"), false);
         }
 
         return 1;
@@ -97,7 +98,7 @@ public class ShopCommands {
         ServerPlayer player = context.getSource().getPlayerOrException();
         HitResult hit = player.pick(5.0, 0.0f, false);
         if (hit.getType() != HitResult.Type.BLOCK) {
-            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.look_at_sign_or_chest"));
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.look_at_sign_or_chest"));
             return 0;
         }
 
@@ -109,18 +110,18 @@ public class ShopCommands {
         }
 
         if (initialShop == null) {
-            context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("shop.command.no_shop_found"));
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
         }
 
         final Shop shop = initialShop;
 
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.header"), false);
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.owner", shop.getOwnerName()), false);
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName()), false);
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.price", EconomyManager.getInstance().format(shop.getPrice())), false);
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.type", (shop.isBuying() ? "Buy" : "Sell")), false);
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.info.stock", (shop.isAdmin() ? "Unlimited" : shop.getStock())), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.header"), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.owner", shop.getOwnerName()), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName()), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.price", EconomyManager.getInstance().format(shop.getPrice())), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.type", (shop.isBuying() ? "Buy" : "Sell")), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.stock", (shop.isAdmin() ? "Unlimited" : shop.getStock())), false);
 
         return 1;
     }
@@ -130,13 +131,13 @@ public class ShopCommands {
         Collection<Shop> shops = ShopManager.getInstance().getPlayerShops(player.getUUID());
 
         if (shops.isEmpty()) {
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.none"), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.my_shops.none"), false);
             return 1;
         }
 
-        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.header"), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.my_shops.header"), false);
         for (Shop shop : shops) {
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.my_shops.entry", shop.getItem().getHoverName(), shop.getChestLocation().toShortString()), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.my_shops.entry", shop.getItem().getHoverName(), shop.getChestLocation().toShortString()), false);
         }
         return 1;
     }
@@ -151,7 +152,7 @@ public class ShopCommands {
         if (shop != null) {
             shop.setType(ShopType.ADMIN);
             ShopManager.getInstance().save();
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.admin_convert"), true);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.admin_convert"), true);
             ShopSignHelper.updateSign((net.minecraft.server.level.ServerLevel)player.level(), ShopSignHelper.findSignForChest(player.level(), pos), shop);
         }
         return 1;
@@ -162,10 +163,10 @@ public class ShopCommands {
         UUID uuid = player.getUUID();
         if (removeModePlayers.contains(uuid)) {
             removeModePlayers.remove(uuid);
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.remove_mode.exit"), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.remove_mode.exit"), false);
         } else {
             removeModePlayers.add(uuid);
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("shop.command.remove_mode.enter"), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.remove_mode.enter"), false);
         }
         return 1;
     }

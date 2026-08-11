@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import savage.commoneconomy.EconomyManager;
 import savage.commoneconomy.util.PermissionsHelper;
 import savage.commoneconomy.util.TransactionLogger;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -76,16 +77,16 @@ public class AdminEconomyCommands {
         
         lookupUUID(context, targetName).thenAccept(targetUUID -> {
             if (targetUUID == null) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.player_not_found"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.player_not_found"));
                 return;
             }
 
             EconomyManager.getInstance().addBalance(targetUUID, amount).thenAccept(success -> {
                 String formatted = EconomyManager.getInstance().format(amount);
-                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_gave", formatted, targetName), true);
+                context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.admin_gave", formatted, targetName), true);
                 
                 TransactionLogger.log("ADMIN_GIVE", context.getSource().getTextName(), targetName, amount, "Admin Gift");
-                notifyTarget(context, targetUUID, savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_gave_notify", formatted));
+                notifyTarget(context, targetUUID, TranslationHelper.translate("command.economy.admin_gave_notify", formatted));
             });
         });
         
@@ -98,17 +99,17 @@ public class AdminEconomyCommands {
         
         lookupUUID(context, targetName).thenAccept(targetUUID -> {
             if (targetUUID == null) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.player_not_found"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.player_not_found"));
                 return;
             }
 
             EconomyManager.getInstance().removeBalance(targetUUID, amount).thenAccept(success -> {
                 if (success) {
                     String formatted = EconomyManager.getInstance().format(amount);
-                    context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_took", formatted, targetName), true);
+                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.admin_took", formatted, targetName), true);
                     TransactionLogger.log("ADMIN_TAKE", context.getSource().getTextName(), targetName, amount, "Admin Take");
                 } else {
-                    context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_took_insufficient"));
+                    context.getSource().sendFailure(TranslationHelper.translate("command.economy.admin_took_insufficient"));
                 }
             });
         });
@@ -122,15 +123,15 @@ public class AdminEconomyCommands {
         
         lookupUUID(context, targetName).thenAccept(targetUUID -> {
             if (targetUUID == null) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.player_not_found"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.player_not_found"));
                 return;
             }
 
             EconomyManager.getInstance().setBalance(targetUUID, amount).thenAccept(v -> {
                 String formatted = EconomyManager.getInstance().format(amount);
-                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_set", targetName, formatted), true);
+                context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.admin_set", targetName, formatted), true);
                 TransactionLogger.log("ADMIN_SET", context.getSource().getTextName(), targetName, amount, "Admin Set");
-                notifyTarget(context, targetUUID, savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_set_notify", formatted));
+                notifyTarget(context, targetUUID, TranslationHelper.translate("command.economy.admin_set_notify", formatted));
             });
         });
         
@@ -142,16 +143,16 @@ public class AdminEconomyCommands {
         
         lookupUUID(context, targetName).thenAccept(targetUUID -> {
             if (targetUUID == null) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.player_not_found"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.player_not_found"));
                 return;
             }
 
             EconomyManager.getInstance().resetBalance(targetUUID).thenAccept(v -> {
                 BigDecimal defaultBal = savage.commoneconomy.config.ConfigManager.getConfig().defaultBalance;
                 String formatted = EconomyManager.getInstance().format(defaultBal);
-                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_reset", targetName, formatted), true);
+                context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.admin_reset", targetName, formatted), true);
                 TransactionLogger.log("ADMIN_RESET", context.getSource().getTextName(), targetName, defaultBal, "Admin Reset");
-                notifyTarget(context, targetUUID, savage.commoneconomy.util.TranslationHelper.translate("command.economy.admin_reset_notify", formatted));
+                notifyTarget(context, targetUUID, TranslationHelper.translate("command.economy.admin_reset_notify", formatted));
             });
         });
         

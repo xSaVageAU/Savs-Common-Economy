@@ -1,12 +1,14 @@
 package savage.commoneconomy.shop;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.math.BigDecimal;
 
@@ -19,11 +21,11 @@ public class ShopTransactionHandler {
             int amount) {
         if (amount <= 0) {
             if (!shop.isAdmin() && !shop.canSell(1)) {
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.out_of_stock"));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.out_of_stock"));
             } else if (getAvailableSpace(player, shop.getItem()) == 0) {
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.no_space"));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.no_space"));
             } else {
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.insufficient_funds"));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.insufficient_funds"));
             }
             return;
         }
@@ -33,13 +35,13 @@ public class ShopTransactionHandler {
 
         // 1. Initial Checks (Main Thread)
         if (!shop.isAdmin() && !shop.canSell(amount)) {
-            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.out_of_stock"));
+            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.out_of_stock"));
             return;
         }
 
         int availableSpace = getAvailableSpace(player, shop.getItem());
         if (availableSpace < amount) {
-            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.no_space"));
+            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.no_space"));
             return;
         }
 
@@ -53,8 +55,8 @@ public class ShopTransactionHandler {
                         if (!shop.isAdmin()) {
                             EconomyManager.getInstance().addBalance(shop.getOwnerId(), totalCost);
                         }
-                        net.minecraft.network.chat.Component itemComp = shop.getItem().getHoverName();
-                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.buy_success", amount, itemComp, EconomyManager.getInstance().format(totalCost)));
+                        Component itemComp = shop.getItem().getHoverName();
+                        player.sendSystemMessage(TranslationHelper.translate("shop.transaction.buy_success", amount, itemComp, EconomyManager.getInstance().format(totalCost)));
 
                         BlockPos signPos = ShopSignHelper.findSignForChest(world, shop.getChestLocation());
                         if (signPos != null) {
@@ -64,11 +66,11 @@ public class ShopTransactionHandler {
                     } else {
                         // Refund on failure
                         EconomyManager.getInstance().addBalance(player.getUUID(), totalCost);
-                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.item_transfer_error"));
+                        player.sendSystemMessage(TranslationHelper.translate("shop.transaction.item_transfer_error"));
                     }
                 });
             } else {
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.insufficient_funds_detail", EconomyManager.getInstance().format(totalCost)));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.insufficient_funds_detail", EconomyManager.getInstance().format(totalCost)));
             }
         });
     }
@@ -116,14 +118,14 @@ public class ShopTransactionHandler {
         }
 
         if (amount <= 0) {
-            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.no_items"));
+            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.no_items"));
             return;
         }
 
         if (!shop.isAdmin()) {
             int availableSpace = ShopStockCalculator.calculateStock(world, shop);
             if (availableSpace < amount) {
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.shop_no_space"));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.shop_no_space"));
                 return;
             }
         }
@@ -135,8 +137,8 @@ public class ShopTransactionHandler {
         if (shop.isAdmin()) {
             if (finalizeSale(player, shop, world, amount)) {
                 EconomyManager.getInstance().addBalance(player.getUUID(), totalPayout);
-                net.minecraft.network.chat.Component itemComp = shop.getItem().getHoverName();
-                player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemComp, EconomyManager.getInstance().format(totalPayout)));
+                Component itemComp = shop.getItem().getHoverName();
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemComp, EconomyManager.getInstance().format(totalPayout)));
             }
         } else {
             // Check if shop owner can afford it
@@ -147,8 +149,8 @@ public class ShopTransactionHandler {
                             // Pay the seller
                             EconomyManager.getInstance().addBalance(player.getUUID(), finalPayout);
                             
-                            net.minecraft.network.chat.Component sellItemComp = shop.getItem().getHoverName();
-                            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.sell_success", finalAmount, sellItemComp, EconomyManager.getInstance().format(finalPayout)));
+                            Component sellItemComp = shop.getItem().getHoverName();
+                            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_success", finalAmount, sellItemComp, EconomyManager.getInstance().format(finalPayout)));
 
                             BlockPos signPos = ShopSignHelper.findSignForChest(world, shop.getChestLocation());
                             if (signPos != null) {
@@ -158,11 +160,11 @@ public class ShopTransactionHandler {
                         } else {
                             // Refund shop owner on failure
                             EconomyManager.getInstance().addBalance(shop.getOwnerId(), finalPayout);
-                            player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.shop_inventory_error"));
+                            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.shop_inventory_error"));
                         }
                     });
                 } else {
-                    player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("shop.transaction.owner_out_of_funds"));
+                    player.sendSystemMessage(TranslationHelper.translate("shop.transaction.owner_out_of_funds"));
                 }
             });
         }

@@ -10,6 +10,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import savage.commoneconomy.EconomyManager;
 import savage.commoneconomy.util.TransactionLogger;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.math.BigDecimal;
 
@@ -39,7 +40,7 @@ public class BankNoteListener {
                             EconomyManager.getInstance().addBalance(player.getUUID(), value).thenAccept(success -> {
                                 server.execute(() -> {
                                     if (success) {
-                                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("listener.banknote.redeemed", EconomyManager.getInstance().format(value))
+                                        player.sendSystemMessage(TranslationHelper.translate("listener.banknote.redeemed", EconomyManager.getInstance().format(value))
                                             .copy().withStyle(ChatFormatting.GREEN));
                                         TransactionLogger.log("DEPOSIT", "Bank Note", player.getName().getString(), value, "Redeemed Note");
                                     } else {
@@ -50,11 +51,11 @@ public class BankNoteListener {
                                         restoreTag.putDouble("Value", valueDouble);
                                         restored.set(DataComponents.CUSTOM_DATA, CustomData.of(restoreTag));
                                         restored.set(DataComponents.CUSTOM_NAME,
-                                            savage.commoneconomy.util.TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(value)));
+                                            TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(value)));
                                         if (!player.getInventory().add(restored)) {
                                             player.drop(restored, false);
                                         }
-                                        player.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("listener.banknote.deposit_failed")
+                                        player.sendSystemMessage(TranslationHelper.translate("listener.banknote.deposit_failed")
                                             .copy().withStyle(ChatFormatting.RED));
                                     }
                                 });

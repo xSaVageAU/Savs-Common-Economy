@@ -19,6 +19,7 @@ import savage.commoneconomy.EconomyManager;
 import savage.commoneconomy.model.AccountData;
 import savage.commoneconomy.util.PermissionsHelper;
 import savage.commoneconomy.util.TransactionLogger;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -85,7 +86,7 @@ public class EconomyCommands {
         EconomyManager.getInstance().getOrCreateAccount(player.getUUID(), player.getGameProfile().name())
             .thenAccept(account -> {
                  BigDecimal balance = account.getBalance();
-                 context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.balance.self", EconomyManager.getInstance().format(balance)), false);
+                 context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.balance.self", EconomyManager.getInstance().format(balance)), false);
              });
          return 1;
     }
@@ -95,13 +96,13 @@ public class EconomyCommands {
         
         lookupUUID(context, targetName).thenAccept(targetUUID -> {
             if (targetUUID == null) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.player_not_found"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.player_not_found"));
                 return;
             }
 
             EconomyManager.getInstance().getOrCreateAccount(targetUUID, null).thenAccept(account -> {
                 BigDecimal balance = account.getBalance();
-                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.balance.other", account.getName(), EconomyManager.getInstance().format(balance)), false);
+                context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.balance.other", account.getName(), EconomyManager.getInstance().format(balance)), false);
             });
         });
         
@@ -115,12 +116,12 @@ public class EconomyCommands {
 
         lookupUUID(context, targetName).thenAccept(targetUUID -> {
             if (targetUUID == null) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.player_not_found"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.player_not_found"));
                 return;
             }
 
             if (sender.getUUID().equals(targetUUID)) {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.pay.self"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.self"));
                 return;
             }
 
@@ -128,17 +129,17 @@ public class EconomyCommands {
                 if (success) {
                     EconomyManager.getInstance().addBalance(targetUUID, amount).thenAccept(addSuccess -> {
                         String formatted = EconomyManager.getInstance().format(amount);
-                        context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.pay.success", formatted, targetName), false);
+                        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.pay.success", formatted, targetName), false);
                         
                         ServerPlayer targetPlayer = context.getSource().getServer().getPlayerList().getPlayer(targetUUID);
                         if (targetPlayer != null) {
-                            targetPlayer.sendSystemMessage(savage.commoneconomy.util.TranslationHelper.translate("command.economy.pay.received", formatted, sender.getName().getString()));
+                            targetPlayer.sendSystemMessage(TranslationHelper.translate("command.economy.pay.received", formatted, sender.getName().getString()));
                         }
                         
                         TransactionLogger.log("PAY", sender.getName().getString(), targetName, amount, "Player Payment");
                     });
                 } else {
-                    context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.pay.insufficient"));
+                    context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.insufficient"));
                 }
             });
         });
@@ -164,17 +165,17 @@ public class EconomyCommands {
                     note.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
                     
                     note.set(DataComponents.CUSTOM_NAME, 
-                        savage.commoneconomy.util.TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(amount)));
+                        TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(amount)));
 
                     if (!sender.getInventory().add(note)) {
                         sender.drop(note, false);
                     }
                     
-                    context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.withdraw.success", EconomyManager.getInstance().format(amount)), false);
+                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.withdraw.success", EconomyManager.getInstance().format(amount)), false);
                     TransactionLogger.log("WITHDRAW", sender.getName().getString(), "Bank Note", amount, "Withdrawal");
                 });
             } else {
-                context.getSource().sendFailure(savage.commoneconomy.util.TranslationHelper.translate("command.economy.pay.insufficient"));
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.insufficient"));
             }
         });
         
@@ -183,11 +184,11 @@ public class EconomyCommands {
 
     private static int balTop(CommandContext<CommandSourceStack> context) {
         EconomyManager.getInstance().getTopAccounts(10).thenAccept(top -> {
-            context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.baltop.header"), false);
+            context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.baltop.header"), false);
             for (int i = 0; i < top.size(); i++) {
                 AccountData account = top.get(i);
                 int rank = i + 1;
-                context.getSource().sendSuccess(() -> savage.commoneconomy.util.TranslationHelper.translate("command.economy.baltop.entry", rank, account.getName(), EconomyManager.getInstance().format(account.getBalance())), false);
+                context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.baltop.entry", rank, account.getName(), EconomyManager.getInstance().format(account.getBalance())), false);
             }
         });
         return 1;

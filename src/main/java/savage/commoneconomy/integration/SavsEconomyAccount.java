@@ -9,6 +9,7 @@ import eu.pb4.common.economy.api.EconomyCurrency;
 import eu.pb4.common.economy.api.EconomyProvider;
 import eu.pb4.common.economy.api.EconomyTransaction;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.util.TranslationHelper;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -62,7 +63,7 @@ public class SavsEconomyAccount implements EconomyAccount {
         // Divide by 100 when receiving values from the API to translate raw units back into dollars.
         EconomyManager.getInstance().setBalance(profile.id(), new BigDecimal(value).divide(new BigDecimal("100")));
         if (currency instanceof SavsEconomyCurrency ecoCurrency) {
-            sendFeedback(savage.commoneconomy.util.TranslationHelper.translate("api.economy.balance_set", ecoCurrency.formatValue(value, true)));
+            sendFeedback(TranslationHelper.translate("api.economy.balance_set", ecoCurrency.formatValue(value, true)));
         }
     }
 
@@ -72,7 +73,7 @@ public class SavsEconomyAccount implements EconomyAccount {
         BigInteger next = current.add(value);
         setBalance(next);
         if (currency instanceof SavsEconomyCurrency ecoCurrency) {
-            sendFeedback(savage.commoneconomy.util.TranslationHelper.translate("api.economy.balance_add", ecoCurrency.formatValue(value, true)));
+            sendFeedback(TranslationHelper.translate("api.economy.balance_add", ecoCurrency.formatValue(value, true)));
         }
         return new EconomyTransaction.Simple(true, Component.literal("Success"), next, current, value, this);
     }
@@ -84,7 +85,7 @@ public class SavsEconomyAccount implements EconomyAccount {
             BigInteger next = current.subtract(value);
             setBalance(next);
             if (currency instanceof SavsEconomyCurrency ecoCurrency) {
-                sendFeedback(savage.commoneconomy.util.TranslationHelper.translate("api.economy.balance_subtract", ecoCurrency.formatValue(value, true)));
+                sendFeedback(TranslationHelper.translate("api.economy.balance_subtract", ecoCurrency.formatValue(value, true)));
             }
             return new EconomyTransaction.Simple(true, Component.literal("Success"), next, current, value.negate(), this);
         } else {

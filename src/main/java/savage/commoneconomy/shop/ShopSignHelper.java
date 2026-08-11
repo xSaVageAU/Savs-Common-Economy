@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.WallSignBlock;
+import savage.commoneconomy.util.TranslationHelper;
 
 /**
  * Helper for shop sign operations.
@@ -18,8 +19,8 @@ public class ShopSignHelper {
         BlockEntity be = world.getBlockEntity(pos);
         if (be instanceof SignBlockEntity sign) {
             String action = shop.isBuying() ? 
-                    savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_buying") : 
-                    savage.commoneconomy.util.TranslationHelper.translateString("shop.sign.action_selling");
+                    TranslationHelper.translateString("shop.sign.action_buying") : 
+                    TranslationHelper.translateString("shop.sign.action_selling");
 
             // Left as the item's real translatable Component rather than flattened/truncated:
             // the server has no way to know how long the name renders in each client's language,
@@ -32,18 +33,18 @@ public class ShopSignHelper {
             
             Component stockComponent;
             if (stock == -1) {
-                stockComponent = savage.commoneconomy.util.TranslationHelper.translate("shop.sign.stock_infinite");
+                stockComponent = TranslationHelper.translate("shop.sign.stock_infinite");
             } else {
                 String stockKey = shop.isBuying() ? "shop.sign.space_line" : "shop.sign.stock_line";
-                stockComponent = savage.commoneconomy.util.TranslationHelper.translate(stockKey, stock);
+                stockComponent = TranslationHelper.translate(stockKey, stock);
                 shop.setStock(stock);
             }
 
             Component headerComponent = shop.isAdmin() ? 
-                    savage.commoneconomy.util.TranslationHelper.translate("shop.sign.admin_header") : 
-                    savage.commoneconomy.util.TranslationHelper.translate("shop.sign.owner_header", shop.getOwnerName());
+                    TranslationHelper.translate("shop.sign.admin_header") : 
+                    TranslationHelper.translate("shop.sign.owner_header", shop.getOwnerName());
 
-            Component priceComponent = savage.commoneconomy.util.TranslationHelper.translate("shop.sign.price_line", action, priceText);
+            Component priceComponent = TranslationHelper.translate("shop.sign.price_line", action, priceText);
 
             sign.setText(sign.getFrontText()
                 .setMessage(0, headerComponent)
