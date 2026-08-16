@@ -120,8 +120,10 @@ public class ShopCommands {
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.owner", shop.getOwnerName()), false);
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName()), false);
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.price", EconomyManager.getInstance().format(shop.getPrice())), false);
-        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.type", (shop.isBuying() ? "Buy" : "Sell")), false);
-        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.stock", (shop.isAdmin() ? "Unlimited" : shop.getStock())), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.type",
+                TranslationHelper.translateString(shop.isBuying() ? "shop.action.verb_buy" : "shop.action.verb_sell")), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.stock",
+                (shop.isAdmin() ? TranslationHelper.translateString("shop.command.info.stock.unlimited") : shop.getStock())), false);
 
         return 1;
     }

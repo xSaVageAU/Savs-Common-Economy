@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handles server-side translations, including embedded jar lang files,
@@ -27,6 +29,22 @@ public class TranslationHelper {
             .setPrettyPrinting()
             .disableHtmlEscaping()
             .create();
+    // Recognizes the only format tokens this codebase actually uses (%%, %s/%S, %N$s/%N$S).
+    // Any other '%' is a literal the translator wrote (e.g. "10% off") and gets escaped to "%%"
+    // so it survives String.format instead of throwing. Matched as whole tokens, not a per-'%'
+    // lookahead, so an already-escaped "%%" is never split and re-escaped into "%%%".
+    private static final Pattern FORMAT_TOKEN = Pattern.compile("%%|%\\d+\\$[sS]|%[sS]|%");
+
+    private static String escapeStrayPercent(String template) {
+        Matcher m = FORMAT_TOKEN.matcher(template);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String token = m.group();
+            m.appendReplacement(sb, Matcher.quoteReplacement(token.equals("%") ? "%%" : token));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
 
     public static void initialize() {
         // 1. Automatically sync all embedded language files to external lang folder & merge missing keys
@@ -227,8 +245,9 @@ public class TranslationHelper {
             return key;
         }
 
+        String safeTemplate = escapeStrayPercent(template);
         try {
-            return String.format(template, args);
+            return String.format(safeTemplate, args);
         } catch (Exception e) {
             SavsCommonEconomy.LOGGER.error("Formatting error for key: " + key, e);
             return template;
@@ -249,19 +268,17 @@ public class TranslationHelper {
         return parseLegacy(text, Collections.emptyMap());
     }
 
+    // Matches only genuine legacy code sequences ('&' or '§' followed by a real code character),
+    // so a literal '&' in translated text (e.g. "Buy & Sell") is left in place instead of being
+    // consumed as a code marker and silently dropping the character after it.
+    private static final Pattern LEGACY_CODE = Pattern.compile("[&§]([0-9a-fk-or])");
+
     /**
      * Parses legacy formatting codes and integrates embedded Component parameters.
      */
     public static MutableComponent parseLegacy(String text, Map<String, Component> componentMap) {
         MutableComponent root = Component.literal("");
         if (text == null || text.isEmpty()) return root;
-
-        String processed = text.replace('&', '§');
-        String[] parts = processed.split("§");
-
-        if (!parts[0].isEmpty()) {
-            appendContentWithComponents(root, parts[0], componentMap, null, false, false, false, false, false);
-        }
 
         ChatFormatting activeColor = null;
         boolean bold = false;
@@ -270,13 +287,16 @@ public class TranslationHelper {
         boolean strikethrough = false;
         boolean obfuscated = false;
 
-        for (int i = 1; i < parts.length; i++) {
-            String part = parts[i];
-            if (part.isEmpty()) continue;
+        Matcher matcher = LEGACY_CODE.matcher(text);
+        int lastEnd = 0;
 
-            char code = part.charAt(0);
-            String content = part.substring(1);
+        while (matcher.find()) {
+            String before = text.substring(lastEnd, matcher.start());
+            if (!before.isEmpty()) {
+                appendContentWithComponents(root, before, componentMap, activeColor, bold, italic, underline, strikethrough, obfuscated);
+            }
 
+            char code = matcher.group(1).charAt(0);
             switch (code) {
                 case '0' -> { activeColor = ChatFormatting.BLACK; }
                 case '1' -> { activeColor = ChatFormatting.DARK_BLUE; }
@@ -309,9 +329,12 @@ public class TranslationHelper {
                 }
             }
 
-            if (!content.isEmpty()) {
-                appendContentWithComponents(root, content, componentMap, activeColor, bold, italic, underline, strikethrough, obfuscated);
-            }
+            lastEnd = matcher.end();
+        }
+
+        String remaining = text.substring(lastEnd);
+        if (!remaining.isEmpty()) {
+            appendContentWithComponents(root, remaining, componentMap, activeColor, bold, italic, underline, strikethrough, obfuscated);
         }
 
         return root;
@@ -330,10 +353,12 @@ public class TranslationHelper {
         }
 
         String matchedMarker = null;
+        int idx = -1;
         for (String marker : componentMap.keySet()) {
-            if (content.contains(marker)) {
+            int markerIdx = content.indexOf(marker);
+            if (markerIdx != -1 && (matchedMarker == null || markerIdx < idx)) {
                 matchedMarker = marker;
-                break;
+                idx = markerIdx;
             }
         }
 
@@ -344,7 +369,6 @@ public class TranslationHelper {
             return;
         }
 
-        int idx = content.indexOf(matchedMarker);
         String before = content.substring(0, idx);
         String after = content.substring(idx + matchedMarker.length());
 
