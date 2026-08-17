@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -14,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.util.TranslationHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class ShopInteractionManager {
                     boolean isAdmin = savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
                     
                     if (!isOwner && !isAdmin) {
-                        serverPlayer.sendSystemMessage(Component.literal("§cThis chest is protected by a shop! Only the owner can open it."));
+                        serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.chest"));
                         return InteractionResult.FAIL;
                     }
                 }
@@ -66,11 +66,11 @@ public class ShopInteractionManager {
                         if (shop.getOwnerId().equals(serverPlayer.getUUID()) || savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2)) {
                             ShopManager.getInstance().removeShop(chestPos);
                             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-                            serverPlayer.sendSystemMessage(Component.literal("§aShop removed!"));
+                            serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.success"));
                             ShopCommands.exitRemoveMode(serverPlayer.getUUID());
                             return InteractionResult.SUCCESS;
                         } else {
-                            serverPlayer.sendSystemMessage(Component.literal("§cYou don't own this shop!"));
+                            serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.not_owner"));
                             ShopCommands.exitRemoveMode(serverPlayer.getUUID());
                             return InteractionResult.FAIL;
                         }
@@ -79,9 +79,11 @@ public class ShopInteractionManager {
                     // Initiate trade
                     addPendingInteraction(serverPlayer.getUUID(), shop, shop.isBuying());
 
-                    String action = shop.isBuying() ? "sell" : "buy";
-                    serverPlayer.sendSystemMessage(Component.literal("§eType the amount you want to " + action + " in chat."));
-                    serverPlayer.sendSystemMessage(Component.literal("§eType 'all' to " + action + " everything."));
+                    String action = shop.isBuying() ? 
+                            TranslationHelper.translateString("shop.action.verb_sell") : 
+                            TranslationHelper.translateString("shop.action.verb_buy");
+                    serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.interaction.prompt_amount", action));
+                    serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.interaction.prompt_all", action));
                     return InteractionResult.SUCCESS;
                 }
             }
@@ -107,7 +109,7 @@ public class ShopInteractionManager {
                         amount = Integer.parseInt(content);
                         if (amount <= 0) throw new NumberFormatException();
                     } catch (NumberFormatException e) {
-                        sender.sendSystemMessage(Component.literal("§cInvalid amount! Transaction cancelled."));
+                        sender.sendSystemMessage(TranslationHelper.translate("shop.interaction.invalid_amount"));
                         removePendingInteraction(sender.getUUID());
                         return false;
                     }
@@ -132,7 +134,7 @@ public class ShopInteractionManager {
                     // Shop sells (Player buys)
                     if (isAll) {
                         if (shop.isAdmin()) {
-                            sender.sendSystemMessage(Component.literal("§cAdmin shops have infinite stock! Please type a specific amount to buy."));
+                            sender.sendSystemMessage(TranslationHelper.translate("shop.interaction.admin_infinite"));
                             removePendingInteraction(sender.getUUID());
                             return false;
                         }
@@ -159,7 +161,7 @@ public class ShopInteractionManager {
 
             // Protect Shop Chests
             if (ShopManager.getInstance().isShopChest(pos)) {
-                serverPlayer.sendSystemMessage(Component.literal("§cYou cannot break shop chests! Use /shop remove or break the sign first."));
+                serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.break_chest"));
                 return false;
             }
 
@@ -174,10 +176,10 @@ public class ShopInteractionManager {
 
                     if (isOwner || isAdmin) {
                         ShopManager.getInstance().removeShop(chestPos);
-                        serverPlayer.sendSystemMessage(Component.literal("§eShop removed (sign broken)."));
+                        serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.sign_broken"));
                         return true; // Allow breaking
                     } else {
-                        serverPlayer.sendSystemMessage(Component.literal("§cYou cannot break this shop sign! Use /shop remove instead."));
+                        serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.break_sign"));
                         return false; // Cancel breaking
                     }
                 }

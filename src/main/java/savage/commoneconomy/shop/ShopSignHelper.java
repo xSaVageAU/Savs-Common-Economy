@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.WallSignBlock;
+import savage.commoneconomy.util.TranslationHelper;
 
 /**
  * Helper for shop sign operations.
@@ -17,32 +18,39 @@ public class ShopSignHelper {
     public static void updateSign(net.minecraft.server.level.ServerLevel world, BlockPos pos, Shop shop) {
         BlockEntity be = world.getBlockEntity(pos);
         if (be instanceof SignBlockEntity sign) {
-            String action = shop.isBuying() ? "Buying" : "Selling";
-            String itemName = shop.getItem().getHoverName().getString();
-            if (itemName.length() > 15) {
-                itemName = itemName.substring(0, 12) + "...";
-            }
+            String action = shop.isBuying() ? 
+                    TranslationHelper.translateString("shop.sign.action_buying") : 
+                    TranslationHelper.translateString("shop.sign.action_selling");
+
+            // Left as the item's real translatable Component rather than flattened/truncated:
+            // the server has no way to know how long the name renders in each client's language,
+            // and the previous length-based cutoff replaced it with a hardcoded English literal,
+            // breaking localization for any item with a long English name.
+            Component itemComponent = shop.getItem().getHoverName();
 
             String priceText = savage.commoneconomy.EconomyManager.getInstance().format(shop.getPrice());
             int stock = ShopStockCalculator.calculateStock(world, shop);
             
-            String stockText;
+            Component stockComponent;
             if (stock == -1) {
-                stockText = "Stock: ∞";
+                stockComponent = TranslationHelper.translate("shop.sign.stock_infinite");
             } else {
-                stockText = (shop.isBuying() ? "Space: " : "Stock: ") + stock;
+                String stockKey = shop.isBuying() ? "shop.sign.space_line" : "shop.sign.stock_line";
+                stockComponent = TranslationHelper.translate(stockKey, stock);
                 shop.setStock(stock);
             }
 
-            Component header = shop.isAdmin() ? 
-                    Component.literal("§4[Admin Shop]") : 
-                    Component.literal("§1" + shop.getOwnerName());
+            Component headerComponent = shop.isAdmin() ? 
+                    TranslationHelper.translate("shop.sign.admin_header") : 
+                    TranslationHelper.translate("shop.sign.owner_header", shop.getOwnerName());
+
+            Component priceComponent = TranslationHelper.translate("shop.sign.price_line", action, priceText);
 
             sign.setText(sign.getFrontText()
-                .setMessage(0, header)
-                .setMessage(1, Component.literal(itemName))
-                .setMessage(2, Component.literal("§0" + action + ": " + priceText))
-                .setMessage(3, Component.literal("§0" + stockText)), true);
+                .setMessage(0, headerComponent)
+                .setMessage(1, itemComponent)
+                .setMessage(2, priceComponent)
+                .setMessage(3, stockComponent), true);
             
             world.sendBlockUpdated(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
         }

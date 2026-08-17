@@ -12,6 +12,7 @@ import savage.commoneconomy.shop.ShopCommands;
 import savage.commoneconomy.shop.ShopInteractionManager;
 import savage.commoneconomy.shop.ShopManager;
 import savage.commoneconomy.util.TransactionLogger;
+import savage.commoneconomy.util.TranslationHelper;
 
 public class SavsCommonEconomy implements ModInitializer {
 	public static final String MOD_ID = "savs-common-economy";
@@ -28,6 +29,7 @@ public class SavsCommonEconomy implements ModInitializer {
 		
 		// Load Configuration
 		ConfigManager.load();
+		TranslationHelper.initialize();
 
 		// Register Commands
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {

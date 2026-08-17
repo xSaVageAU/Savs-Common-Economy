@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 public class EconomyConfig {
     
     // --- General Settings ---
+    public String language = "en_us";
     public BigDecimal defaultBalance = BigDecimal.valueOf(1000);
     public String currencySymbol = "$";
     public boolean symbolBeforeAmount = true;

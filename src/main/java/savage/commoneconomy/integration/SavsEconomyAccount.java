@@ -9,6 +9,7 @@ import eu.pb4.common.economy.api.EconomyCurrency;
 import eu.pb4.common.economy.api.EconomyProvider;
 import eu.pb4.common.economy.api.EconomyTransaction;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.util.TranslationHelper;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -62,7 +63,7 @@ public class SavsEconomyAccount implements EconomyAccount {
         // Divide by 100 when receiving values from the API to translate raw units back into dollars.
         EconomyManager.getInstance().setBalance(profile.id(), new BigDecimal(value).divide(new BigDecimal("100")));
         if (currency instanceof SavsEconomyCurrency ecoCurrency) {
-            sendFeedback("§e[Economy] Balance set to " + ecoCurrency.formatValue(value, true));
+            sendFeedback(TranslationHelper.translate("api.economy.balance_set", ecoCurrency.formatValue(value, true)));
         }
     }
 
@@ -72,7 +73,7 @@ public class SavsEconomyAccount implements EconomyAccount {
         BigInteger next = current.add(value);
         setBalance(next);
         if (currency instanceof SavsEconomyCurrency ecoCurrency) {
-            sendFeedback("§e[Economy] §a+" + ecoCurrency.formatValue(value, true));
+            sendFeedback(TranslationHelper.translate("api.economy.balance_add", ecoCurrency.formatValue(value, true)));
         }
         return new EconomyTransaction.Simple(true, Component.literal("Success"), next, current, value, this);
     }
@@ -84,7 +85,7 @@ public class SavsEconomyAccount implements EconomyAccount {
             BigInteger next = current.subtract(value);
             setBalance(next);
             if (currency instanceof SavsEconomyCurrency ecoCurrency) {
-                sendFeedback("§e[Economy] §c-" + ecoCurrency.formatValue(value, true));
+                sendFeedback(TranslationHelper.translate("api.economy.balance_subtract", ecoCurrency.formatValue(value, true)));
             }
             return new EconomyTransaction.Simple(true, Component.literal("Success"), next, current, value.negate(), this);
         } else {
@@ -92,7 +93,7 @@ public class SavsEconomyAccount implements EconomyAccount {
         }
     }
 
-    private void sendFeedback(String message) {
+    private void sendFeedback(Component message) {
         net.minecraft.server.MinecraftServer server = savage.commoneconomy.SavsCommonEconomy.getServer();
         if (server != null) {
             net.minecraft.server.level.ServerPlayer player = server.getPlayerList().getPlayer(profile.id());
@@ -100,7 +101,7 @@ public class SavsEconomyAccount implements EconomyAccount {
                 var config = savage.commoneconomy.config.ConfigManager.getConfig();
                 boolean overlay = (config.apiNotificationMode == savage.commoneconomy.config.EconomyConfig.NotificationMode.ACTION_BAR);
                 server.execute(() -> {
-                    player.sendSystemMessage(Component.literal(message), overlay);
+                    player.sendSystemMessage(message, overlay);
                 });
             }
         }
