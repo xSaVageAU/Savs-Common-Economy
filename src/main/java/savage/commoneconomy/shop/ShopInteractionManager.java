@@ -7,11 +7,13 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import savage.commoneconomy.EconomyManager;
 import savage.commoneconomy.util.TranslationHelper;
 
@@ -219,7 +221,8 @@ public class ShopInteractionManager {
                     for (Shop shop : ShopManager.getInstance().getAllShops()) {
                         if (worldId.equals(shop.getWorldId())) {
                             BlockPos chestPos = shop.getChestLocation();
-                            if (!(world.getBlockState(chestPos).getBlock() instanceof net.minecraft.world.level.block.ChestBlock)) {
+                            BlockEntity be = world.getBlockEntity(chestPos);
+                            if (!(be instanceof Container)) {
                                 toRemove.add(chestPos);
                             }
                         }
