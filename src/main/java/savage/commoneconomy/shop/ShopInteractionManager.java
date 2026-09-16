@@ -177,7 +177,11 @@ public class ShopInteractionManager {
                     if (isOwner || isAdmin) {
                         ShopManager.getInstance().removeShop(chestPos);
                         serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.sign_broken"));
-                        return true; // Allow breaking
+                        // Clear the block ourselves instead of letting vanilla breaking proceed:
+                        // the sign was spawned in for free on shop creation (no item was taken
+                        // from the player), so a normal break would drop a duplicated sign item.
+                        world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                        return false; // Cancel vanilla breaking (no item drop)
                     } else {
                         serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.break_sign"));
                         return false; // Cancel breaking
