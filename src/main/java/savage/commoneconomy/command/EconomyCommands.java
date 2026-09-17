@@ -10,6 +10,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -168,7 +169,7 @@ public class EconomyCommands {
                         TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(amount)));
 
                     if (!sender.getInventory().add(note)) {
-                        sender.drop(note, false);
+                        sender.drop(note, false, Prediction.SERVER_ONLY);
                     }
                     
                     context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.withdraw.success", EconomyManager.getInstance().format(amount)), false);

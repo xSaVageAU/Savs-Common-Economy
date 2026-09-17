@@ -25,7 +25,7 @@ public class SavsCommonEconomy implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Savs Common Economy is initializing for Minecraft 26.2 (Stable)...");
+		LOGGER.info("Savs Common Economy is initializing for Minecraft 26.3 (Stable)...");
 		
 		// Load Configuration
 		ConfigManager.load();

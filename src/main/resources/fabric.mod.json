@@ -3,7 +3,7 @@
 	"id": "savs-common-economy",
 	"version": "${version}",
 	"name": "Savs Common Economy",
-	"description": "A comprehensive economy mod for Minecraft 26.2, featuring physical currency, bank notes, chest shops, and cross-server synchronization.",
+	"description": "A comprehensive economy mod for Minecraft 26.3, featuring physical currency, bank notes, chest shops, and cross-server synchronization.",
 	"authors": [
 		"xSaVageAU"
 	],
@@ -23,8 +23,8 @@
 		"savs-common-economy.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.19.3",
-		"minecraft": "~26.2-",
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3-",
 		"java": ">=25",
 		"fabric-api": "*"
 	}

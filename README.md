@@ -1,6 +1,6 @@
 # Savs Common Economy
 
-A lightweight, **server-side only** economy mod for Minecraft 26.2 (Fabric), designed for SMP servers and multi-server networks. It provides a robust, modern economy system with support for JSON, SQLite, MySQL, and PostgreSQL storage, offline player support, leaderboards, physical bank notes, player chest shops, and cross-server network synchronization. No client installation required!
+A lightweight, **server-side only** economy mod for Minecraft 26.3 (Fabric), designed for SMP servers and multi-server networks. It provides a robust, modern economy system with support for JSON, SQLite, MySQL, and PostgreSQL storage, offline player support, leaderboards, physical bank notes, player chest shops, and cross-server network synchronization. No client installation required!
 
 ## Core Features
 

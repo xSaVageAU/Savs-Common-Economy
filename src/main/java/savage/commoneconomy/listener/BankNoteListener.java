@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -53,7 +54,7 @@ public class BankNoteListener {
                                         restored.set(DataComponents.CUSTOM_NAME,
                                             TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(value)));
                                         if (!player.getInventory().add(restored)) {
-                                            player.drop(restored, false);
+                                            player.drop(restored, false, Prediction.SERVER_ONLY);
                                         }
                                         player.sendSystemMessage(TranslationHelper.translate("listener.banknote.deposit_failed")
                                             .copy().withStyle(ChatFormatting.RED));

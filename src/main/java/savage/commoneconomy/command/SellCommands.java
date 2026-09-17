@@ -9,6 +9,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -266,7 +267,7 @@ public class SellCommands {
                 server3.execute(() -> {
                     ItemStack stack = new ItemStack(item, amount);
                     if (!player.getInventory().add(stack)) {
-                        player.drop(stack, false);
+                        player.drop(stack, false, Prediction.SERVER_ONLY);
                     }
                     context.getSource().sendSuccess(() -> TranslationHelper.translate("command.buy.success", amount, itemId, EconomyManager.getInstance().format(totalCost)), false);
                     savage.commoneconomy.util.TransactionLogger.log("BUY", "Server", player.getName().getString(), totalCost, "Bought " + amount + "x " + itemId);

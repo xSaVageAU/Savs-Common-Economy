@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.WallSignBlock;
 import savage.commoneconomy.util.TranslationHelper;
@@ -46,11 +47,12 @@ public class ShopSignHelper {
 
             Component priceComponent = TranslationHelper.translate("shop.sign.price_line", action, priceText);
 
-            sign.setText(sign.getFrontText()
-                .setMessage(0, headerComponent)
-                .setMessage(1, itemComponent)
-                .setMessage(2, priceComponent)
-                .setMessage(3, stockComponent), true);
+            sign.setText(sign.getText(SignTextSlot.FRONT).asMutable()
+                .setLine(0, headerComponent)
+                .setLine(1, itemComponent)
+                .setLine(2, priceComponent)
+                .setLine(3, stockComponent)
+                .asImmutable(), SignTextSlot.FRONT);
             
             world.sendBlockUpdated(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
         }
