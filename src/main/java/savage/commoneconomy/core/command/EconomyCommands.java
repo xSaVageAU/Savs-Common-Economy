@@ -10,12 +10,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 import savage.commoneconomy.core.EconomyManager;
 import savage.commoneconomy.core.model.AccountData;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
@@ -65,11 +59,6 @@ public class EconomyCommands {
                         .suggests(PLAYER_SUGGESTIONS)
                         .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.01))
                                 .executes(EconomyCommands::pay))));
-
-        dispatcher.register(Commands.literal("withdraw")
-                .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.command.withdraw", true))
-                .then(Commands.argument("amount", DoubleArgumentType.doubleArg(0.01))
-                        .executes(EconomyCommands::withdraw)));
 
         // /baltop and /balancetop
         var baltopCommand = Commands.literal("baltop")
@@ -143,41 +132,6 @@ public class EconomyCommands {
                     context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.insufficient"));
                 }
             });
-        });
-        
-        return 1;
-    }
-
-    private static int withdraw(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        ServerPlayer sender = context.getSource().getPlayerOrException();
-        double amountDouble = DoubleArgumentType.getDouble(context, "amount");
-        BigDecimal amount = BigDecimal.valueOf(amountDouble);
-
-        var server = context.getSource().getServer();
-        EconomyManager.getInstance().removeBalance(sender.getUUID(), amount).thenAccept(success -> {
-            if (success) {
-                // Must modify inventory on the main server thread
-                server.execute(() -> {
-                    ItemStack note = new ItemStack(Items.PAPER);
-                    
-                    CompoundTag tag = new CompoundTag();
-                    tag.putBoolean("EconomyBankNote", true);
-                    tag.putDouble("Value", amountDouble);
-                    note.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-                    
-                    note.set(DataComponents.CUSTOM_NAME, 
-                        TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(amount)));
-
-                    if (!sender.getInventory().add(note)) {
-                        sender.drop(note, false, Prediction.SERVER_ONLY);
-                    }
-                    
-                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.withdraw.success", EconomyManager.getInstance().format(amount)), false);
-                    TransactionLogger.log("WITHDRAW", sender.getName().getString(), "Bank Note", amount, "Withdrawal");
-                });
-            } else {
-                context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.insufficient"));
-            }
         });
         
         return 1;

@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import savage.commoneconomy.banknote.BankNoteCommands;
 import savage.commoneconomy.core.EconomyManager;
 import savage.commoneconomy.core.command.AdminEconomyCommands;
 import savage.commoneconomy.core.command.EconomyCommands;
@@ -37,6 +38,7 @@ public class SavsCommonEconomy implements ModInitializer {
 			EconomyCommands.register(dispatcher);
 			AdminEconomyCommands.register(dispatcher);
 			savage.commoneconomy.core.log.LogCommand.register(dispatcher);
+				BankNoteCommands.register(dispatcher);
 			savage.commoneconomy.sell.SellCommands.register(dispatcher);
 			if (ConfigManager.getConfig().enableChestShops) {
 				ShopCommands.register(dispatcher);
