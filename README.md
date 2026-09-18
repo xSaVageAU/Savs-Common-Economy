@@ -12,7 +12,7 @@ A lightweight, **server-side only** economy mod for Minecraft 26.3 (Fabric), des
 *   **Chest Shops**: Player shops! Create buy and sell chest shops using vanilla signs.
 *   **Buy & Sell System**: Quickly configure official server prices and empower your players to directly trade with the server using `/buy` and `/sell` commands! (Customizable via `worth.json`).
 *   **Bank Notes**: Players can withdraw their digital balance into physical vanilla paper items to trade or stash away.
-*   **Transaction Logging**: Searchable in-game transaction ledger for server admins (`/ecolog`).
+*   **Transaction Logging**: Searchable in-game transaction ledger for server admins (`/ecolog`). A `TRANSFER_FAILED` entry means a payment could not be completed; its reason says whether the player was refunded or is still owed money (the server console also logs an error when someone is owed).
 *   **Vanilla Permissions Setup**: Easily configure command access levels using the `permissions.json` config using vanilla OP clearance levels.
 
 ## Commands
@@ -24,12 +24,13 @@ A lightweight, **server-side only** economy mod for Minecraft 26.3 (Fabric), des
 *   `/baltop` or `/balancetop`: View the richest players on the server.
 *   `/withdraw <amount>`: Withdraw money as a physical bank note.
 *   `/worth`: Check the value of the item in your hand.
-*   `/worth all`: Check the value of all items in your inventory matching the one in your hand.
+*   `/worth all`: Check the value of all items in your main inventory and hotbar matching the one in your hand.
 *   `/worth list`: View an organized, colored table of all server buy and sell prices.
 *   `/worth <item>`: Check the value of a specific item.
-*   `/buy <item> [amount]`: Purchase items directly from the server.
+*   `/buy <item> [amount]`: Purchase items directly from the server. It fails without charging you if your inventory cannot hold the items.
 *   `/sell`: Sell the item stack currently in your hand.
-*   `/sell all`: Sell all identical items in your inventory.
+*   `/sell all`: Sell all identical items in your main inventory and hotbar. Worn armor and your offhand are never sold.
+*   Items that hold contents or custom data are never sold or counted by `/sell` and `/worth`: bank notes, and shulker boxes or bundles with items inside.
 
 ### Shop Commands
 *   `/shop create sell <price>`: Create a selling shop (sells items TO players).
@@ -60,6 +61,7 @@ From here, you can change the default starting balances, currency symbols, and d
   "symbolBeforeAmount": true,
   "enableSellCommands": false,
   "enableChestShops": true,
+  "enableBankNotes": true,
   "storage": {
     "type": "JSON",
     "host": "localhost",
@@ -95,11 +97,12 @@ From here, you can change the default starting balances, currency symbols, and d
 *   `symbolBeforeAmount`: If `true`, output shows `$100`. If `false`, output shows `100$`.
 *   `enableSellCommands`: Turns the `/worth`, `/buy`, and `/sell` server market on or off. 
 *   `enableChestShops`: Turns the player chest shop sign system on or off.
+*   `enableBankNotes`: Turns `/withdraw` and bank note redemption on or off. While this is off, existing bank notes cannot be redeemed.
 
 #### Storage Options
 Controls how player balances are saved.
-*   `storage.type`: Choose how to save player balances. `JSON` is the default and is perfect for standard servers. Change this to `SQLITE`, `MYSQL`, or `POSTGRESQL` if you run a large network.
-*   `storage.host` / `port` / `database` / `user` / `password`: Fill these in only if you are using `MYSQL` or `POSTGRESQL`.
+*   `storage.type`: Choose how to save player balances. `JSON` is the default and is perfect for standard servers. Change this to `SQLITE`, `MYSQL` (or `MARIADB`), or `POSTGRESQL` if you run a large network. Any other value falls back to `JSON`.
+*   `storage.host` / `port` / `database` / `user` / `password`: Fill these in only if you are using `MYSQL`, `MARIADB` or `POSTGRESQL`. `SQLITE` ignores them and saves to `config/savs-common-economy/economy.db`.
 *   `storage.tablePrefix`: The prefix used for the database tables (default `savs_eco_`).
 
 #### Redis Network Sync (Optional)
