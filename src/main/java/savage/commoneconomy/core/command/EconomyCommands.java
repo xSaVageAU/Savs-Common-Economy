@@ -10,6 +10,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.server.level.ServerPlayer;
+import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.EconomyManager;
 import savage.commoneconomy.core.model.AccountData;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
@@ -118,6 +119,11 @@ public class EconomyCommands {
             EconomyManager.getInstance().removeBalance(sender.getUUID(), amount).thenAccept(success -> {
                 if (success) {
                     EconomyManager.getInstance().addBalance(targetUUID, amount).thenAccept(addSuccess -> {
+                        if (!addSuccess) {
+                            refundFailedPayment(context, sender, targetName, amount);
+                            return;
+                        }
+
                         String formatted = EconomyManager.getInstance().format(amount);
                         context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.pay.success", formatted, targetName), false);
                         
@@ -135,6 +141,25 @@ public class EconomyCommands {
         });
         
         return 1;
+    }
+
+    /**
+     * The sender was already charged but the target's deposit failed, so give the money back.
+     * If the refund fails too, the amount is only recoverable by an admin, so log everything needed to repair it.
+     */
+    private static void refundFailedPayment(CommandContext<CommandSourceStack> context, ServerPlayer sender, String targetName, BigDecimal amount) {
+        String senderName = sender.getName().getString();
+        EconomyManager.getInstance().addBalance(sender.getUUID(), amount).thenAccept(refunded -> {
+            if (refunded) {
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.failed"));
+                TransactionLogger.log("TRANSFER_FAILED", senderName, targetName, amount, "Deposit failed and sender was refunded");
+            } else {
+                SavsCommonEconomy.LOGGER.error("Payment of {} from {} ({}) to {} failed and the refund also failed; the sender is owed this amount.",
+                        amount.toPlainString(), senderName, sender.getUUID(), targetName);
+                context.getSource().sendFailure(TranslationHelper.translate("command.economy.pay.failed_refund_failed"));
+                TransactionLogger.log("TRANSFER_FAILED", senderName, targetName, amount, "Deposit failed and refund failed so sender is owed this amount");
+            }
+        });
     }
 
     private static int balTop(CommandContext<CommandSourceStack> context) {

@@ -64,6 +64,8 @@
   "command.economy.pay.success": "Paid %s to %s",
   "command.economy.pay.received": "Received %s from %s",
   "command.economy.pay.insufficient": "Insufficient funds.",
+  "command.economy.pay.failed": "Payment failed. Your money has been refunded.",
+  "command.economy.pay.failed_refund_failed": "Payment failed and the refund could not be completed. Please contact an admin.",
   "command.economy.withdraw.success": "Withdrew %s as a bank note.",
   "command.economy.baltop.header": "--- Top 10 Balances ---",
   "command.economy.baltop.entry": "%s. %s: %s",

@@ -64,6 +64,8 @@
   "command.economy.pay.success": "成功向 %2$s 转账了 %1$s",
   "command.economy.pay.received": "收到了来自 %2$s 的 %1$s",
   "command.economy.pay.insufficient": "余额不足。",
+  "command.economy.pay.failed": "转账失败，已将金额退还给你。",
+  "command.economy.pay.failed_refund_failed": "转账失败，且退款未能完成。请联系管理员。",
   "command.economy.withdraw.success": "成功提取了 %s 的金币支票。",
   "command.economy.baltop.header": "--- 富豪榜前10名 ---",
   "command.economy.baltop.entry": "%s. %s: %s",
