@@ -21,7 +21,7 @@ public class EconomyConfig {
     public StorageConfig storage = new StorageConfig();
 
     public static class StorageConfig {
-        public String type = "JSON"; // JSON, MYSQL, POSTGRESQL
+        public String type = "JSON"; // JSON, SQLITE, MYSQL, MARIADB, POSTGRESQL (anything else falls back to JSON)
         public String host = "localhost";
         public int port = 3306;
         public String database = "savs_economy";
@@ -55,12 +55,5 @@ public class EconomyConfig {
         CHAT,
         ACTION_BAR,
         NONE
-    }
-
-    public enum StorageType {
-        JSON,
-        SQLITE,
-        MYSQL,
-        POSTGRESQL
     }
 }
