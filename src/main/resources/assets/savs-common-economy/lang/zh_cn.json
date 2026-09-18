@@ -98,6 +98,7 @@
   "command.buy.not_for_sale": "此物品不对外出售。",
   "command.buy.success": "购买了 %1$s 个 %2$s，花费了 %3$s",
   "command.buy.insufficient_funds": "余额不足！需要花费：%s",
+  "command.buy.no_space": "你没有足够的背包空间。",
   
   "command.log.invalid_unit": "&c无效的时间单位。请使用 s, m, h 或 d。",
   "command.log.searching": "正在查询过去 %2$s%3$s 内与 %1$s 相关的日志...",

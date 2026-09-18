@@ -98,6 +98,7 @@
   "command.buy.not_for_sale": "This item is not for sale.",
   "command.buy.success": "Bought %sx %s for %s",
   "command.buy.insufficient_funds": "Insufficient funds! Cost: %s",
+  "command.buy.no_space": "You do not have enough inventory space.",
   
   "command.log.invalid_unit": "&cInvalid time unit. Use s, m, h, or d.",
   "command.log.searching": "Searching logs for %s in the last %s%s...",

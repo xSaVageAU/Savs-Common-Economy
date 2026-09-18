@@ -16,6 +16,7 @@ import net.minecraft.world.item.Items;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
+import savage.commoneconomy.core.inventory.InventorySpace;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -254,6 +255,11 @@ public class SellCommands {
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.buy.not_for_sale"));
+            return 0;
+        }
+
+        if (InventorySpace.getAvailableSpace(player, new ItemStack(item)) < amount) {
+            context.getSource().sendFailure(TranslationHelper.translate("command.buy.no_space"));
             return 0;
         }
 
