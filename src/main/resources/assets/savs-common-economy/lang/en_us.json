@@ -12,7 +12,7 @@
   "shop.transaction.shop_inventory_error": "&cTransaction failed! Shop inventory error.",
   "shop.transaction.owner_out_of_funds": "&cShop owner is out of funds!",
   "shop.transaction.refund_failed": "&cTransaction failed and your refund could not be completed. Please contact an admin.",
-  "shop.transaction.owner_payment_failed": "&cA shop sale of %s could not be credited to your account. Please contact an admin.",
+  "shop.transaction.payment_not_credited": "&cA shop payment of %s could not be credited to your account. Please contact an admin.",
   
   "shop.protect.chest": "&cThis chest is protected by a shop! Only the owner can open it.",
   "shop.remove.success": "&aShop removed!",

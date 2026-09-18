@@ -94,7 +94,7 @@ public class ShopTransactionHandler {
 
                 ServerPlayer owner = world.getServer().getPlayerList().getPlayer(shop.getOwnerId());
                 if (owner != null) {
-                    owner.sendSystemMessage(TranslationHelper.translate("shop.transaction.owner_payment_failed", EconomyService.get().format(amount)));
+                    owner.sendSystemMessage(TranslationHelper.translate("shop.transaction.payment_not_credited", EconomyService.get().format(amount)));
                 }
             });
         });
@@ -179,7 +179,7 @@ public class ShopTransactionHandler {
         // 2. Asynchronous Owner Balance Check (If not admin)
         if (shop.isAdmin()) {
             if (finalizeSale(player, shop, world, amount)) {
-                EconomyService.get().addBalance(player.getUUID(), totalPayout);
+                paySeller(player, shop, world, totalPayout);
                 Component itemComp = shop.getItem().getHoverName();
                 player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemComp, EconomyService.get().format(totalPayout)));
             }
@@ -190,7 +190,7 @@ public class ShopTransactionHandler {
                     world.getServer().execute(() -> {
                         if (finalizeSale(player, shop, world, finalAmount)) {
                             // Pay the seller
-                            EconomyService.get().addBalance(player.getUUID(), finalPayout);
+                            paySeller(player, shop, world, finalPayout);
                             
                             Component sellItemComp = shop.getItem().getHoverName();
                             player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_success", finalAmount, sellItemComp, EconomyService.get().format(finalPayout)));
@@ -202,7 +202,7 @@ public class ShopTransactionHandler {
                             ShopManager.getInstance().save();
                         } else {
                             // Refund shop owner on failure
-                            EconomyService.get().addBalance(shop.getOwnerId(), finalPayout);
+                            refundShopOwner(player, shop, world, finalPayout);
                             player.sendSystemMessage(TranslationHelper.translate("shop.transaction.shop_inventory_error"));
                         }
                     });
@@ -211,6 +211,46 @@ public class ShopTransactionHandler {
                 }
             });
         }
+    }
+
+    /**
+     * Pays a player who sold items to a shop. The shop already has the items, so if the deposit fails
+     * the seller is owed the money: log what an admin needs to repair it and tell the seller.
+     */
+    private static void paySeller(ServerPlayer seller, Shop shop, ServerLevel world, BigDecimal amount) {
+        EconomyService.get().addBalance(seller.getUUID(), amount).thenAccept(paid -> {
+            if (paid) return;
+
+            world.getServer().execute(() -> {
+                String sellerName = seller.getName().getString();
+                String payerName = shop.isAdmin() ? "Shop" : shop.getOwnerName();
+                SavsCommonEconomy.LOGGER.error("Shop sale by {} ({}) for {} completed but paying the seller failed; the seller is owed this amount.",
+                        sellerName, seller.getUUID(), amount.toPlainString());
+                TransactionLogger.log("TRANSFER_FAILED", payerName, sellerName, amount, "Seller deposit failed so seller is owed this amount");
+                seller.sendSystemMessage(TranslationHelper.translate("shop.transaction.payment_not_credited", EconomyService.get().format(amount)));
+            });
+        });
+    }
+
+    /**
+     * Returns the shop owner's money after the item transfer failed. The seller is already told the transaction
+     * failed; if the refund itself fails the owner is owed the money, so log what an admin needs to repair it.
+     */
+    private static void refundShopOwner(ServerPlayer seller, Shop shop, ServerLevel world, BigDecimal amount) {
+        EconomyService.get().addBalance(shop.getOwnerId(), amount).thenAccept(refunded -> {
+            if (refunded) return;
+
+            world.getServer().execute(() -> {
+                SavsCommonEconomy.LOGGER.error("Shop sale by {} ({}) failed and refunding {} to owner {} ({}) also failed; the owner is owed this amount.",
+                        seller.getName().getString(), seller.getUUID(), amount.toPlainString(), shop.getOwnerName(), shop.getOwnerId());
+                TransactionLogger.log("TRANSFER_FAILED", "Shop", shop.getOwnerName(), amount, "Shop refund failed so owner is owed this amount");
+
+                ServerPlayer owner = world.getServer().getPlayerList().getPlayer(shop.getOwnerId());
+                if (owner != null) {
+                    owner.sendSystemMessage(TranslationHelper.translate("shop.transaction.refund_failed"));
+                }
+            });
+        });
     }
 
     private static boolean finalizeSale(ServerPlayer player, Shop shop, net.minecraft.server.level.ServerLevel world,
