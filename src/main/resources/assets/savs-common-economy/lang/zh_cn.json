@@ -84,6 +84,8 @@
   
   "command.sell.not_holding": "你手中没有持有任何物品。",
   "command.sell.cannot_be_sold": "此物品无法出售。",
+  "command.sell.protected_item": "该物品包含内容物或自定义数据，无法出售。",
+  "command.sell.skipped_protected": "已跳过 %s 组包含内容物或自定义数据的物品。",
   "command.sell.worth_hand": "手中持有 %1$s 个 %2$s 的价值: %3$s（每个 %4$s）",
   "command.sell.worth_all": "背包中所有 %1$s 个 %2$s 的价值: %3$s",
   "command.sell.worth_none": "未配置任何物品的价值。",

@@ -84,6 +84,8 @@
   
   "command.sell.not_holding": "You are not holding any item.",
   "command.sell.cannot_be_sold": "This item cannot be sold.",
+  "command.sell.protected_item": "This item holds contents or custom data and cannot be sold.",
+  "command.sell.skipped_protected": "Skipped %s stack(s) that hold contents or custom data.",
   "command.sell.worth_hand": "Worth of %sx %s: %s (%s each)",
   "command.sell.worth_all": "Worth of all %sx %s in inventory: %s",
   "command.sell.worth_none": "No items have a configured worth.",

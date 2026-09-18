@@ -7,12 +7,15 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.BundleContents;
+import net.minecraft.world.item.component.ItemContainerContents;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
@@ -75,6 +78,11 @@ public class SellCommands {
             return 0;
         }
 
+        if (isProtected(stack)) {
+            context.getSource().sendFailure(TranslationHelper.translate("command.sell.protected_item"));
+            return 0;
+        }
+
         BigDecimal stackValue = price.multiply(BigDecimal.valueOf(stack.getCount()));
         context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_hand", stack.getCount(), itemId, EconomyService.get().format(stackValue), EconomyService.get().format(price)), false);
         return 1;
@@ -97,10 +105,15 @@ public class SellCommands {
             return 0;
         }
 
+        if (isProtected(handStack)) {
+            context.getSource().sendFailure(TranslationHelper.translate("command.sell.protected_item"));
+            return 0;
+        }
+
         int totalCount = 0;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (!stack.isEmpty() && stack.getItem() == handStack.getItem()) {
+            if (!stack.isEmpty() && stack.getItem() == handStack.getItem() && !isProtected(stack)) {
                 totalCount += stack.getCount();
             }
         }
@@ -170,6 +183,11 @@ public class SellCommands {
             return 0;
         }
 
+        if (isProtected(stack)) {
+            context.getSource().sendFailure(TranslationHelper.translate("command.sell.protected_item"));
+            return 0;
+        }
+
         // Take the items now, on the main thread, so the player is paid for exactly what was removed
         // and cannot move or drop them while the payment is in flight.
         int count = stack.getCount();
@@ -211,14 +229,24 @@ public class SellCommands {
             return 0;
         }
 
+        if (isProtected(handStack)) {
+            context.getSource().sendFailure(TranslationHelper.translate("command.sell.protected_item"));
+            return 0;
+        }
+
         // Take every matching stack now, on the main thread, so the player is paid for exactly what was
         // removed and anything picked up or dropped while the payment is in flight is not affected.
         Item soldItem = handStack.getItem();
         List<ItemStack> taken = new ArrayList<>();
         int totalCount = 0;
+        int skippedProtected = 0;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (!stack.isEmpty() && stack.getItem() == soldItem) {
+                if (isProtected(stack)) {
+                    skippedProtected++;
+                    continue;
+                }
                 taken.add(stack.copy());
                 totalCount += stack.getCount();
                 player.getInventory().setItem(i, ItemStack.EMPTY);
@@ -229,6 +257,7 @@ public class SellCommands {
 
         BigDecimal totalValue = price.multiply(BigDecimal.valueOf(totalCount));
         int finalCount = totalCount;
+        int finalSkipped = skippedProtected;
         var server = context.getSource().getServer();
         EconomyService.get().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
             // Must modify inventory on the main server thread
@@ -236,6 +265,9 @@ public class SellCommands {
                 if (success) {
                     context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_all", finalCount, itemId, EconomyService.get().format(totalValue)), false);
                     TransactionLogger.log("SELL_ALL", player.getName().getString(), "Server", totalValue, "Sold all " + finalCount + "x " + itemId);
+                    if (finalSkipped > 0) {
+                        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.skipped_protected", finalSkipped), false);
+                    }
                 } else {
                     giveBack(player, taken);
                     context.getSource().sendFailure(TranslationHelper.translate("command.sell.transaction_failed"));
@@ -244,6 +276,20 @@ public class SellCommands {
         });
 
         return 1;
+    }
+
+    /**
+     * Stacks that hold contents or custom data are never sold, because selling would destroy what they hold:
+     * shulker boxes and bundles with items inside, and bank notes and other custom-data items.
+     */
+    private static boolean isProtected(ItemStack stack) {
+        if (stack.has(DataComponents.CUSTOM_DATA)) return true;
+
+        ItemContainerContents container = stack.get(DataComponents.CONTAINER);
+        if (container != null && container.nonEmptyItems().iterator().hasNext()) return true;
+
+        BundleContents bundle = stack.get(DataComponents.BUNDLE_CONTENTS);
+        return bundle != null && !bundle.isEmpty();
     }
 
     /**
