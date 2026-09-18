@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
+import savage.commoneconomy.core.inventory.InventorySpace;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -142,7 +143,7 @@ public class ShopInteractionManager {
                         java.math.BigDecimal balance = EconomyService.get().getCachedBalance(sender.getUUID());
                         int canAfford = balance.divideToIntegralValue(shop.getPrice()).intValue();
                         int shopHas = ShopStockCalculator.calculateStock((ServerLevel)sender.level(), shop);
-                        int playerCanFit = ShopTransactionHandler.getAvailableSpace(sender, shop.getItem());
+                        int playerCanFit = InventorySpace.getAvailableSpace(sender, shop.getItem());
                         amount = Math.min(Math.min(canAfford, shopHas), playerCanFit);
                         if (amount > 2304) amount = 2304;
                     }

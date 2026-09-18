@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
+import savage.commoneconomy.core.inventory.InventorySpace;
 import savage.commoneconomy.core.log.TransactionLogger;
 
 import java.math.BigDecimal;
@@ -25,7 +26,7 @@ public class ShopTransactionHandler {
         if (amount <= 0) {
             if (!shop.isAdmin() && !shop.canSell(1)) {
                 player.sendSystemMessage(TranslationHelper.translate("shop.transaction.out_of_stock"));
-            } else if (getAvailableSpace(player, shop.getItem()) == 0) {
+            } else if (InventorySpace.getAvailableSpace(player, shop.getItem()) == 0) {
                 player.sendSystemMessage(TranslationHelper.translate("shop.transaction.no_space"));
             } else {
                 player.sendSystemMessage(TranslationHelper.translate("shop.transaction.insufficient_funds"));
@@ -42,7 +43,7 @@ public class ShopTransactionHandler {
             return;
         }
 
-        int availableSpace = getAvailableSpace(player, shop.getItem());
+        int availableSpace = InventorySpace.getAvailableSpace(player, shop.getItem());
         if (availableSpace < amount) {
             player.sendSystemMessage(TranslationHelper.translate("shop.transaction.no_space"));
             return;
@@ -349,18 +350,5 @@ public class ShopTransactionHandler {
             }
         }
         return stack.isEmpty();
-    }
-
-    public static int getAvailableSpace(ServerPlayer player, ItemStack template) {
-        int space = 0;
-        for (int i = 0; i < 36; i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (stack.isEmpty()) {
-                space += template.getMaxStackSize();
-            } else if (ItemStack.isSameItemSameComponents(stack, template)) {
-                space += Math.max(0, stack.getMaxStackSize() - stack.getCount());
-            }
-        }
-        return space;
     }
 }
