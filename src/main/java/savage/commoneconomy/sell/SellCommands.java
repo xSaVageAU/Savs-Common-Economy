@@ -16,9 +16,12 @@ import net.minecraft.world.item.Items;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
+import savage.commoneconomy.core.log.TransactionLogger;
 import savage.commoneconomy.core.inventory.InventorySpace;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -167,21 +170,25 @@ public class SellCommands {
             return 0;
         }
 
+        // Take the items now, on the main thread, so the player is paid for exactly what was removed
+        // and cannot move or drop them while the payment is in flight.
         int count = stack.getCount();
+        ItemStack taken = stack.copy();
+        stack.shrink(count);
         BigDecimal totalValue = price.multiply(BigDecimal.valueOf(count));
 
-        var server1 = context.getSource().getServer();
+        var server = context.getSource().getServer();
         EconomyService.get().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
-            if (success) {
-                // Must modify inventory on the main server thread
-                server1.execute(() -> {
-                    player.getInventory().removeItem(stack); // In 26.1 use removeItem or set to Empty
+            // Must modify inventory on the main server thread
+            server.execute(() -> {
+                if (success) {
                     context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_hand", count, itemId, EconomyService.get().format(totalValue)), false);
-                    savage.commoneconomy.core.log.TransactionLogger.log("SELL", player.getName().getString(), "Server", totalValue, "Sold " + count + "x " + itemId);
-                });
-            } else {
-                context.getSource().sendFailure(TranslationHelper.translate("command.sell.transaction_failed"));
-            }
+                    TransactionLogger.log("SELL", player.getName().getString(), "Server", totalValue, "Sold " + count + "x " + itemId);
+                } else {
+                    giveBack(player, List.of(taken));
+                    context.getSource().sendFailure(TranslationHelper.translate("command.sell.transaction_failed"));
+                }
+            });
         });
 
         return 1;
@@ -204,11 +211,17 @@ public class SellCommands {
             return 0;
         }
 
+        // Take every matching stack now, on the main thread, so the player is paid for exactly what was
+        // removed and anything picked up or dropped while the payment is in flight is not affected.
+        Item soldItem = handStack.getItem();
+        List<ItemStack> taken = new ArrayList<>();
         int totalCount = 0;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (!stack.isEmpty() && stack.getItem() == handStack.getItem()) {
+            if (!stack.isEmpty() && stack.getItem() == soldItem) {
+                taken.add(stack.copy());
                 totalCount += stack.getCount();
+                player.getInventory().setItem(i, ItemStack.EMPTY);
             }
         }
 
@@ -216,26 +229,33 @@ public class SellCommands {
 
         BigDecimal totalValue = price.multiply(BigDecimal.valueOf(totalCount));
         int finalCount = totalCount;
-        var server2 = context.getSource().getServer();
+        var server = context.getSource().getServer();
         EconomyService.get().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
-            if (success) {
-                // Must modify inventory on the main server thread
-                server2.execute(() -> {
-                    for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                        ItemStack stack = player.getInventory().getItem(i);
-                        if (!stack.isEmpty() && stack.getItem() == handStack.getItem()) {
-                            player.getInventory().setItem(i, ItemStack.EMPTY);
-                        }
-                    }
+            // Must modify inventory on the main server thread
+            server.execute(() -> {
+                if (success) {
                     context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_all", finalCount, itemId, EconomyService.get().format(totalValue)), false);
-                    savage.commoneconomy.core.log.TransactionLogger.log("SELL_ALL", player.getName().getString(), "Server", totalValue, "Sold all " + finalCount + "x " + itemId);
-                });
-            } else {
-                context.getSource().sendFailure(TranslationHelper.translate("command.sell.transaction_failed"));
-            }
+                    TransactionLogger.log("SELL_ALL", player.getName().getString(), "Server", totalValue, "Sold all " + finalCount + "x " + itemId);
+                } else {
+                    giveBack(player, taken);
+                    context.getSource().sendFailure(TranslationHelper.translate("command.sell.transaction_failed"));
+                }
+            });
         });
 
         return 1;
+    }
+
+    /**
+     * Returns items that were taken for a sale whose payment failed. They go into the first free slots,
+     * and anything that does not fit is dropped at the player's feet.
+     */
+    private static void giveBack(ServerPlayer player, List<ItemStack> items) {
+        for (ItemStack item : items) {
+            if (!player.getInventory().add(item)) {
+                player.drop(item, false, Prediction.SERVER_ONLY);
+            }
+        }
     }
 
     private static int buyItem(CommandContext<CommandSourceStack> context, int amount) throws CommandSyntaxException {
