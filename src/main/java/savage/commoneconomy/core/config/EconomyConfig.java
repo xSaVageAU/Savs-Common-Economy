@@ -15,6 +15,7 @@ public class EconomyConfig {
     public boolean symbolBeforeAmount = true;
     public boolean enableSellCommands = false;
     public boolean enableChestShops = true;
+    public boolean enableBankNotes = true;
     
     // --- Storage Settings ---
     public StorageConfig storage = new StorageConfig();

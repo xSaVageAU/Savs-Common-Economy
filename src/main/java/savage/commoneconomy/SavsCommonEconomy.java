@@ -1,47 +1,64 @@
 package savage.commoneconomy;
 
+import eu.pb4.common.economy.api.CommonEconomy;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import savage.commoneconomy.banknote.BankNoteCommands;
+import savage.commoneconomy.banknote.BankNoteFeature;
 import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.api.SavsEconomyProvider;
 import savage.commoneconomy.core.command.AdminEconomyCommands;
 import savage.commoneconomy.core.command.EconomyCommands;
 import savage.commoneconomy.core.config.ConfigManager;
-import savage.commoneconomy.shop.ShopCommands;
-import savage.commoneconomy.shop.ShopInteractionManager;
-import savage.commoneconomy.shop.ShopManager;
-import savage.commoneconomy.core.log.TransactionLogger;
+import savage.commoneconomy.core.feature.Feature;
 import savage.commoneconomy.core.i18n.TranslationHelper;
+import savage.commoneconomy.core.log.LogCommand;
+import savage.commoneconomy.core.log.TransactionLogger;
+import savage.commoneconomy.sell.SellFeature;
+import savage.commoneconomy.shop.ShopFeature;
+
+import java.util.List;
 
 public class SavsCommonEconomy implements ModInitializer {
 	public static final String MOD_ID = "savs-common-economy";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static net.minecraft.server.MinecraftServer server;
+	public static MinecraftServer server;
 
-	public static net.minecraft.server.MinecraftServer getServer() {
+	private static final List<Feature> FEATURES = List.of(
+			new BankNoteFeature(),
+			new SellFeature(),
+			new ShopFeature()
+	);
+
+	public static MinecraftServer getServer() {
 		return server;
 	}
 
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Savs Common Economy is initializing for Minecraft 26.3 (Stable)...");
-		
+
 		// Load Configuration
 		ConfigManager.load();
 		TranslationHelper.initialize();
+
+		for (Feature feature : FEATURES) {
+			LOGGER.info("Feature '{}': {}", feature.id(), feature.isEnabled() ? "enabled" : "disabled");
+		}
 
 		// Register Commands
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			EconomyCommands.register(dispatcher);
 			AdminEconomyCommands.register(dispatcher);
-			savage.commoneconomy.core.log.LogCommand.register(dispatcher);
-				BankNoteCommands.register(dispatcher);
-			savage.commoneconomy.sell.SellCommands.register(dispatcher);
-			if (ConfigManager.getConfig().enableChestShops) {
-				ShopCommands.register(dispatcher);
+			LogCommand.register(dispatcher);
+			for (Feature feature : FEATURES) {
+				if (feature.isEnabled()) {
+					feature.registerCommands(dispatcher);
+				}
 			}
 		});
 
@@ -51,25 +68,29 @@ public class SavsCommonEconomy implements ModInitializer {
 		});
 
 		// Register Shutdown Hook
-		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			LOGGER.info("Savs Common Economy is shutting down...");
 			EconomyManager.getInstance().shutdown();
 			TransactionLogger.shutdown();
 		});
 
-		// Listeners
-		savage.commoneconomy.banknote.BankNoteListener.register();
-		
-		// Register API Provider
-		eu.pb4.common.economy.api.CommonEconomy.register("savs_common_economy", savage.commoneconomy.core.api.SavsEconomyProvider.INSTANCE);
+		// Feature listeners
+		for (Feature feature : FEATURES) {
+			if (feature.isEnabled()) {
+				feature.onInitialize();
+			}
+		}
 
-		// Initialize Shop System on Server Start (only if enabled)
-		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+		// Register API Provider
+		CommonEconomy.register("savs_common_economy", SavsEconomyProvider.INSTANCE);
+
+		// Feature startup on server start (only enabled features)
+		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			SavsCommonEconomy.server = server;
-			if (ConfigManager.getConfig().enableChestShops) {
-				ShopManager.getInstance().setServer(server);
-				ShopManager.getInstance().load();
-				ShopInteractionManager.getInstance().register();
+			for (Feature feature : FEATURES) {
+				if (feature.isEnabled()) {
+					feature.onServerStarting(server);
+				}
 			}
 		});
 	}

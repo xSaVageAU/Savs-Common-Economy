@@ -14,7 +14,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import savage.commoneconomy.core.EconomyService;
-import savage.commoneconomy.core.config.ConfigManager;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
@@ -27,7 +26,6 @@ import java.util.Map;
 public class SellCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        if (!ConfigManager.getConfig().enableSellCommands) return;
 
         // /worth
         dispatcher.register(Commands.literal("worth")
