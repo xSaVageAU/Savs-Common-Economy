@@ -2,13 +2,16 @@ package savage.commoneconomy.shop;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
+import savage.commoneconomy.core.log.TransactionLogger;
 
 import java.math.BigDecimal;
 
@@ -53,7 +56,7 @@ public class ShopTransactionHandler {
                     if (finalizePurchase(player, shop, world, amount)) {
                         // Success! Pay the shop owner (if not admin)
                         if (!shop.isAdmin()) {
-                            EconomyService.get().addBalance(shop.getOwnerId(), totalCost);
+                            payShopOwner(player, shop, world, totalCost);
                         }
                         Component itemComp = shop.getItem().getHoverName();
                         player.sendSystemMessage(TranslationHelper.translate("shop.transaction.buy_success", amount, itemComp, EconomyService.get().format(totalCost)));
@@ -65,13 +68,53 @@ public class ShopTransactionHandler {
                         ShopManager.getInstance().save();
                     } else {
                         // Refund on failure
-                        EconomyService.get().addBalance(player.getUUID(), totalCost);
+                        refundBuyer(player, world, totalCost);
                         player.sendSystemMessage(TranslationHelper.translate("shop.transaction.item_transfer_error"));
                     }
                 });
             } else {
                 player.sendSystemMessage(TranslationHelper.translate("shop.transaction.insufficient_funds_detail", EconomyService.get().format(totalCost)));
             }
+        });
+    }
+
+    /**
+     * Pays the shop owner after a completed purchase. The buyer already has the items, so if the
+     * deposit fails the owner is owed the money: log what an admin needs to repair it and tell the owner if online.
+     */
+    private static void payShopOwner(ServerPlayer buyer, Shop shop, ServerLevel world, BigDecimal amount) {
+        EconomyService.get().addBalance(shop.getOwnerId(), amount).thenAccept(paid -> {
+            if (paid) return;
+
+            world.getServer().execute(() -> {
+                String buyerName = buyer.getName().getString();
+                SavsCommonEconomy.LOGGER.error("Shop purchase by {} ({}) for {} completed but paying owner {} ({}) failed; the owner is owed this amount.",
+                        buyerName, buyer.getUUID(), amount.toPlainString(), shop.getOwnerName(), shop.getOwnerId());
+                TransactionLogger.log("TRANSFER_FAILED", buyerName, shop.getOwnerName(), amount, "Shop owner deposit failed so owner is owed this amount");
+
+                ServerPlayer owner = world.getServer().getPlayerList().getPlayer(shop.getOwnerId());
+                if (owner != null) {
+                    owner.sendSystemMessage(TranslationHelper.translate("shop.transaction.owner_payment_failed", EconomyService.get().format(amount)));
+                }
+            });
+        });
+    }
+
+    /**
+     * Returns the buyer's money after the item transfer failed. The buyer is already told the transaction
+     * failed; if the refund itself fails they are owed the money, so log what an admin needs to repair it.
+     */
+    private static void refundBuyer(ServerPlayer buyer, ServerLevel world, BigDecimal amount) {
+        EconomyService.get().addBalance(buyer.getUUID(), amount).thenAccept(refunded -> {
+            if (refunded) return;
+
+            world.getServer().execute(() -> {
+                String buyerName = buyer.getName().getString();
+                SavsCommonEconomy.LOGGER.error("Shop purchase by {} ({}) failed and refunding {} also failed; the buyer is owed this amount.",
+                        buyerName, buyer.getUUID(), amount.toPlainString());
+                TransactionLogger.log("TRANSFER_FAILED", "Shop", buyerName, amount, "Shop refund failed so buyer is owed this amount");
+                buyer.sendSystemMessage(TranslationHelper.translate("shop.transaction.refund_failed"));
+            });
         });
     }
 

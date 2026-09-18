@@ -11,6 +11,8 @@
   "shop.transaction.sell_success": "&a成功以 %3$s 出售了 %1$sx %2$s",
   "shop.transaction.shop_inventory_error": "&c交易失败！商店仓库错误。",
   "shop.transaction.owner_out_of_funds": "&c商店主资金不足！",
+  "shop.transaction.refund_failed": "&c交易失败，且退款未能完成。请联系管理员。",
+  "shop.transaction.owner_payment_failed": "&c你的商店出售 %s 的款项未能入账。请联系管理员。",
   
   "shop.protect.chest": "&c该箱子受商店保护！只有店主可以打开它。",
   "shop.remove.success": "&a商店已移除！",
