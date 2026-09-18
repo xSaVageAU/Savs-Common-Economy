@@ -5,14 +5,15 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import savage.commoneconomy.command.AdminEconomyCommands;
-import savage.commoneconomy.command.EconomyCommands;
-import savage.commoneconomy.config.ConfigManager;
+import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.command.AdminEconomyCommands;
+import savage.commoneconomy.core.command.EconomyCommands;
+import savage.commoneconomy.core.config.ConfigManager;
 import savage.commoneconomy.shop.ShopCommands;
 import savage.commoneconomy.shop.ShopInteractionManager;
 import savage.commoneconomy.shop.ShopManager;
-import savage.commoneconomy.util.TransactionLogger;
-import savage.commoneconomy.util.TranslationHelper;
+import savage.commoneconomy.core.log.TransactionLogger;
+import savage.commoneconomy.core.i18n.TranslationHelper;
 
 public class SavsCommonEconomy implements ModInitializer {
 	public static final String MOD_ID = "savs-common-economy";
@@ -35,8 +36,8 @@ public class SavsCommonEconomy implements ModInitializer {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			EconomyCommands.register(dispatcher);
 			AdminEconomyCommands.register(dispatcher);
-			savage.commoneconomy.command.LogCommand.register(dispatcher);
-			savage.commoneconomy.command.SellCommands.register(dispatcher);
+			savage.commoneconomy.core.log.LogCommand.register(dispatcher);
+			savage.commoneconomy.sell.SellCommands.register(dispatcher);
 			if (ConfigManager.getConfig().enableChestShops) {
 				ShopCommands.register(dispatcher);
 			}
@@ -55,10 +56,10 @@ public class SavsCommonEconomy implements ModInitializer {
 		});
 
 		// Listeners
-		savage.commoneconomy.listener.BankNoteListener.register();
+		savage.commoneconomy.banknote.BankNoteListener.register();
 		
 		// Register API Provider
-		eu.pb4.common.economy.api.CommonEconomy.register("savs_common_economy", savage.commoneconomy.integration.SavsEconomyProvider.INSTANCE);
+		eu.pb4.common.economy.api.CommonEconomy.register("savs_common_economy", savage.commoneconomy.core.api.SavsEconomyProvider.INSTANCE);
 
 		// Initialize Shop System on Server Start (only if enabled)
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(server -> {

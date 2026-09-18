@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.WallSignBlock;
-import savage.commoneconomy.util.TranslationHelper;
+import savage.commoneconomy.core.i18n.TranslationHelper;
 
 /**
  * Helper for shop sign operations.
@@ -29,7 +29,7 @@ public class ShopSignHelper {
             // breaking localization for any item with a long English name.
             Component itemComponent = shop.getItem().getHoverName();
 
-            String priceText = savage.commoneconomy.EconomyManager.getInstance().format(shop.getPrice());
+            String priceText = savage.commoneconomy.core.EconomyManager.getInstance().format(shop.getPrice());
             int stock = ShopStockCalculator.calculateStock(world, shop);
             
             Component stockComponent;

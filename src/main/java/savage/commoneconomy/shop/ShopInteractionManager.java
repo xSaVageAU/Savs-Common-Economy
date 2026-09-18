@@ -12,8 +12,8 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
-import savage.commoneconomy.EconomyManager;
-import savage.commoneconomy.util.TranslationHelper;
+import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.i18n.TranslationHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,7 @@ public class ShopInteractionManager {
                 Shop shop = ShopManager.getInstance().getShop(pos);
                 if (shop != null) {
                     boolean isOwner = shop.getOwnerId().equals(serverPlayer.getUUID());
-                    boolean isAdmin = savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
+                    boolean isAdmin = savage.commoneconomy.core.permissions.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
                     
                     if (!isOwner && !isAdmin) {
                         serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.protect.chest"));
@@ -63,7 +63,7 @@ public class ShopInteractionManager {
                 if (shop != null) {
                     // Remove mode check
                     if (ShopCommands.isInRemoveMode(serverPlayer.getUUID())) {
-                        if (shop.getOwnerId().equals(serverPlayer.getUUID()) || savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2)) {
+                        if (shop.getOwnerId().equals(serverPlayer.getUUID()) || savage.commoneconomy.core.permissions.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2)) {
                             ShopManager.getInstance().removeShop(chestPos);
                             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
                             serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.remove.success"));
@@ -172,7 +172,7 @@ public class ShopInteractionManager {
 
                 if (shop != null) {
                     boolean isOwner = shop.getOwnerId().equals(serverPlayer.getUUID());
-                    boolean isAdmin = savage.commoneconomy.util.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
+                    boolean isAdmin = savage.commoneconomy.core.permissions.PermissionsHelper.check(serverPlayer, "savscommoneconomy.admin", 2);
 
                     if (isOwner || isAdmin) {
                         ShopManager.getInstance().removeShop(chestPos);

@@ -13,9 +13,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import savage.commoneconomy.EconomyManager;
-import savage.commoneconomy.util.PermissionsHelper;
-import savage.commoneconomy.util.TranslationHelper;
+import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.permissions.PermissionsHelper;
+import savage.commoneconomy.core.i18n.TranslationHelper;
 
 import java.math.BigDecimal;
 import java.util.Collection;

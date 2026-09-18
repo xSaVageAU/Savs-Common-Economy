@@ -7,8 +7,8 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import savage.commoneconomy.EconomyManager;
-import savage.commoneconomy.util.TranslationHelper;
+import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.i18n.TranslationHelper;
 
 import java.math.BigDecimal;
 
