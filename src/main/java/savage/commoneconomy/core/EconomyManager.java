@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * The central logic for the Savs Common Economy mod.
  * Handles caching, balance manipulation, and sync orchestration.
  */
-public class EconomyManager {
+public class EconomyManager implements EconomyService {
     // Holder pattern: lazy initialization + thread-safe (JVM guarantees atomic class loading)
     private static class Holder {
         static final EconomyManager INSTANCE = new EconomyManager();
@@ -87,6 +87,7 @@ public class EconomyManager {
      * Returns default balance if no cached entry exists.
      * Safe to call from the server thread without blocking.
      */
+    @Override
     public BigDecimal getCachedBalance(UUID uuid) {
         AccountData data = accountCache.getIfPresent(uuid);
         if (data != null) {
@@ -99,6 +100,7 @@ public class EconomyManager {
      * Adds balance to a player's account asynchronously with optimistic locking.
      * @return CompletableFuture completing with true if successful.
      */
+    @Override
     public CompletableFuture<Boolean> addBalance(UUID uuid, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) return CompletableFuture.completedFuture(false);
         return retryBalanceUpdate(uuid, amount, true, 5);
@@ -108,6 +110,7 @@ public class EconomyManager {
      * Removes balance from a player's account asynchronously with optimistic locking.
      * @return CompletableFuture completing with true if successful.
      */
+    @Override
     public CompletableFuture<Boolean> removeBalance(UUID uuid, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) return CompletableFuture.completedFuture(false);
         return retryBalanceUpdate(uuid, amount, false, 5);
@@ -230,6 +233,7 @@ public class EconomyManager {
     /**
      * Formats a balance with the configured currency symbol.
      */
+    @Override
     public String format(BigDecimal balance) {
         DecimalFormat df = new DecimalFormat("#,##0.00");
         var config = ConfigManager.getConfig();

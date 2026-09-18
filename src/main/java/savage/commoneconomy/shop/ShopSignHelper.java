@@ -1,5 +1,6 @@
 package savage.commoneconomy.shop;
 
+import savage.commoneconomy.core.EconomyService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -29,7 +30,7 @@ public class ShopSignHelper {
             // breaking localization for any item with a long English name.
             Component itemComponent = shop.getItem().getHoverName();
 
-            String priceText = savage.commoneconomy.core.EconomyManager.getInstance().format(shop.getPrice());
+            String priceText = EconomyService.get().format(shop.getPrice());
             int stock = ShopStockCalculator.calculateStock(world, shop);
             
             Component stockComponent;

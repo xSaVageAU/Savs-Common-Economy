@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
@@ -119,7 +119,7 @@ public class ShopCommands {
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.header"), false);
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.owner", shop.getOwnerName()), false);
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.item", shop.getItem().getHoverName()), false);
-        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.price", EconomyManager.getInstance().format(shop.getPrice())), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.price", EconomyService.get().format(shop.getPrice())), false);
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.type",
                 TranslationHelper.translateString(shop.isBuying() ? "shop.action.verb_buy" : "shop.action.verb_sell")), false);
         context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.info.stock",

@@ -12,7 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
 import java.util.HashMap;
@@ -139,7 +139,7 @@ public class ShopInteractionManager {
                             return false;
                         }
 
-                        java.math.BigDecimal balance = EconomyManager.getInstance().getCachedBalance(sender.getUUID());
+                        java.math.BigDecimal balance = EconomyService.get().getCachedBalance(sender.getUUID());
                         int canAfford = balance.divideToIntegralValue(shop.getPrice()).intValue();
                         int shopHas = ShopStockCalculator.calculateStock((ServerLevel)sender.level(), shop);
                         int playerCanFit = ShopTransactionHandler.getAvailableSpace(sender, shop.getItem());

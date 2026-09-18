@@ -13,7 +13,7 @@ import net.minecraft.util.Prediction;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.config.ConfigManager;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
@@ -74,7 +74,7 @@ public class SellCommands {
         }
 
         BigDecimal stackValue = price.multiply(BigDecimal.valueOf(stack.getCount()));
-        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_hand", stack.getCount(), itemId, EconomyManager.getInstance().format(stackValue), EconomyManager.getInstance().format(price)), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_hand", stack.getCount(), itemId, EconomyService.get().format(stackValue), EconomyService.get().format(price)), false);
         return 1;
     }
 
@@ -105,7 +105,7 @@ public class SellCommands {
 
         BigDecimal totalValue = price.multiply(BigDecimal.valueOf(totalCount));
         int finalTotalCount = totalCount;
-        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_all", finalTotalCount, itemId, EconomyManager.getInstance().format(totalValue)), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_all", finalTotalCount, itemId, EconomyService.get().format(totalValue)), false);
         return 1;
     }
 
@@ -127,8 +127,8 @@ public class SellCommands {
             BigDecimal sell = sellPrices.getOrDefault(item, BigDecimal.ZERO);
             BigDecimal buy = buyPrices.getOrDefault(item, BigDecimal.ZERO);
             
-            String sellStr = sell.compareTo(BigDecimal.ZERO) > 0 ? EconomyManager.getInstance().format(sell) : "N/A";
-            String buyStr = buy.compareTo(BigDecimal.ZERO) > 0 ? EconomyManager.getInstance().format(buy) : "N/A";
+            String sellStr = sell.compareTo(BigDecimal.ZERO) > 0 ? EconomyService.get().format(sell) : "N/A";
+            String buyStr = buy.compareTo(BigDecimal.ZERO) > 0 ? EconomyService.get().format(buy) : "N/A";
             
             String buyFormatted = buy.compareTo(BigDecimal.ZERO) > 0 ? "&a" + buyStr : "&c" + buyStr;
             String sellFormatted = sell.compareTo(BigDecimal.ZERO) > 0 ? "&a" + sellStr : "&c" + sellStr;
@@ -147,7 +147,7 @@ public class SellCommands {
             return 0;
         }
 
-        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_item", itemId, EconomyManager.getInstance().format(price)), false);
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.worth_item", itemId, EconomyService.get().format(price)), false);
         return 1;
     }
 
@@ -172,12 +172,12 @@ public class SellCommands {
         BigDecimal totalValue = price.multiply(BigDecimal.valueOf(count));
 
         var server1 = context.getSource().getServer();
-        EconomyManager.getInstance().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
+        EconomyService.get().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
             if (success) {
                 // Must modify inventory on the main server thread
                 server1.execute(() -> {
                     player.getInventory().removeItem(stack); // In 26.1 use removeItem or set to Empty
-                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_hand", count, itemId, EconomyManager.getInstance().format(totalValue)), false);
+                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_hand", count, itemId, EconomyService.get().format(totalValue)), false);
                     savage.commoneconomy.core.log.TransactionLogger.log("SELL", player.getName().getString(), "Server", totalValue, "Sold " + count + "x " + itemId);
                 });
             } else {
@@ -218,7 +218,7 @@ public class SellCommands {
         BigDecimal totalValue = price.multiply(BigDecimal.valueOf(totalCount));
         int finalCount = totalCount;
         var server2 = context.getSource().getServer();
-        EconomyManager.getInstance().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
+        EconomyService.get().addBalance(player.getUUID(), totalValue).thenAccept(success -> {
             if (success) {
                 // Must modify inventory on the main server thread
                 server2.execute(() -> {
@@ -228,7 +228,7 @@ public class SellCommands {
                             player.getInventory().setItem(i, ItemStack.EMPTY);
                         }
                     }
-                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_all", finalCount, itemId, EconomyManager.getInstance().format(totalValue)), false);
+                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.sell.sold_all", finalCount, itemId, EconomyService.get().format(totalValue)), false);
                     savage.commoneconomy.core.log.TransactionLogger.log("SELL_ALL", player.getName().getString(), "Server", totalValue, "Sold all " + finalCount + "x " + itemId);
                 });
             } else {
@@ -262,7 +262,7 @@ public class SellCommands {
         BigDecimal totalCost = price.multiply(BigDecimal.valueOf(amount));
 
         var server3 = context.getSource().getServer();
-        EconomyManager.getInstance().removeBalance(player.getUUID(), totalCost).thenAccept(success -> {
+        EconomyService.get().removeBalance(player.getUUID(), totalCost).thenAccept(success -> {
             if (success) {
                 // Must modify inventory on the main server thread
                 server3.execute(() -> {
@@ -270,11 +270,11 @@ public class SellCommands {
                     if (!player.getInventory().add(stack)) {
                         player.drop(stack, false, Prediction.SERVER_ONLY);
                     }
-                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.buy.success", amount, itemId, EconomyManager.getInstance().format(totalCost)), false);
+                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.buy.success", amount, itemId, EconomyService.get().format(totalCost)), false);
                     savage.commoneconomy.core.log.TransactionLogger.log("BUY", "Server", player.getName().getString(), totalCost, "Bought " + amount + "x " + itemId);
                 });
             } else {
-                context.getSource().sendFailure(TranslationHelper.translate("command.buy.insufficient_funds", EconomyManager.getInstance().format(totalCost)));
+                context.getSource().sendFailure(TranslationHelper.translate("command.buy.insufficient_funds", EconomyService.get().format(totalCost)));
             }
         });
 

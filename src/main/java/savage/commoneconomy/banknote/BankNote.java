@@ -5,7 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
 import java.math.BigDecimal;
@@ -31,7 +31,7 @@ public final class BankNote {
         note.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 
         note.set(DataComponents.CUSTOM_NAME,
-            TranslationHelper.translate("item.banknote.title", EconomyManager.getInstance().format(BigDecimal.valueOf(value))));
+            TranslationHelper.translate("item.banknote.title", EconomyService.get().format(BigDecimal.valueOf(value))));
         return note;
     }
 

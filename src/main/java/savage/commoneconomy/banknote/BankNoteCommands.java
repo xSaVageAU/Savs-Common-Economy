@@ -9,7 +9,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 import savage.commoneconomy.core.log.TransactionLogger;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
@@ -34,7 +34,7 @@ public class BankNoteCommands {
         BigDecimal amount = BigDecimal.valueOf(amountDouble);
 
         var server = context.getSource().getServer();
-        EconomyManager.getInstance().removeBalance(sender.getUUID(), amount).thenAccept(success -> {
+        EconomyService.get().removeBalance(sender.getUUID(), amount).thenAccept(success -> {
             if (success) {
                 // Must modify inventory on the main server thread
                 server.execute(() -> {
@@ -44,7 +44,7 @@ public class BankNoteCommands {
                         sender.drop(note, false, Prediction.SERVER_ONLY);
                     }
 
-                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.withdraw.success", EconomyManager.getInstance().format(amount)), false);
+                    context.getSource().sendSuccess(() -> TranslationHelper.translate("command.economy.withdraw.success", EconomyService.get().format(amount)), false);
                     TransactionLogger.log("WITHDRAW", sender.getName().getString(), "Bank Note", amount, "Withdrawal");
                 });
             } else {

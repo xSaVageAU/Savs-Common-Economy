@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.log.TransactionLogger;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
@@ -33,10 +33,10 @@ public class BankNoteListener {
                     stack.shrink(1);
 
                     var server = ((ServerLevel) world).getServer();
-                    EconomyManager.getInstance().addBalance(player.getUUID(), value).thenAccept(success -> {
+                    EconomyService.get().addBalance(player.getUUID(), value).thenAccept(success -> {
                         server.execute(() -> {
                             if (success) {
-                                player.sendSystemMessage(TranslationHelper.translate("listener.banknote.redeemed", EconomyManager.getInstance().format(value))
+                                player.sendSystemMessage(TranslationHelper.translate("listener.banknote.redeemed", EconomyService.get().format(value))
                                     .copy().withStyle(ChatFormatting.GREEN));
                                 TransactionLogger.log("DEPOSIT", "Bank Note", player.getName().getString(), value, "Redeemed Note");
                             } else {

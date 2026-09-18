@@ -7,7 +7,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
 import java.math.BigDecimal;
@@ -46,17 +46,17 @@ public class ShopTransactionHandler {
         }
 
         // 2. Asynchronous Fund Removal
-        EconomyManager.getInstance().removeBalance(player.getUUID(), totalCost).thenAccept(success -> {
+        EconomyService.get().removeBalance(player.getUUID(), totalCost).thenAccept(success -> {
             if (success) {
                 // 3. Finalize on Main Thread
                 world.getServer().execute(() -> {
                     if (finalizePurchase(player, shop, world, amount)) {
                         // Success! Pay the shop owner (if not admin)
                         if (!shop.isAdmin()) {
-                            EconomyManager.getInstance().addBalance(shop.getOwnerId(), totalCost);
+                            EconomyService.get().addBalance(shop.getOwnerId(), totalCost);
                         }
                         Component itemComp = shop.getItem().getHoverName();
-                        player.sendSystemMessage(TranslationHelper.translate("shop.transaction.buy_success", amount, itemComp, EconomyManager.getInstance().format(totalCost)));
+                        player.sendSystemMessage(TranslationHelper.translate("shop.transaction.buy_success", amount, itemComp, EconomyService.get().format(totalCost)));
 
                         BlockPos signPos = ShopSignHelper.findSignForChest(world, shop.getChestLocation());
                         if (signPos != null) {
@@ -65,12 +65,12 @@ public class ShopTransactionHandler {
                         ShopManager.getInstance().save();
                     } else {
                         // Refund on failure
-                        EconomyManager.getInstance().addBalance(player.getUUID(), totalCost);
+                        EconomyService.get().addBalance(player.getUUID(), totalCost);
                         player.sendSystemMessage(TranslationHelper.translate("shop.transaction.item_transfer_error"));
                     }
                 });
             } else {
-                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.insufficient_funds_detail", EconomyManager.getInstance().format(totalCost)));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.insufficient_funds_detail", EconomyService.get().format(totalCost)));
             }
         });
     }
@@ -136,21 +136,21 @@ public class ShopTransactionHandler {
         // 2. Asynchronous Owner Balance Check (If not admin)
         if (shop.isAdmin()) {
             if (finalizeSale(player, shop, world, amount)) {
-                EconomyManager.getInstance().addBalance(player.getUUID(), totalPayout);
+                EconomyService.get().addBalance(player.getUUID(), totalPayout);
                 Component itemComp = shop.getItem().getHoverName();
-                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemComp, EconomyManager.getInstance().format(totalPayout)));
+                player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_admin_success", amount, itemComp, EconomyService.get().format(totalPayout)));
             }
         } else {
             // Check if shop owner can afford it
-            EconomyManager.getInstance().removeBalance(shop.getOwnerId(), totalPayout).thenAccept(success -> {
+            EconomyService.get().removeBalance(shop.getOwnerId(), totalPayout).thenAccept(success -> {
                 if (success) {
                     world.getServer().execute(() -> {
                         if (finalizeSale(player, shop, world, finalAmount)) {
                             // Pay the seller
-                            EconomyManager.getInstance().addBalance(player.getUUID(), finalPayout);
+                            EconomyService.get().addBalance(player.getUUID(), finalPayout);
                             
                             Component sellItemComp = shop.getItem().getHoverName();
-                            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_success", finalAmount, sellItemComp, EconomyManager.getInstance().format(finalPayout)));
+                            player.sendSystemMessage(TranslationHelper.translate("shop.transaction.sell_success", finalAmount, sellItemComp, EconomyService.get().format(finalPayout)));
 
                             BlockPos signPos = ShopSignHelper.findSignForChest(world, shop.getChestLocation());
                             if (signPos != null) {
@@ -159,7 +159,7 @@ public class ShopTransactionHandler {
                             ShopManager.getInstance().save();
                         } else {
                             // Refund shop owner on failure
-                            EconomyManager.getInstance().addBalance(shop.getOwnerId(), finalPayout);
+                            EconomyService.get().addBalance(shop.getOwnerId(), finalPayout);
                             player.sendSystemMessage(TranslationHelper.translate("shop.transaction.shop_inventory_error"));
                         }
                     });
