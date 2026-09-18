@@ -14,6 +14,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.config.ConfigManager;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 
@@ -26,7 +27,7 @@ import java.util.Map;
 public class SellCommands {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        if (!EconomyManager.getInstance().isSellEnabled()) return;
+        if (!ConfigManager.getConfig().enableSellCommands) return;
 
         // /worth
         dispatcher.register(Commands.literal("worth")
@@ -65,7 +66,7 @@ public class SellCommands {
         }
 
         String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-        BigDecimal price = EconomyManager.getInstance().getSellPrice(itemId);
+        BigDecimal price = ItemWorth.getSellPrice(itemId);
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.sell.cannot_be_sold"));
@@ -87,7 +88,7 @@ public class SellCommands {
         }
 
         String itemId = BuiltInRegistries.ITEM.getKey(handStack.getItem()).toString();
-        BigDecimal price = EconomyManager.getInstance().getSellPrice(itemId);
+        BigDecimal price = ItemWorth.getSellPrice(itemId);
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.sell.cannot_be_sold"));
@@ -109,8 +110,8 @@ public class SellCommands {
     }
 
     private static int listWorth(CommandContext<CommandSourceStack> context) {
-        Map<String, BigDecimal> sellPrices = EconomyManager.getInstance().getAllSellPrices();
-        Map<String, BigDecimal> buyPrices = EconomyManager.getInstance().getAllBuyPrices();
+        Map<String, BigDecimal> sellPrices = ItemWorth.getAllSellPrices();
+        Map<String, BigDecimal> buyPrices = ItemWorth.getAllBuyPrices();
         
         java.util.Set<String> allItems = new java.util.TreeSet<>();
         allItems.addAll(sellPrices.keySet());
@@ -139,7 +140,7 @@ public class SellCommands {
 
     private static int checkItemWorth(CommandContext<CommandSourceStack> context) {
         String itemId = StringArgumentType.getString(context, "item");
-        BigDecimal price = EconomyManager.getInstance().getSellPrice(itemId);
+        BigDecimal price = ItemWorth.getSellPrice(itemId);
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.sell.worth_not_found", itemId));
@@ -160,7 +161,7 @@ public class SellCommands {
         }
 
         String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-        BigDecimal price = EconomyManager.getInstance().getSellPrice(itemId);
+        BigDecimal price = ItemWorth.getSellPrice(itemId);
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.sell.cannot_be_sold"));
@@ -197,7 +198,7 @@ public class SellCommands {
         }
 
         String itemId = BuiltInRegistries.ITEM.getKey(handStack.getItem()).toString();
-        BigDecimal price = EconomyManager.getInstance().getSellPrice(itemId);
+        BigDecimal price = ItemWorth.getSellPrice(itemId);
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.sell.cannot_be_sold"));
@@ -251,7 +252,7 @@ public class SellCommands {
         }
 
         String itemId = BuiltInRegistries.ITEM.getKey(item).toString();
-        BigDecimal price = EconomyManager.getInstance().getBuyPrice(itemId);
+        BigDecimal price = ItemWorth.getBuyPrice(itemId);
 
         if (price.compareTo(BigDecimal.ZERO) <= 0) {
             context.getSource().sendFailure(TranslationHelper.translate("command.buy.not_for_sale"));

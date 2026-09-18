@@ -249,26 +249,6 @@ public class EconomyManager {
         );
     }
 
-    public boolean isSellEnabled() {
-        return ConfigManager.getConfig().enableSellCommands;
-    }
-
-    public BigDecimal getSellPrice(String itemId) {
-        return ConfigManager.getWorth().sellPrices.getOrDefault(itemId, BigDecimal.ZERO);
-    }
-
-    public BigDecimal getBuyPrice(String itemId) {
-        return ConfigManager.getWorth().buyPrices.getOrDefault(itemId, BigDecimal.ZERO);
-    }
-
-    public Map<String, BigDecimal> getAllSellPrices() {
-        return Collections.unmodifiableMap(ConfigManager.getWorth().sellPrices);
-    }
-
-    public Map<String, BigDecimal> getAllBuyPrices() {
-        return Collections.unmodifiableMap(ConfigManager.getWorth().buyPrices);
-    }
-
     /**
      * Looks up a UUID by player name from the storage asynchronously.
      */
