@@ -16,7 +16,10 @@ import savage.commoneconomy.SavsCommonEconomy;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
@@ -114,12 +117,26 @@ public class ShopManager {
 
     public void save() {
         if (server == null) return;
-        try (FileWriter writer = new FileWriter(shopsFile)) {
+
+        // Write to a temporary file and move it into place, so a crash mid-write does not truncate shops.json
+        Path tempPath = shopsFile.toPath().resolveSibling(shopsFile.getName() + ".tmp");
+        try (FileWriter writer = new FileWriter(tempPath.toFile())) {
             List<ShopData> shopDataList = new ArrayList<>();
             for (Shop shop : shops.values()) {
                 shopDataList.add(new ShopData(shop, server));
             }
             gson.toJson(new ShopsContainer(shopDataList), writer);
+        } catch (IOException e) {
+            SavsCommonEconomy.LOGGER.error("Failed to save shops.json", e);
+            return;
+        }
+
+        try {
+            try {
+                Files.move(tempPath, shopsFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tempPath, shopsFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
             SavsCommonEconomy.LOGGER.error("Failed to save shops.json", e);
         }
@@ -128,6 +145,7 @@ public class ShopManager {
     public void load() {
         if (!shopsFile.exists() || server == null) return;
 
+        boolean hadProblems = false;
         try (FileReader reader = new FileReader(shopsFile)) {
             Type type = new TypeToken<ShopsContainer>() {}.getType();
             ShopsContainer container = gson.fromJson(reader, type);
@@ -141,12 +159,33 @@ public class ShopManager {
                         shops.put(shop.getChestLocation(), shop);
                         playerShops.computeIfAbsent(shop.getOwnerId(), k -> new HashSet<>()).add(shop.getChestLocation());
                     } catch (Exception e) {
+                        hadProblems = true;
                         SavsCommonEconomy.LOGGER.error("Failed to load a shop from shops.json", e);
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
+            // Not just IOException: Gson throws unchecked exceptions for a corrupt file, which would stop the server starting
+            hadProblems = true;
             SavsCommonEconomy.LOGGER.error("Failed to load shops.json", e);
+        }
+
+        if (hadProblems) {
+            backUpShopsFile();
+        }
+    }
+
+    /**
+     * Shops that failed to load are missing from memory, so the next save would drop them from shops.json.
+     * Keep a copy of the file as it was so they can be restored by hand.
+     */
+    private void backUpShopsFile() {
+        Path backup = shopsFile.toPath().resolveSibling(shopsFile.getName() + ".broken-" + System.currentTimeMillis());
+        try {
+            Files.copy(shopsFile.toPath(), backup);
+            SavsCommonEconomy.LOGGER.error("shops.json could not be loaded completely. A copy of the original was saved to {}; shops that failed to load are missing until restored from it.", backup);
+        } catch (IOException e) {
+            SavsCommonEconomy.LOGGER.error("Could not back up shops.json", e);
         }
     }
 
@@ -227,7 +266,8 @@ public class ShopManager {
                     RegistryOps<Tag> ops = server.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE);
                     itemStack = ItemStack.CODEC.parse(ops, nbt).getOrThrow();
                 } catch (Exception e) {
-                    SavsCommonEconomy.LOGGER.error("Failed to decode item stack for shop " + shopId, e);
+                    // Do not continue with an empty item: the shop would misbehave and the next save would erase the stored item
+                    throw new IllegalStateException("Failed to decode item stack for shop " + shopId, e);
                 }
             } else if (this.itemId != null && !this.itemId.equals("minecraft:air")) {
                 // Fallback for very old shops without base64 NBT
