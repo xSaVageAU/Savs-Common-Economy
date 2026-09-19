@@ -185,9 +185,9 @@ Why this order:
 - A backup copy of `shops.json` is made whenever anything fails to load.
 
 **Import from v1** (one time, one way):
-- Runs the first time v2 starts and `shops.json` does not exist in the data folder. v1's file is never modified.
+- Runs the first time v2 starts and `shops.json` does not exist in the data folder. v1's file is never modified. The importer itself refuses to run if a v2 `shops.json` exists, and writes nothing if no shop could be imported, so a later start can try again. v1's shop ids are kept, so the item files are named after them.
 - For each v1 shop: the dimension, position, owner, type and price carry over, and the mode comes from v1's `buying` flag. The item is decoded from v1's base64 and rewritten as an SNBT file with a count of 1, stamped with the current `DataVersion` (v1 never recorded one, so it is assumed current). A v1 item that cannot be decoded leaves that shop out of the import, reported; it stays in v1's file.
-- Prices with more than two decimals are **rounded to two decimals (half up) on import**, and each change is logged as a warning, especially any price that becomes 0 (a free shop). This keeps imported prices consistent with the two-decimal rule (D6, D10), so a total can never round to zero while the sign shows a price.
+- Prices with more than two decimals are **rounded to two decimals (half up) on import**, and each change is logged as a warning, especially any price that becomes 0 (a free shop). This keeps imported prices consistent with the two-decimal rule (D6, D10), so a total can never round to zero while the sign shows a price. A price outside 0 to 1,000,000,000 leaves that shop out of the import (reported).
 - **The import does not read blocks**, because that would mean loading chunks. It records the shop with no sign and marks it `needsSignLookup`. The first time its chunk is checked (D8), the sign is looked up: exactly one attached wall sign is recorded, several record the first and log the rest, none becomes "No sign".
 - After the first import, v1 and v2 files do not sync. Shops made in one do not appear in the other if you switch back. This is documented. An admin command to pull in missing shops from v1 is possible later.
 
@@ -392,7 +392,7 @@ Rule for pure logic: trade planning, identity, and the storage format take plain
 ## 5. Milestones (each a small, reviewable commit series)
 
 - [x] **M0** Scaffold: `shopv2` package, `shopVersion` selector, data folder.
-- [ ] **M1** Data model and storage (`shops.json` and the SNBT item files), including the import from v1 and the check that the data fixer upgrades an old-format item (no game hooks yet).
+- [x] **M1** Data model and storage (`shops.json` and the SNBT item files), including the import from v1 and the check that the data fixer upgrades an old-format item (no game hooks yet). Done; nothing calls it yet, that is M2 onwards.
 - [ ] **M2** Container registry and inventory resolving (chest, trapped chest, barrel, double chest), and the shared "is this position part of a shop" lookup (D3).
 - [ ] **M3** Sign rendering and placement.
 - [ ] **M4** Commands: create (with the one-shop-per-container, sign-space, access and price checks), info, list, remove, resign, admin.
@@ -484,4 +484,4 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
-- M1 in progress: the data model, `shops.json` storage and the SNBT item store are built and checked. The data fixer upgrade is now verified (D7, section 7c).
+- M1 done: the data model, `shops.json` storage, the SNBT item store and the v1 import are built and checked, the import against a real v1 file. The data fixer upgrade is verified (D7, section 7c).
