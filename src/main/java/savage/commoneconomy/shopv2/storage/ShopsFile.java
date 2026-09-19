@@ -10,14 +10,10 @@ import com.google.gson.JsonParser;
 import savage.commoneconomy.shopv2.model.Shop;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -131,11 +127,8 @@ public final class ShopsFile {
         root.addProperty("formatVersion", FORMAT_VERSION);
         root.add("shops", entries);
 
-        Files.createDirectories(file.toAbsolutePath().getParent());
-        Path temp = file.resolveSibling(file.getFileName() + ".tmp");
-        writeAndFlush(temp, GSON.toJson(root).getBytes(StandardCharsets.UTF_8));
         keepPreviousCopy();
-        moveIntoPlace(temp);
+        AtomicFiles.write(file, GSON.toJson(root).getBytes(StandardCharsets.UTF_8));
         return true;
     }
 
@@ -189,25 +182,6 @@ public final class ShopsFile {
     private void keepPreviousCopy() throws IOException {
         if (Files.exists(file) && readRoot(file) != null) {
             Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    private static void writeAndFlush(Path path, byte[] bytes) throws IOException {
-        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
-                StandardOpenOption.TRUNCATE_EXISTING)) {
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            while (buffer.hasRemaining()) {
-                channel.write(buffer);
-            }
-            channel.force(true);
-        }
-    }
-
-    private void moveIntoPlace(Path temp) throws IOException {
-        try {
-            Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException e) {
-            Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }

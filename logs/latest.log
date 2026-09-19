@@ -1,0 +1,24 @@
+[02:42:51] [main/INFO]: [STDOUT]: current data version = 5023
+[02:42:51] [main/INFO]: [STDOUT]: encoded (compact): {components:{"minecraft:custom_name":"Old Blade","minecraft:damage":10},count:1,id:"minecraft:diamond_sword"}
+[02:42:51] [main/INFO]: [STDOUT]: encoded (pretty):
+{
+    components: {
+        "minecraft:custom_name": "Old Blade",
+        "minecraft:damage": 10
+    },
+    count: 1,
+    id: "minecraft:diamond_sword"
+}
+[02:42:51] [main/INFO]: [STDOUT]: after data fixer 3700 -> 5023:
+{
+    components: {
+        "minecraft:custom_name": {
+            text: "Old Blade"
+        },
+        "minecraft:damage": 10,
+        "minecraft:repair_cost": 3
+    },
+    count: 1,
+    id: "minecraft:diamond_sword"
+}
+[02:42:51] [main/INFO]: [STDOUT]: decoded: 1 minecraft:diamond_sword name=literal{Old Blade} damage=10
