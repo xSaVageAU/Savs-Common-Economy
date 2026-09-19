@@ -3,7 +3,7 @@
 	"package": "savage.commoneconomy.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"ChestBlockEntityMixin"
+		"ContainerBlockEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
