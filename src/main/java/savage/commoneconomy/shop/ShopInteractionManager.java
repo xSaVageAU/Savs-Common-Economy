@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
@@ -121,7 +122,7 @@ public class ShopInteractionManager {
                     // Shop buys (Player sells)
                     if (isAll) {
                         amount = 0;
-                        for (int i = 0; i < sender.getInventory().getContainerSize(); i++) {
+                        for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
                             ItemStack stack = sender.getInventory().getItem(i);
                             if (ItemStack.isSameItemSameComponents(stack, shop.getItem())) amount += stack.getCount();
                         }

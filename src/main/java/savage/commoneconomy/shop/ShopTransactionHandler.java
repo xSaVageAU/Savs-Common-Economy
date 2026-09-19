@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -293,7 +294,7 @@ public class ShopTransactionHandler {
 
     private static int countItems(ServerPlayer player, ItemStack template) {
         int count = 0;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+        for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (ItemStack.isSameItemSameComponents(stack, template))
                 count += stack.getCount();
@@ -302,7 +303,7 @@ public class ShopTransactionHandler {
     }
 
     private static boolean removeItemsFromPlayer(ServerPlayer player, ItemStack template, int amount) {
-        for (int i = 0; i < player.getInventory().getContainerSize() && amount > 0; i++) {
+        for (int i = 0; i < Inventory.INVENTORY_SIZE && amount > 0; i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (ItemStack.isSameItemSameComponents(stack, template)) {
                 int take = Math.min(amount, stack.getCount());
