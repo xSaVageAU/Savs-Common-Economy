@@ -8,7 +8,7 @@ import savage.commoneconomy.core.feature.Feature;
 
 /**
  * Chest shops, version 2. Runs instead of the v1 shop (shop package) when shopVersion is "v2".
- * Scaffold only for now: it registers nothing.
+ * Scaffold only for now: it registers nothing. The design and plan are in DESIGN.md next to this file.
  */
 public class ShopV2Feature implements Feature {
 
