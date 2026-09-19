@@ -62,6 +62,10 @@ public final class ShopsFile {
         this.file = file;
     }
 
+    public boolean exists() {
+        return Files.exists(file);
+    }
+
     public Loaded load() throws IOException {
         unreadable.clear();
         readOnly = false;
