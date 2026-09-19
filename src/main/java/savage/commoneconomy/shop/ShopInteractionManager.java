@@ -17,6 +17,7 @@ import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 import savage.commoneconomy.core.inventory.InventorySpace;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -141,8 +142,11 @@ public class ShopInteractionManager {
                             return false;
                         }
 
-                        java.math.BigDecimal balance = EconomyService.get().getCachedBalance(sender.getUUID());
-                        int canAfford = balance.divideToIntegralValue(shop.getPrice()).intValue();
+                        BigDecimal balance = EconomyService.get().getCachedBalance(sender.getUUID());
+                        // A free shop has no affordability limit; the cap also stops huge quotients wrapping around in intValue()
+                        int canAfford = shop.getPrice().signum() == 0
+                                ? Integer.MAX_VALUE
+                                : balance.divideToIntegralValue(shop.getPrice()).min(BigDecimal.valueOf(Integer.MAX_VALUE)).intValue();
                         int shopHas = ShopStockCalculator.calculateStock((ServerLevel)sender.level(), shop);
                         int playerCanFit = InventorySpace.getAvailableSpace(sender, shop.getItem());
                         amount = Math.min(Math.min(canAfford, shopHas), playerCanFit);
