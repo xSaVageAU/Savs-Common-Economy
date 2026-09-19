@@ -170,7 +170,7 @@ Why this order:
 - **Loading:** read the file, look at its `DataVersion`, run the data fixer from that version up to the current one if it is older, then decode. If the file was upgraded, rewrite it (atomically) at the current version.
 - The stored item is a **single-item template** (count 1). v1 stores the held stack including its count.
 - A file whose `DataVersion` is **newer** than the running game is left untouched, and its shop is Unreadable.
-- **Not verified yet:** that the data fixer upgrades an old item correctly in practice. That needs the game running, so it is a check in milestone M1 (write an item in an old format by hand, load it, and confirm it comes out current).
+- **Verified (M1):** the data fixer upgrades old items correctly. Two hand-written files, one from data version 3700 (the 1.20.4 layout with `Count` and `tag`) and one from 3955 (1.21.1 components), were loaded on the current version (5023). Both came out with the right item, name, damage and enchantment, and the file was rewritten in the current format. The check ran the game's own registries and data fixer outside the game. It covers those two eras; other versions rely on Mojang's fixers.
 
 **Consistency between the two:** item files are written once and never change, except for a version upgrade.
 - Creating a shop: write the item file first, then save `shops.json`.
@@ -464,7 +464,7 @@ Things deliberately left for later, so they do not slow v2.0 down:
 ## 7c. Still to verify
 
 Claims in this document that were reasoned from the code or the game's bytecode but never tested, so they are not forgotten:
-- **The data fixer upgrades an old-format item correctly** (D7). A check in M1: write an item in an old format by hand, load it, confirm it comes out current.
+- ~~The data fixer upgrades an old-format item correctly~~ (D7): verified in M1, see D7.
 - **The creation access check works with the common claim mods**, and what other mods' callbacks show the player (D4).
 - **In v1, opening the neighbouring half of a shop's double chest reaches the shop's contents**, and in v2 it no longer does (D3, D4).
 - **The exact pickup and drop-off rules of the Copper Golem** (D2).
@@ -484,3 +484,4 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
+- M1 in progress: the data model, `shops.json` storage and the SNBT item store are built and checked. The data fixer upgrade is now verified (D7, section 7c).
