@@ -7,8 +7,8 @@ import java.io.File;
 import java.nio.file.Path;
 
 /**
- * Where the mod keeps data, as opposed to configuration: {server folder}/data/savs-common-economy.
- * Config stays under config/savs-common-economy.
+ * Where the mod keeps data files, so they do not sit next to the config files:
+ * config/savs-common-economy/data (next to the lang folder).
  */
 public final class DataFolder {
 
@@ -18,7 +18,7 @@ public final class DataFolder {
      * @return The data folder, created if it does not exist yet.
      */
     public static Path get() {
-        Path dir = FabricLoader.getInstance().getGameDir().resolve("data").resolve(SavsCommonEconomy.MOD_ID);
+        Path dir = FabricLoader.getInstance().getConfigDir().resolve(SavsCommonEconomy.MOD_ID).resolve("data");
         File dirFile = dir.toFile();
         if (!dirFile.exists() && !dirFile.mkdirs()) {
             SavsCommonEconomy.LOGGER.error("Could not create the data folder {}", dir);
