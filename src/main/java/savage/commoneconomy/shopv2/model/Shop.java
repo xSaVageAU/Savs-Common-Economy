@@ -1,6 +1,7 @@
 package savage.commoneconomy.shopv2.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -10,7 +11,7 @@ import java.util.UUID;
  * Stock and status are never stored, they are worked out when needed.
  *
  * @param anchor         the container block the shop was created on
- * @param price          the unit price, valid according to {@link Prices}
+ * @param price          the unit price, valid according to {@link Prices}, always held with exactly two decimals
  * @param sign           where the shop's sign is, or null when there is none
  * @param needsSignLookup true for an imported shop whose sign has not been looked up yet
  */
@@ -36,6 +37,8 @@ public record Shop(
         if (!Prices.isValid(price)) {
             throw new IllegalArgumentException("Invalid price: " + price);
         }
+        // One canonical form, so 12.5 and 12.50 are the same price and two equal shops compare equal
+        price = price.setScale(2, RoundingMode.UNNECESSARY);
     }
 
     public boolean hasSign() {
