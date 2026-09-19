@@ -20,6 +20,7 @@ import savage.commoneconomy.core.log.LogCommand;
 import savage.commoneconomy.core.log.TransactionLogger;
 import savage.commoneconomy.sell.SellFeature;
 import savage.commoneconomy.shop.ShopFeature;
+import savage.commoneconomy.shopv2.ShopV2Feature;
 
 import java.util.List;
 
@@ -31,7 +32,8 @@ public class SavsCommonEconomy implements ModInitializer {
 	private static final List<Feature> FEATURES = List.of(
 			new BankNoteFeature(),
 			new SellFeature(),
-			new ShopFeature()
+			new ShopFeature(),
+			new ShopV2Feature()
 	);
 
 	public static MinecraftServer getServer() {

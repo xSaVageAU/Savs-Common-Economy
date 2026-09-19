@@ -16,6 +16,7 @@ public class EconomyConfig {
     public boolean enableSellCommands = false;
     public boolean enableChestShops = true;
     public boolean enableBankNotes = true;
+    public String shopVersion = "v1"; // "v1" or "v2"; which chest shop implementation runs (unrecognised values use "v1")
     
     // --- Storage Settings ---
     public StorageConfig storage = new StorageConfig();

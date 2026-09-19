@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import savage.commoneconomy.core.config.ConfigManager;
+import savage.commoneconomy.core.config.ShopVersion;
 import savage.commoneconomy.core.feature.Feature;
 
 public class ShopFeature implements Feature {
@@ -15,7 +16,7 @@ public class ShopFeature implements Feature {
 
     @Override
     public boolean isEnabled() {
-        return ConfigManager.getConfig().enableChestShops;
+        return ConfigManager.getConfig().enableChestShops && ConfigManager.getShopVersion() == ShopVersion.V1;
     }
 
     @Override
