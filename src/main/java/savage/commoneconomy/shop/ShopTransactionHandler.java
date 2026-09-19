@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -132,20 +133,33 @@ public class ShopTransactionHandler {
 
         if (shop.isAdmin()) {
             // Admin shop: just give items
-            player.getInventory().add(template);
+            giveOrDrop(player, template);
             return true;
         }
 
         if (be instanceof Container container) {
             // Player shop: check and remove from container
             if (removeItemsFromContainer(container, shop.getItem(), amount)) {
-                player.getInventory().add(template);
+                giveOrDrop(player, template);
                 shop.removeStock(amount);
                 container.setChanged();
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Gives the player the stack. The space check happens before the payment, so the inventory can fill up
+     * in between; whatever does not fit is dropped at the player's feet, in normal-sized stacks, and not lost.
+     */
+    private static void giveOrDrop(ServerPlayer player, ItemStack stack) {
+        if (player.getInventory().add(stack)) return;
+
+        // Inventory.add leaves the part that did not fit in the stack
+        while (!stack.isEmpty()) {
+            player.drop(stack.split(stack.getMaxStackSize()), false, Prediction.SERVER_ONLY);
+        }
     }
 
     public static void handleSale(ServerPlayer player, Shop shop, net.minecraft.server.level.ServerLevel world,
