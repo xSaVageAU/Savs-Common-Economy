@@ -1,6 +1,8 @@
 package savage.commoneconomy.core.config;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Unified configuration for Savs Common Economy.
@@ -17,7 +19,8 @@ public class EconomyConfig {
     public boolean enableChestShops = true;
     public boolean enableBankNotes = true;
     public String shopVersion = "v1"; // "v1" or "v2"; which chest shop implementation runs (unrecognised values use "v1")
-    
+    public List<String> shopAllowedContainers = new ArrayList<>(List.of("minecraft:chest", "minecraft:trapped_chest", "minecraft:barrel")); // shop v2 only: block ids, or block tags with a "#" prefix, that can hold a shop
+
     // --- Storage Settings ---
     public StorageConfig storage = new StorageConfig();
 
