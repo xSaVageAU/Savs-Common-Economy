@@ -99,7 +99,9 @@ public class ShopSignHelper {
     public static BlockPos findSignForChest(Level world, BlockPos chestPos) {
         for (Direction direction : new Direction[]{Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST}) {
             BlockPos signPos = chestPos.relative(direction);
-            if (world.getBlockState(signPos).getBlock() instanceof WallSignBlock) {
+            // Only a sign attached to this chest counts; a neighbouring shop's sign can sit next to it too.
+            if (world.getBlockState(signPos).getBlock() instanceof WallSignBlock
+                    && getAttachedChest(world, signPos).equals(chestPos)) {
                 return signPos;
             }
         }

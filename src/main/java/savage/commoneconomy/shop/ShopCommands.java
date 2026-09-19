@@ -155,7 +155,10 @@ public class ShopCommands {
             shop.setType(ShopType.ADMIN);
             ShopManager.getInstance().save();
             context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.admin_convert"), true);
-            ShopSignHelper.updateSign((net.minecraft.server.level.ServerLevel)player.level(), ShopSignHelper.findSignForChest(player.level(), pos), shop);
+            BlockPos signPos = ShopSignHelper.findSignForChest(player.level(), pos);
+            if (signPos != null) {
+                ShopSignHelper.updateSign((net.minecraft.server.level.ServerLevel)player.level(), signPos, shop);
+            }
         }
         return 1;
     }
