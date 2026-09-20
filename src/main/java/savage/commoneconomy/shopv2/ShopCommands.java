@@ -35,7 +35,7 @@ import java.util.UUID;
 
 /**
  * The /shop commands (D10). Same commands and permission nodes as v1.
- * Create, info and list so far; remove, resign and admin follow.
+ * Create, info, list and admin so far; resign and remove follow.
  */
 final class ShopCommands {
 
@@ -60,7 +60,10 @@ final class ShopCommands {
                         .executes(this::shopInfo))
                 .then(Commands.literal("list")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.list", true))
-                        .executes(this::listShops)));
+                        .executes(this::listShops))
+                .then(Commands.literal("admin")
+                        .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
+                        .executes(this::makeAdmin)));
     }
 
     /**
@@ -206,6 +209,38 @@ final class ShopCommands {
             source.sendSuccess(() -> TranslationHelper.translate("shop.command.my_shops.entry_detail",
                     itemName, position, shop.anchor().dimension(), status), false);
         }
+        return 1;
+    }
+
+    /**
+     * Converts the shop the player is aiming at, by its container or its sign, into an admin shop. One way, as in v1.
+     */
+    private int makeAdmin(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayerOrException();
+        BlockHitResult blockHit = aimedBlock(player);
+        if (blockHit == null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.look_at_sign_or_chest"));
+            return 0;
+        }
+
+        ServerLevel level = player.level();
+        Shop shop = findShop(level, blockHit.getBlockPos());
+        if (shop == null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
+            return 0;
+        }
+
+        Shop converted = shop.withType(ShopType.ADMIN);
+        try {
+            feature.changes().update(converted);
+        } catch (IOException e) {
+            SavsCommonEconomy.LOGGER.error("Shop v2: could not save shop {} after converting it to an admin shop", shop.id(), e);
+            source.sendFailure(TranslationHelper.translate("shop.command.save_failed"));
+            return 0;
+        }
+        feature.signs().refresh(level, converted, feature.shops().item(shop.id()));
+        source.sendSuccess(() -> TranslationHelper.translate("shop.command.admin_convert"), true);
         return 1;
     }
 

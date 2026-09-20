@@ -84,14 +84,15 @@ public final class ShopSigns {
     }
 
     /**
-     * Rewrites the text on the shop's recorded sign. Does nothing if the shop has no sign, the sign's chunk (or the
-     * container's) is not loaded, or there is no sign block at the recorded position. Never loads a chunk.
+     * Rewrites the text on the shop's recorded sign. Does nothing if the shop has no sign or no readable item, the
+     * sign's chunk (or the container's) is not loaded, or there is no sign block at the recorded position.
+     * Never loads a chunk.
      *
      * @param level the level of the shop's dimension
-     * @param item  the shop's item template
+     * @param item  the shop's item template, or null if it could not be read
      */
     public void refresh(ServerLevel level, Shop shop, ItemStack item) {
-        if (!shop.hasSign()) {
+        if (!shop.hasSign() || item == null) {
             return;
         }
         BlockPos signPos = Positions.toBlockPos(shop.sign());
