@@ -77,12 +77,11 @@ final class ShopCommands {
             return 0;
         }
 
-        HitResult hit = player.pick(5.0, 0.0f, false);
-        if (hit.getType() != HitResult.Type.BLOCK) {
+        BlockHitResult blockHit = aimedBlock(player);
+        if (blockHit == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.look_at_chest"));
             return 0;
         }
-        BlockHitResult blockHit = (BlockHitResult) hit;
         ServerLevel level = player.level();
         BlockPos pos = blockHit.getBlockPos();
 
@@ -157,15 +156,14 @@ final class ShopCommands {
     private int shopInfo(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayerOrException();
-        HitResult hit = player.pick(5.0, 0.0f, false);
-        if (hit.getType() != HitResult.Type.BLOCK) {
+        BlockHitResult blockHit = aimedBlock(player);
+        if (blockHit == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.look_at_sign_or_chest"));
             return 0;
         }
 
         ServerLevel level = player.level();
-        BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-        Shop shop = findShop(level, pos);
+        Shop shop = findShop(level, blockHit.getBlockPos());
         if (shop == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
@@ -209,6 +207,14 @@ final class ShopCommands {
                     itemName, position, shop.anchor().dimension(), status), false);
         }
         return 1;
+    }
+
+    /**
+     * @return the block the player is aiming at within 5 blocks, or null if they are aiming at nothing
+     */
+    private static BlockHitResult aimedBlock(ServerPlayer player) {
+        HitResult hit = player.pick(5.0, 0.0f, false);
+        return hit.getType() == HitResult.Type.BLOCK ? (BlockHitResult) hit : null;
     }
 
     /**
