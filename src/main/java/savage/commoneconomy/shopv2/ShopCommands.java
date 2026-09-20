@@ -35,7 +35,7 @@ import java.util.UUID;
 
 /**
  * The /shop commands (D10). Same commands and permission nodes as v1.
- * Create, info, list and admin so far; resign and remove follow.
+ * Create, info, list, resign and admin. Remove needs the click handling and comes with M5.
  */
 final class ShopCommands {
 
@@ -61,6 +61,9 @@ final class ShopCommands {
                 .then(Commands.literal("list")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.list", true))
                         .executes(this::listShops))
+                .then(Commands.literal("resign")
+                        .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
+                        .executes(this::resign))
                 .then(Commands.literal("admin")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.admin", 2))
                         .executes(this::makeAdmin)));
@@ -209,6 +212,63 @@ final class ShopCommands {
             source.sendSuccess(() -> TranslationHelper.translate("shop.command.my_shops.entry_detail",
                     itemName, position, shop.anchor().dimension(), status), false);
         }
+        return 1;
+    }
+
+    /**
+     * Places a new sign for the shop whose container the player is aiming at (D5), on the same side and with the
+     * same refusals as creation. Only the owner or an admin may, and only if the recorded sign is not still there.
+     */
+    private int resign(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayerOrException();
+        BlockHitResult blockHit = aimedBlock(player);
+        if (blockHit == null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.look_at_chest"));
+            return 0;
+        }
+
+        ServerLevel level = player.level();
+        Shop shop = feature.shops().findByContainerBlock(level, blockHit.getBlockPos());
+        if (shop == null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
+            return 0;
+        }
+        if (!shop.owner().equals(player.getUUID()) && !PermissionsHelper.check(source, "savscommoneconomy.admin", 2)) {
+            source.sendFailure(TranslationHelper.translate("shop.remove.not_owner"));
+            return 0;
+        }
+        if (shop.hasSign() && ShopSigns.isPresent(level, shop.sign())) {
+            source.sendFailure(TranslationHelper.translate("shop.command.resign.has_sign"));
+            return 0;
+        }
+
+        // The sign goes on the shop's anchor block, even if the player is aiming at the other half of a double chest
+        BlockPos anchor = Positions.toBlockPos(shop.anchor().position());
+        Direction side = ShopSigns.chooseSide(blockHit.getDirection(), player.getDirection());
+        if (!ShopSigns.canPlace(level, anchor, side)) {
+            source.sendFailure(TranslationHelper.translate("shop.command.create_no_sign_space"));
+            return 0;
+        }
+
+        // Choosing a sign settles it, so an imported shop no longer needs its sign looked up (D7)
+        Shop resigned = shop.withSign(Positions.toPosition(anchor.relative(side))).withNeedsSignLookup(false);
+        try {
+            feature.changes().update(resigned);
+        } catch (IOException e) {
+            SavsCommonEconomy.LOGGER.error("Shop v2: could not save shop {} after placing a new sign", shop.id(), e);
+            source.sendFailure(TranslationHelper.translate("shop.command.save_failed"));
+            return 0;
+        }
+
+        // If the sign cannot be placed after all, the record points at nothing and the shop shows as having no sign,
+        // so /shop resign can simply be run again
+        if (ShopSigns.place(level, anchor, side) == null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.create_no_sign_space"));
+            return 0;
+        }
+        feature.signs().refresh(level, resigned, feature.shops().item(shop.id()));
+        source.sendSuccess(() -> TranslationHelper.translate("shop.command.resign.success"), false);
         return 1;
     }
 
