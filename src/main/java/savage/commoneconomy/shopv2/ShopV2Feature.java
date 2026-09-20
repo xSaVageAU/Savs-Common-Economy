@@ -25,6 +25,7 @@ public class ShopV2Feature implements Feature {
     private ContainerRegistry containers;
     private ShopRegistry shops;
     private ShopHealth health;
+    private ShopChanges changes;
 
     @Override
     public String id() {
@@ -56,6 +57,10 @@ public class ShopV2Feature implements Feature {
         return shops;
     }
 
+    ShopChanges changes() {
+        return changes;
+    }
+
     ShopHealth health() {
         return health;
     }
@@ -65,10 +70,12 @@ public class ShopV2Feature implements Feature {
         containers = new ContainerRegistry(ConfigManager.getConfig().shopAllowedContainers);
         shops = new ShopRegistry();
         health = new ShopHealth(containers, shops);
+        ShopStorage storage = new ShopStorage(DataFolder.get());
+        changes = new ShopChanges(shops, storage, server.registryAccess());
 
         Path v1File = FabricLoader.getInstance().getConfigDir().resolve(SavsCommonEconomy.MOD_ID).resolve("shops.json");
         try {
-            ShopStorage.Loaded loaded = new ShopStorage(DataFolder.get()).load(v1File, server.registryAccess());
+            ShopStorage.Loaded loaded = storage.load(v1File, server.registryAccess());
             loaded.problems().forEach(SavsCommonEconomy.LOGGER::warn);
             if (loaded.imported().imported() > 0 || loaded.imported().skipped() > 0) {
                 SavsCommonEconomy.LOGGER.info("Shop v2: imported {} shop(s) from v1, left out {}.", loaded.imported().imported(), loaded.imported().skipped());
