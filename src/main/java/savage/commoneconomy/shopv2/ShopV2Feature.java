@@ -43,6 +43,7 @@ public class ShopV2Feature implements Feature {
     @Override
     public void onInitialize() {
         new ShopClickHandler(this).register();
+        new ShopChatHandler(this).register();
         SavsCommonEconomy.LOGGER.warn("Shop v2 is selected in config.json but is still under development and provides no shops yet. "
                 + "Set \"shopVersion\" back to \"v1\" to use chest shops. Its data folder is {}", DataFolder.get());
     }
