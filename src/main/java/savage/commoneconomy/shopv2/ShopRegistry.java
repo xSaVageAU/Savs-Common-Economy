@@ -37,6 +37,11 @@ public final class ShopRegistry {
         return true;
     }
 
+    public void remove(Shop shop) {
+        byAnchor.remove(shop.anchor());
+        items.remove(shop.id());
+    }
+
     /**
      * @return the shop's single-item template, or null if its item could not be read
      */

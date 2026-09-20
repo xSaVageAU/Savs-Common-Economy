@@ -7,6 +7,7 @@ import savage.commoneconomy.shopv2.model.Shop;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ public final class ShopStorage {
 
     private final ShopsFile shopsFile;
     private final ShopItemStore itemStore;
+    private boolean ready;
 
     public ShopStorage(Path dataFolder) {
         this.shopsFile = new ShopsFile(dataFolder.resolve("shops.json"));
@@ -65,6 +67,28 @@ public final class ShopStorage {
                 problems.add("The item file " + name + " is not used by any loaded shop. It was left in place.");
             }
         }
+        ready = true;
         return new Loaded(loaded.shops(), items, imported, problems);
+    }
+
+    /**
+     * Saves shops.json right away (D7). Refused until the shops have been loaded completely, and for a file written
+     * by a newer version, so a shop that was never read can never be overwritten.
+     */
+    public void save(Collection<Shop> shops) throws IOException {
+        if (!ready) {
+            throw new IOException("the shops were not loaded completely, so shops.json is not being changed");
+        }
+        if (!shopsFile.save(shops)) {
+            throw new IOException("shops.json was written by a newer version and is not being changed");
+        }
+    }
+
+    public void writeItem(UUID shopId, ItemStack item, HolderLookup.Provider registries) throws IOException {
+        itemStore.write(shopId, item, registries);
+    }
+
+    public void deleteItem(UUID shopId) throws IOException {
+        itemStore.delete(shopId);
     }
 }
