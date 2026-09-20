@@ -1,6 +1,8 @@
 package savage.commoneconomy.shopv2;
 
+import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.config.ConfigManager;
@@ -15,13 +17,14 @@ import java.nio.file.Path;
 
 /**
  * Chest shops, version 2. Runs instead of the v1 shop (shop package) when shopVersion is "v2".
- * Under development: it loads shops and can find them, but registers no commands or events yet.
+ * Under development: it loads shops and registers /shop info and /shop list so far, and no events yet.
  * The design and plan are in DESIGN.md next to this file.
  */
 public class ShopV2Feature implements Feature {
 
     private ContainerRegistry containers;
     private ShopRegistry shops;
+    private ShopHealth health;
 
     @Override
     public String id() {
@@ -40,9 +43,28 @@ public class ShopV2Feature implements Feature {
     }
 
     @Override
+    public void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
+        new ShopCommands(this).register(dispatcher);
+    }
+
+    // Built when the server starts, so only call these from code that runs after that (commands and events)
+    ContainerRegistry containers() {
+        return containers;
+    }
+
+    ShopRegistry shops() {
+        return shops;
+    }
+
+    ShopHealth health() {
+        return health;
+    }
+
+    @Override
     public void onServerStarting(MinecraftServer server) {
         containers = new ContainerRegistry(ConfigManager.getConfig().shopAllowedContainers);
         shops = new ShopRegistry();
+        health = new ShopHealth(containers, shops);
 
         Path v1File = FabricLoader.getInstance().getConfigDir().resolve(SavsCommonEconomy.MOD_ID).resolve("shops.json");
         try {
