@@ -23,6 +23,7 @@ import java.nio.file.Path;
 public class ShopV2Feature implements Feature {
 
     private final RemoveMode removeMode = new RemoveMode();
+    private final PendingTrades pendingTrades = new PendingTrades();
     private ContainerRegistry containers;
     private ShopRegistry shops;
     private ShopHealth health;
@@ -62,6 +63,10 @@ public class ShopV2Feature implements Feature {
 
     ShopSigns signs() {
         return signs;
+    }
+
+    PendingTrades pendingTrades() {
+        return pendingTrades;
     }
 
     RemoveMode removeMode() {

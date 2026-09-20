@@ -12,12 +12,14 @@ import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.shopv2.model.Shop;
+import savage.commoneconomy.shopv2.model.ShopMode;
+import savage.commoneconomy.shopv2.model.ShopStatus;
 
 import java.io.IOException;
 import java.util.UUID;
 
 /**
- * The event side of clicking and chatting with shops (D9, D10): remove-mode and, later, pending trades.
+ * The event side of clicking and chatting with shops (D9, D10): remove-mode and starting a trade; the chat amount comes next.
  * Registers its events once at start-up; they do nothing until the server has started and the feature's
  * state exists.
  */
@@ -35,17 +37,38 @@ final class ShopClickHandler {
                     || !(player instanceof ServerPlayer serverPlayer) || !(level instanceof ServerLevel serverLevel)) {
                 return InteractionResult.PASS;
             }
-            Shop shop = feature.shops().findByBlock(serverLevel, hit.getBlockPos());
-            if (shop == null) {
-                return InteractionResult.PASS;
+            long now = System.currentTimeMillis();
+            if (feature.removeMode().isActive(serverPlayer.getUUID(), now)) {
+                Shop shop = feature.shops().findByBlock(serverLevel, hit.getBlockPos());
+                return shop == null ? InteractionResult.PASS : removeClickedShop(serverPlayer, serverLevel, shop);
             }
-            if (feature.removeMode().isActive(serverPlayer.getUUID(), System.currentTimeMillis())) {
-                return removeClickedShop(serverPlayer, serverLevel, shop);
-            }
-            return InteractionResult.PASS;
+            // Only the sign starts a trade; a click on the container is left alone (protection comes with M7)
+            Shop shop = feature.shops().findBySign(serverLevel, hit.getBlockPos());
+            return shop == null ? InteractionResult.PASS : startTrade(serverPlayer, serverLevel, shop, now);
         });
         ServerTickEvents.END_SERVER_TICK.register(this::onTick);
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> feature.removeMode().end(handler.getPlayer().getUUID()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            UUID player = handler.getPlayer().getUUID();
+            feature.removeMode().end(player);
+            feature.pendingTrades().end(player);
+        });
+    }
+
+    /**
+     * A click on a shop's sign starts a trade (D9): the player is asked to type an amount in chat. A shop that is not
+     * OK says it is unavailable and starts nothing. The click never places a block or opens the sign editor.
+     */
+    private InteractionResult startTrade(ServerPlayer player, ServerLevel level, Shop shop, long now) {
+        if (feature.health().statusOf(level.getServer(), shop) != ShopStatus.OK) {
+            player.sendSystemMessage(TranslationHelper.translate("shop.interaction.unavailable"));
+            return InteractionResult.SUCCESS;
+        }
+
+        feature.pendingTrades().start(player.getUUID(), shop.anchor(), now);
+        String action = TranslationHelper.translateString(shop.mode() == ShopMode.BUY ? "shop.action.verb_sell" : "shop.action.verb_buy");
+        player.sendSystemMessage(TranslationHelper.translate("shop.interaction.prompt_amount", action));
+        player.sendSystemMessage(TranslationHelper.translate("shop.interaction.prompt_all", action));
+        return InteractionResult.SUCCESS;
     }
 
     /**
