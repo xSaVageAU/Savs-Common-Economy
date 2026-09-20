@@ -5,10 +5,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import savage.commoneconomy.shopv2.model.BlockLocation;
+import savage.commoneconomy.shopv2.model.Position;
 import savage.commoneconomy.shopv2.model.Shop;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,6 +50,24 @@ public final class ShopRegistry {
 
     public Collection<Shop> all() {
         return byAnchor.values();
+    }
+
+    public List<Shop> ownedBy(UUID owner) {
+        return byAnchor.values().stream().filter(shop -> shop.owner().equals(owner)).toList();
+    }
+
+    /**
+     * Only the sign a shop has recorded counts (D5); another wall sign on a container is an ordinary sign.
+     *
+     * @return the shop whose recorded sign is at that position in that level, or null
+     */
+    public Shop findBySign(ServerLevel level, BlockPos pos) {
+        String dimension = level.dimension().identifier().toString();
+        Position signPosition = Positions.toPosition(pos);
+        return byAnchor.values().stream()
+                .filter(shop -> signPosition.equals(shop.sign()) && dimension.equals(shop.anchor().dimension()))
+                .findFirst()
+                .orElse(null);
     }
 
     public int size() {
