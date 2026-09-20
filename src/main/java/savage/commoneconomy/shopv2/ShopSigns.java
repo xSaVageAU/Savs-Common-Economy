@@ -68,6 +68,14 @@ public final class ShopSigns {
         return Positions.toPosition(signPos);
     }
 
+    /**
+     * @return true if the block at that position is a wall sign; false if it is anything else or its chunk is not loaded
+     */
+    public static boolean isPresent(ServerLevel level, Position signPosition) {
+        BlockPos pos = Positions.toBlockPos(signPosition);
+        return level.hasChunkAt(pos) && level.getBlockState(pos).getBlock() instanceof WallSignBlock;
+    }
+
     private static BlockState wallSign(Direction side) {
         if (!side.getAxis().isHorizontal()) {
             throw new IllegalArgumentException("A wall sign goes on a side face, not " + side);

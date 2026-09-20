@@ -26,19 +26,30 @@ public final class ShopHealth {
     }
 
     public ShopStatus statusOf(MinecraftServer server, Shop shop) {
-        return ShopStatus.of(shops.item(shop.id()) != null, containerEnabled(server, shop), shop.hasSign());
+        ServerLevel level = levelOf(server, shop.anchor().dimension());
+        if (level == null) {
+            return ShopStatus.of(shops.item(shop.id()) != null, false, true);
+        }
+        return ShopStatus.of(shops.item(shop.id()) != null, containerEnabled(level, shop), signIntact(level, shop));
     }
 
     /**
      * A container in an unloaded chunk cannot be checked without loading it, so it counts as enabled.
      */
-    private boolean containerEnabled(MinecraftServer server, Shop shop) {
-        ServerLevel level = levelOf(server, shop.anchor().dimension());
-        if (level == null) {
-            return false;
-        }
+    private boolean containerEnabled(ServerLevel level, Shop shop) {
         BlockPos pos = Positions.toBlockPos(shop.anchor().position());
         return !level.hasChunkAt(pos) || containers.isAllowed(level.getBlockState(pos));
+    }
+
+    /**
+     * The recorded sign must still be a sign block. One in an unloaded chunk cannot be checked without
+     * loading it, so it counts as there.
+     */
+    private static boolean signIntact(ServerLevel level, Shop shop) {
+        if (!shop.hasSign()) {
+            return false;
+        }
+        return !level.hasChunkAt(Positions.toBlockPos(shop.sign())) || ShopSigns.isPresent(level, shop.sign());
     }
 
     private static ServerLevel levelOf(MinecraftServer server, String dimension) {
