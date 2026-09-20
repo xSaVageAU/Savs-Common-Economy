@@ -74,6 +74,10 @@ public final class ShopRegistry {
      * @return the shop whose recorded sign is at that position in that level, or null
      */
     public Shop findBySign(ServerLevel level, BlockPos pos) {
+        // Checked first so that clicking any other block does not scan every shop
+        if (!ShopSigns.isPresent(level, Positions.toPosition(pos))) {
+            return null;
+        }
         String dimension = level.dimension().identifier().toString();
         Position signPosition = Positions.toPosition(pos);
         return byAnchor.values().stream()

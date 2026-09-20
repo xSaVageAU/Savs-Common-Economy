@@ -76,6 +76,16 @@ public final class ShopSigns {
         return level.hasChunkAt(pos) && level.getBlockState(pos).getBlock() instanceof WallSignBlock;
     }
 
+    /**
+     * Removes a shop's sign without dropping an item: the sign was placed for free when the shop was created,
+     * so a normal break would hand out a sign that nobody paid for. Does nothing if there is no wall sign there.
+     */
+    public static void clear(ServerLevel level, Position signPosition) {
+        if (isPresent(level, signPosition)) {
+            level.setBlock(Positions.toBlockPos(signPosition), Blocks.AIR.defaultBlockState(), 3);
+        }
+    }
+
     private static BlockState wallSign(Direction side) {
         if (!side.getAxis().isHorizontal()) {
             throw new IllegalArgumentException("A wall sign goes on a side face, not " + side);
