@@ -37,7 +37,6 @@ public class ShopV2Feature implements Feature {
     public void onInitialize() {
         SavsCommonEconomy.LOGGER.warn("Shop v2 is selected in config.json but is still under development and provides no shops yet. "
                 + "Set \"shopVersion\" back to \"v1\" to use chest shops. Its data folder is {}", DataFolder.get());
-        TemporaryDebug.register(() -> containers, () -> shops); // TEMPORARY, remove after M3 is checked
     }
 
     @Override
