@@ -17,7 +17,7 @@ import java.nio.file.Path;
 
 /**
  * Chest shops, version 2. Runs instead of the v1 shop (shop package) when shopVersion is "v2".
- * Under development: it loads shops and registers /shop info and /shop list so far, and no events yet.
+ * Under development: it loads shops and registers /shop create, info and list so far, and no events yet.
  * The design and plan are in DESIGN.md next to this file.
  */
 public class ShopV2Feature implements Feature {
@@ -26,6 +26,7 @@ public class ShopV2Feature implements Feature {
     private ShopRegistry shops;
     private ShopHealth health;
     private ShopChanges changes;
+    private ShopSigns signs;
 
     @Override
     public String id() {
@@ -57,6 +58,10 @@ public class ShopV2Feature implements Feature {
         return shops;
     }
 
+    ShopSigns signs() {
+        return signs;
+    }
+
     ShopChanges changes() {
         return changes;
     }
@@ -70,6 +75,7 @@ public class ShopV2Feature implements Feature {
         containers = new ContainerRegistry(ConfigManager.getConfig().shopAllowedContainers);
         shops = new ShopRegistry();
         health = new ShopHealth(containers, shops);
+        signs = new ShopSigns(containers);
         ShopStorage storage = new ShopStorage(DataFolder.get());
         changes = new ShopChanges(shops, storage, server.registryAccess());
 

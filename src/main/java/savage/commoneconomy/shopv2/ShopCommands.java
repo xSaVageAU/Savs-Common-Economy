@@ -1,30 +1,41 @@
 package savage.commoneconomy.shopv2;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.EconomyService;
 import savage.commoneconomy.core.i18n.TranslationHelper;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
+import savage.commoneconomy.shopv2.model.BlockLocation;
+import savage.commoneconomy.shopv2.model.Prices;
 import savage.commoneconomy.shopv2.model.Shop;
 import savage.commoneconomy.shopv2.model.ShopMode;
 import savage.commoneconomy.shopv2.model.ShopStatus;
 import savage.commoneconomy.shopv2.model.ShopType;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The /shop commands (D10). Same commands and permission nodes as v1.
- * Only info and list so far; create, remove, resign and admin follow.
+ * Create, info and list so far; remove, resign and admin follow.
  */
 final class ShopCommands {
 
@@ -36,12 +47,111 @@ final class ShopCommands {
 
     void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("shop")
+                .then(Commands.literal("create")
+                        .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
+                        .then(Commands.literal("sell")
+                                .then(Commands.argument("price", DoubleArgumentType.doubleArg(0))
+                                        .executes(ctx -> createShop(ctx, ShopMode.SELL))))
+                        .then(Commands.literal("buy")
+                                .then(Commands.argument("price", DoubleArgumentType.doubleArg(0))
+                                        .executes(ctx -> createShop(ctx, ShopMode.BUY)))))
                 .then(Commands.literal("info")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.info", true))
                         .executes(this::shopInfo))
                 .then(Commands.literal("list")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.list", true))
                         .executes(this::listShops)));
+    }
+
+    /**
+     * Nothing is changed until every check has passed (D1, D4, D5, D10).
+     * Then the item file and shops.json are written (D7), and only then is the sign placed; if the sign cannot be
+     * placed after all, the shop is removed again (D5).
+     */
+    private int createShop(CommandContext<CommandSourceStack> context, ShopMode mode) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayerOrException();
+        ItemStack held = player.getMainHandItem();
+        if (held.isEmpty()) {
+            source.sendFailure(TranslationHelper.translate("shop.command.hold_item"));
+            return 0;
+        }
+
+        HitResult hit = player.pick(5.0, 0.0f, false);
+        if (hit.getType() != HitResult.Type.BLOCK) {
+            source.sendFailure(TranslationHelper.translate("shop.command.look_at_chest"));
+            return 0;
+        }
+        BlockHitResult blockHit = (BlockHitResult) hit;
+        ServerLevel level = player.level();
+        BlockPos pos = blockHit.getBlockPos();
+
+        if (feature.containers().resolve(level, pos) == null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.look_at_chest_or_container"));
+            return 0;
+        }
+        if (feature.shops().findByContainerBlock(level, pos) != null) {
+            source.sendFailure(TranslationHelper.translate("shop.command.container_in_use"));
+            return 0;
+        }
+
+        BigDecimal price = BigDecimal.valueOf(DoubleArgumentType.getDouble(context, "price"));
+        if (Prices.hasTooManyDecimals(price)) {
+            source.sendFailure(TranslationHelper.translate("shop.command.price_decimals"));
+            return 0;
+        }
+        if (Prices.isTooHigh(price)) {
+            source.sendFailure(TranslationHelper.translate("shop.command.price_too_high", EconomyService.get().format(Prices.MAX_PRICE)));
+            return 0;
+        }
+
+        if (!mayUseContainer(player, level, blockHit)) {
+            source.sendFailure(TranslationHelper.translate("shop.command.create_no_access"));
+            return 0;
+        }
+
+        Direction side = ShopSigns.chooseSide(blockHit.getDirection(), player.getDirection());
+        if (!ShopSigns.canPlace(level, pos, side)) {
+            source.sendFailure(TranslationHelper.translate("shop.command.create_no_sign_space"));
+            return 0;
+        }
+
+        Shop shop = new Shop(UUID.randomUUID(),
+                new BlockLocation(level.dimension().identifier().toString(), Positions.toPosition(pos)),
+                player.getUUID(), player.getName().getString(), ShopType.PLAYER, mode, price,
+                Positions.toPosition(pos.relative(side)), false);
+        try {
+            feature.changes().create(shop, held);
+        } catch (IOException e) {
+            SavsCommonEconomy.LOGGER.error("Shop v2: could not save the new shop at {} in {}", pos.toShortString(), shop.anchor().dimension(), e);
+            source.sendFailure(TranslationHelper.translate("shop.command.create_failed"));
+            return 0;
+        }
+
+        if (ShopSigns.place(level, pos, side) == null) {
+            removeAfterFailedSign(shop);
+            source.sendFailure(TranslationHelper.translate("shop.command.create_no_sign_space"));
+            return 0;
+        }
+        feature.signs().refresh(level, shop, feature.shops().item(shop.id()));
+        source.sendSuccess(() -> TranslationHelper.translate("shop.command.create_success"), false);
+        return 1;
+    }
+
+    private void removeAfterFailedSign(Shop shop) {
+        try {
+            feature.changes().remove(shop);
+        } catch (IOException e) {
+            SavsCommonEconomy.LOGGER.error("Shop v2: shop {} was created but its sign could not be placed, and the shop could not be removed again.", shop.id(), e);
+        }
+    }
+
+    /**
+     * Fires the normal block-interaction event for the player and the aimed container and lets any mod that
+     * uses that event refuse (D4). Only mods that use that event are consulted.
+     */
+    private static boolean mayUseContainer(ServerPlayer player, ServerLevel level, BlockHitResult hit) {
+        return UseBlockCallback.EVENT.invoker().interact(player, level, InteractionHand.MAIN_HAND, hit) == InteractionResult.PASS;
     }
 
     private int shopInfo(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
