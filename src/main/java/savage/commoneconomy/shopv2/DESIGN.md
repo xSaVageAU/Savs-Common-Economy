@@ -393,7 +393,7 @@ Rule for pure logic: trade planning, identity, and the storage format take plain
 
 - [x] **M0** Scaffold: `shopv2` package, `shopVersion` selector, data folder.
 - [x] **M1** Data model and storage (`shops.json` and the SNBT item files), including the import from v1 and the check that the data fixer upgrades an old-format item (no game hooks yet). Done; nothing calls it yet, that is M2 onwards.
-- [ ] **M2** Container registry and inventory resolving (chest, trapped chest, barrel, double chest), and the shared "is this position part of a shop" lookup (D3).
+- [x] **M2** Container registry and inventory resolving (chest, trapped chest, barrel, double chest), and the shared "is this position part of a shop" lookup (D3). Done and checked in the game; shops are loaded (and the v1 import runs) at server start. Item files are not read at startup yet: that comes with M3, where the sign needs the item.
 - [ ] **M3** Sign rendering and placement.
 - [ ] **M4** Commands: create (with the one-shop-per-container, sign-space, access and price checks), info, list, remove, resign, admin.
 - [ ] **M5** Click and chat handling: pending trades (range and dimension rule, re-validation, clearing on disconnect) and remove-mode (sign or container, expiry).
@@ -466,6 +466,7 @@ Things deliberately left for later, so they do not slow v2.0 down:
 Claims in this document that were reasoned from the code or the game's bytecode but never tested, so they are not forgotten:
 - ~~The data fixer upgrades an old-format item correctly~~ (D7): verified in M1, see D7.
 - **The creation access check works with the common claim mods**, and what other mods' callbacks show the player (D4).
+- ~~Block tags are loaded when the registry is built at server start (D2)~~: verified in M2, `#minecraft:copper_chests` resolved and produced no warning.
 - **In v1, opening the neighbouring half of a shop's double chest reaches the shop's contents**, and in v2 it no longer does (D3, D4).
 - **The exact pickup and drop-off rules of the Copper Golem** (D2).
 - **Fabric's chunk-load event** exists as assumed, and the sweep's loaded-chunk check behaves as described (D8).
@@ -484,4 +485,5 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
+- M2 done: `shopAllowedContainers`, `ContainerRegistry`, `ShopRegistry` and `ShopStorage`. Checked in the game with a temporary debug log: single and double chests, barrels and copper chests (by tag) resolve to the right inventory, a double chest reports its partner half, and a shop is found from either half of its double chest.
 - M1 done: the data model, `shops.json` storage, the SNBT item store and the v1 import are built and checked, the import against a real v1 file. The data fixer upgrade is verified (D7, section 7c).
