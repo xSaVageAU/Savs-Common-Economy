@@ -61,6 +61,7 @@
   "shop.command.create_no_sign_space": "&c该面没有放置商店告示牌的空间。请清理该面前方的空间。",
   "shop.command.create_no_access": "&c你无权使用该容器。",
   "shop.command.container_in_use": "&c该容器已属于一个商店。",
+  "shop.command.create_failed": "&c商店无法保存，因此未被创建。请让管理员检查服务器日志。",
   "shop.command.price_decimals": "&c价格最多只能有两位小数。",
   "shop.command.price_too_high": "&c每件物品的最高价格为 %s。",
   "shop.command.remove_mode.enter_sign_or_container": "&6已进入移除模式。右键点击商店告示牌或其容器以将其移除。",
