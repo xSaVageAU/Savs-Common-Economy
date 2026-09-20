@@ -62,6 +62,7 @@
   "shop.command.create_no_access": "&cYou are not allowed to use that container.",
   "shop.command.container_in_use": "&cThat container already belongs to a shop.",
   "shop.command.create_failed": "&cThe shop could not be saved, so it was not created. Ask an admin to check the server log.",
+  "shop.command.save_failed": "&cThe change could not be saved, so it was not made. Ask an admin to check the server log.",
   "shop.command.price_decimals": "&cPrices can have at most two decimal places.",
   "shop.command.price_too_high": "&cThe maximum price is %s per item.",
   "shop.command.remove_mode.enter_sign_or_container": "&6Entered REMOVE MODE. Right-click the shop's sign or its container to remove it.",

@@ -312,13 +312,14 @@ A shop can only be physically broken while its chunk is loaded (offline edits ar
 5. **Every new key also gets a `zh_cn` translation.** These are drafted by me and need a native speaker's review. A missing translation falls back to English, not to a raw key.
 6. `/shop resign` reuses `shop.remove.not_owner` for the wrong-owner case.
 
-**New keys (22; `shop.command.create_failed` was added in M4 for a shop that could not be saved).** English wording is a draft; the final text is settled when each is implemented.
+**New keys (23; `shop.command.create_failed` and `shop.command.save_failed` were added in M4, for a shop or a change that could not be saved).** English wording is a draft; the final text is settled when each is implemented.
 | Key | Draft English text | From |
 |---|---|---|
 | `shop.command.create_no_sign_space` | `&cThere is no room for the shop sign on that side. Clear the space in front of that face.` | D5 |
 | `shop.command.create_no_access` | `&cYou are not allowed to use that container.` | D4 |
 | `shop.command.container_in_use` | `&cThat container already belongs to a shop.` | D1 |
 | `shop.command.create_failed` | `&cThe shop could not be saved, so it was not created. Ask an admin to check the server log.` | D7 |
+| `shop.command.save_failed` | `&cThe change could not be saved, so it was not made. Ask an admin to check the server log.` | D7 |
 | `shop.command.price_decimals` | `&cPrices can have at most two decimal places.` | D10 |
 | `shop.command.price_too_high` | `&cThe maximum price is %s per item.` | D10 |
 | `shop.command.remove_mode.enter_sign_or_container` | `&6Entered REMOVE MODE. Right-click the shop's sign or its container to remove it.` | D5 |
