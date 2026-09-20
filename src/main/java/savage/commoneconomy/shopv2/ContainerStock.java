@@ -33,16 +33,26 @@ public final class ContainerStock {
         int limit = container.getMaxStackSize(template);
         int space = 0;
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
-            if (!container.canPlaceItem(slot, template)) {
-                continue;
-            }
-            ItemStack stack = container.getItem(slot);
-            if (stack.isEmpty()) {
-                space += limit;
-            } else if (ItemStack.isSameItemSameComponents(stack, template)) {
-                space += Math.max(0, limit - stack.getCount());
-            }
+            space += roomInSlot(container, slot, template, limit);
         }
         return space;
+    }
+
+    /**
+     * How many more of the item one slot takes: nothing if the slot does not accept it or holds something else,
+     * a full stack if it is empty, and what is left under the limit if it holds the same item. Both {@link #space}
+     * and {@link ContainerMoves#insert} use this, so what is counted as room is exactly what gets filled.
+     *
+     * @param limit the container's stack limit for this item
+     */
+    static int roomInSlot(Container container, int slot, ItemStack template, int limit) {
+        if (!container.canPlaceItem(slot, template)) {
+            return 0;
+        }
+        ItemStack stack = container.getItem(slot);
+        if (stack.isEmpty()) {
+            return limit;
+        }
+        return ItemStack.isSameItemSameComponents(stack, template) ? Math.max(0, limit - stack.getCount()) : 0;
     }
 }
