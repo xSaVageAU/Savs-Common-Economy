@@ -5,7 +5,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import savage.commoneconomy.shopv2.model.BlockLocation;
-import savage.commoneconomy.shopv2.model.Position;
 import savage.commoneconomy.shopv2.model.Shop;
 
 import java.util.Collection;
@@ -66,16 +65,12 @@ public final class ShopRegistry {
             return null;
         }
         String dimension = level.dimension().identifier().toString();
-        Shop shop = get(new BlockLocation(dimension, position(pos)));
+        Shop shop = get(new BlockLocation(dimension, Positions.toPosition(pos)));
         if (shop != null) {
             return shop;
         }
         BlockState state = level.getBlockState(pos);
         BlockPos partner = ContainerRegistry.partnerOf(state, pos);
-        return partner == null ? null : get(new BlockLocation(dimension, position(partner)));
-    }
-
-    private static Position position(BlockPos pos) {
-        return new Position(pos.getX(), pos.getY(), pos.getZ());
+        return partner == null ? null : get(new BlockLocation(dimension, Positions.toPosition(partner)));
     }
 }

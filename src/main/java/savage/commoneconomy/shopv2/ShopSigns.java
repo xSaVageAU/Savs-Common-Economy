@@ -65,7 +65,7 @@ public final class ShopSigns {
         }
         BlockPos signPos = anchor.relative(side);
         level.setBlock(signPos, wallSign(side), 3);
-        return new Position(signPos.getX(), signPos.getY(), signPos.getZ());
+        return Positions.toPosition(signPos);
     }
 
     private static BlockState wallSign(Direction side) {
@@ -86,7 +86,7 @@ public final class ShopSigns {
         if (!shop.hasSign()) {
             return;
         }
-        BlockPos signPos = blockPos(shop.sign());
+        BlockPos signPos = Positions.toBlockPos(shop.sign());
         if (!level.hasChunkAt(signPos) || !(level.getBlockEntity(signPos) instanceof SignBlockEntity sign)) {
             return;
         }
@@ -120,7 +120,7 @@ public final class ShopSigns {
         if (shop.type() == ShopType.ADMIN) {
             return TranslationHelper.translate("shop.sign.stock_infinite");
         }
-        Container container = containers.resolve(level, blockPos(shop.anchor().position()));
+        Container container = containers.resolve(level, Positions.toBlockPos(shop.anchor().position()));
         if (container == null) {
             return null;
         }
@@ -128,9 +128,5 @@ public final class ShopSigns {
             return TranslationHelper.translate("shop.sign.space_line", ContainerStock.space(container, item));
         }
         return TranslationHelper.translate("shop.sign.stock_line", ContainerStock.count(container, item));
-    }
-
-    private static BlockPos blockPos(Position position) {
-        return new BlockPos(position.x(), position.y(), position.z());
     }
 }
