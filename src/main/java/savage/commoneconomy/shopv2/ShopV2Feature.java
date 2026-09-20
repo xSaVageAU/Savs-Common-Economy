@@ -17,13 +17,14 @@ import java.nio.file.Path;
 
 /**
  * Chest shops, version 2. Runs instead of the v1 shop (shop package) when shopVersion is "v2".
- * Under development: it loads shops and registers /shop create, info and list so far, and no events yet.
+ * Under development: shops, commands, clicks, chat and trades work; protection and the health checks are still to come.
  * The design and plan are in DESIGN.md next to this file.
  */
 public class ShopV2Feature implements Feature {
 
     private final RemoveMode removeMode = new RemoveMode();
     private final PendingTrades pendingTrades = new PendingTrades();
+    private final TradeService trades = new TradeService(this);
     private ContainerRegistry containers;
     private ShopRegistry shops;
     private ShopHealth health;
@@ -64,6 +65,10 @@ public class ShopV2Feature implements Feature {
 
     ShopSigns signs() {
         return signs;
+    }
+
+    TradeService trades() {
+        return trades;
     }
 
     PendingTrades pendingTrades() {

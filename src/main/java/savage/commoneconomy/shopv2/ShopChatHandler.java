@@ -1,7 +1,6 @@
 package savage.commoneconomy.shopv2;
 
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -83,7 +82,7 @@ final class ShopChatHandler {
             }
             amount = everything.getAsInt();
         }
-        runTrade(player, shop, item, amount);
+        feature.trades().start(player, shop, amount);
         return true;
     }
 
@@ -138,14 +137,5 @@ final class ShopChatHandler {
         int room = container == null ? 0 : ContainerStock.space(container, item);
         int ownerCanPay = Prices.affordable(EconomyService.get().getCachedBalance(shop.owner()), shop.price());
         return OptionalInt.of(Math.min(carried, Math.min(room, ownerCanPay)));
-    }
-
-    /**
-     * TEMPORARY until M6: the trade service does not exist yet, so this only reports what it would be asked to do.
-     */
-    private void runTrade(ServerPlayer player, Shop shop, ItemStack item, int amount) {
-        String verb = shop.mode() == ShopMode.SELL ? "buy" : "sell";
-        player.sendSystemMessage(Component.literal("[shop v2, trade not built yet] Would " + verb + " " + amount + "x "
-                + item.getHoverName().getString() + " at " + shop.price().toPlainString() + " each."));
     }
 }
