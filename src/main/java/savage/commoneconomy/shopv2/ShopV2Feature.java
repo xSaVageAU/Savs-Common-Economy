@@ -52,7 +52,7 @@ public class ShopV2Feature implements Feature {
                 SavsCommonEconomy.LOGGER.info("Shop v2: imported {} shop(s) from v1, left out {}.", loaded.imported().imported(), loaded.imported().skipped());
             }
             for (Shop shop : loaded.shops()) {
-                if (!shops.add(shop)) {
+                if (!shops.add(shop, loaded.items().get(shop.id()))) {
                     SavsCommonEconomy.LOGGER.warn("Shop v2: shop {} has the same container as another shop at {} in {} and was left out of memory.",
                             shop.id(), shop.anchor().position(), shop.anchor().dimension());
                 }

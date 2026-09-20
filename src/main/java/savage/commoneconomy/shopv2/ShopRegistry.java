@@ -2,6 +2,7 @@ package savage.commoneconomy.shopv2;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import savage.commoneconomy.shopv2.model.BlockLocation;
 import savage.commoneconomy.shopv2.model.Position;
@@ -10,20 +11,36 @@ import savage.commoneconomy.shopv2.model.Shop;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * The shops in memory, looked up by identity: the dimension plus the anchor block (D1).
+ * The shops in memory, looked up by identity: the dimension plus the anchor block (D1). Also holds each shop's item.
  * Call it from the server thread only.
  */
 public final class ShopRegistry {
 
     private final Map<BlockLocation, Shop> byAnchor = new HashMap<>();
+    private final Map<UUID, ItemStack> items = new HashMap<>();
 
     /**
+     * @param item the shop's single-item template, or null if its item file could not be read (the shop is still kept)
      * @return false, and does nothing, if another shop already has that anchor
      */
-    public boolean add(Shop shop) {
-        return byAnchor.putIfAbsent(shop.anchor(), shop) == null;
+    public boolean add(Shop shop, ItemStack item) {
+        if (byAnchor.putIfAbsent(shop.anchor(), shop) != null) {
+            return false;
+        }
+        if (item != null) {
+            items.put(shop.id(), item);
+        }
+        return true;
+    }
+
+    /**
+     * @return the shop's single-item template, or null if its item could not be read
+     */
+    public ItemStack item(UUID shopId) {
+        return items.get(shopId);
     }
 
     public Shop get(BlockLocation anchor) {

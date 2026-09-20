@@ -1,12 +1,15 @@
 package savage.commoneconomy.shopv2.storage;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.world.item.ItemStack;
 import savage.commoneconomy.shopv2.model.Shop;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -17,10 +20,11 @@ import java.util.UUID;
 public final class ShopStorage {
 
     /**
+     * @param items    each shop's item; a shop whose item file could not be used has none, and is still in {@code shops}
      * @param imported what the v1 import did (all zero if it did not run)
      * @param problems plain-English lines for the caller to log
      */
-    public record Loaded(List<Shop> shops, ShopImporter.Report imported, List<String> problems) {
+    public record Loaded(List<Shop> shops, Map<UUID, ItemStack> items, ShopImporter.Report imported, List<String> problems) {
     }
 
     private final ShopsFile shopsFile;
@@ -43,6 +47,17 @@ public final class ShopStorage {
         ShopsFile.Loaded loaded = shopsFile.load();
         problems.addAll(loaded.problems());
 
+        Map<UUID, ItemStack> items = new HashMap<>();
+        for (Shop shop : loaded.shops()) {
+            ShopItemStore.Loaded item = itemStore.read(shop.id(), registries);
+            if (item.item() != null) {
+                items.put(shop.id(), item.item());
+            }
+            if (item.problem() != null) {
+                problems.add("Shop " + shop.id() + ": " + item.problem());
+            }
+        }
+
         // When nothing could be loaded every item file would look unused, which would only mislead
         if (loaded.status() != ShopsFile.Status.CORRUPT && loaded.status() != ShopsFile.Status.NEWER_FORMAT) {
             List<UUID> ids = loaded.shops().stream().map(Shop::id).toList();
@@ -50,6 +65,6 @@ public final class ShopStorage {
                 problems.add("The item file " + name + " is not used by any loaded shop. It was left in place.");
             }
         }
-        return new Loaded(loaded.shops(), imported, problems);
+        return new Loaded(loaded.shops(), items, imported, problems);
     }
 }
