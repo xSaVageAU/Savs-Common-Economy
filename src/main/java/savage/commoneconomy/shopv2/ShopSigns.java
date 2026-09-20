@@ -1,10 +1,13 @@
 package savage.commoneconomy.shopv2;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,6 +28,51 @@ public final class ShopSigns {
 
     public ShopSigns(ContainerRegistry containers) {
         this.containers = containers;
+    }
+
+    /**
+     * Which side of the container the sign goes on (D5): the face the player is aiming at, or if that is the top or
+     * bottom, the side opposite the direction the player is facing, so the sign faces them.
+     *
+     * @param playerFacing the direction the player looks in, horizontal
+     * @return a horizontal direction
+     */
+    public static Direction chooseSide(Direction aimedFace, Direction playerFacing) {
+        return aimedFace.getAxis().isHorizontal() ? aimedFace : playerFacing.getOpposite();
+    }
+
+    /**
+     * Whether a wall sign can go on that side of the container: the spot must be empty or replaceable and
+     * a wall sign must be able to stand there. Nothing else is tried, and it never loads a chunk.
+     */
+    public static boolean canPlace(ServerLevel level, BlockPos anchor, Direction side) {
+        BlockPos signPos = anchor.relative(side);
+        if (!level.hasChunkAt(signPos)) {
+            return false;
+        }
+        BlockState existing = level.getBlockState(signPos);
+        return (existing.isAir() || existing.canBeReplaced()) && wallSign(side).canSurvive(level, signPos);
+    }
+
+    /**
+     * Places a blank wall sign on that side of the container, facing outwards. The text is written by {@link #refresh}.
+     *
+     * @return where the sign is, or null if it cannot be placed there (see {@link #canPlace})
+     */
+    public static Position place(ServerLevel level, BlockPos anchor, Direction side) {
+        if (!canPlace(level, anchor, side)) {
+            return null;
+        }
+        BlockPos signPos = anchor.relative(side);
+        level.setBlock(signPos, wallSign(side), 3);
+        return new Position(signPos.getX(), signPos.getY(), signPos.getZ());
+    }
+
+    private static BlockState wallSign(Direction side) {
+        if (!side.getAxis().isHorizontal()) {
+            throw new IllegalArgumentException("A wall sign goes on a side face, not " + side);
+        }
+        return Blocks.OAK_WALL_SIGN.defaultBlockState().setValue(WallSignBlock.FACING, side);
     }
 
     /**
