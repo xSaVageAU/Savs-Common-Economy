@@ -87,6 +87,14 @@ public final class ShopRegistry {
     }
 
     /**
+     * A shop is found by either of its blocks: the container (both halves of a double chest) or its recorded sign.
+     */
+    public Shop findByBlock(ServerLevel level, BlockPos pos) {
+        Shop shop = findByContainerBlock(level, pos);
+        return shop != null ? shop : findBySign(level, pos);
+    }
+
+    /**
      * "Is this block part of a shop?" (D3). A double chest is one container, so a shop covers both halves
      * whichever half it was created on. Does not load a chunk.
      *

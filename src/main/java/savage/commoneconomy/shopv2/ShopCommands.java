@@ -172,7 +172,7 @@ final class ShopCommands {
         }
 
         ServerLevel level = player.level();
-        Shop shop = findShop(level, blockHit.getBlockPos());
+        Shop shop = feature.shops().findByBlock(level, blockHit.getBlockPos());
         if (shop == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
@@ -300,7 +300,7 @@ final class ShopCommands {
         }
 
         ServerLevel level = player.level();
-        Shop shop = findShop(level, blockHit.getBlockPos());
+        Shop shop = feature.shops().findByBlock(level, blockHit.getBlockPos());
         if (shop == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
@@ -325,14 +325,6 @@ final class ShopCommands {
     private static BlockHitResult aimedBlock(ServerPlayer player) {
         HitResult hit = player.pick(5.0, 0.0f, false);
         return hit.getType() == HitResult.Type.BLOCK ? (BlockHitResult) hit : null;
-    }
-
-    /**
-     * A shop is found by either of its blocks: the container (both halves of a double chest) or its recorded sign.
-     */
-    private Shop findShop(ServerLevel level, BlockPos pos) {
-        Shop shop = feature.shops().findByContainerBlock(level, pos);
-        return shop != null ? shop : feature.shops().findBySign(level, pos);
     }
 
     /**
