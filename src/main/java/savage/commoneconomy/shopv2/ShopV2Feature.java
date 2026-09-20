@@ -22,6 +22,7 @@ import java.nio.file.Path;
  */
 public class ShopV2Feature implements Feature {
 
+    private final RemoveMode removeMode = new RemoveMode();
     private ContainerRegistry containers;
     private ShopRegistry shops;
     private ShopHealth health;
@@ -40,6 +41,7 @@ public class ShopV2Feature implements Feature {
 
     @Override
     public void onInitialize() {
+        new ShopClickHandler(this).register();
         SavsCommonEconomy.LOGGER.warn("Shop v2 is selected in config.json but is still under development and provides no shops yet. "
                 + "Set \"shopVersion\" back to \"v1\" to use chest shops. Its data folder is {}", DataFolder.get());
     }
@@ -60,6 +62,10 @@ public class ShopV2Feature implements Feature {
 
     ShopSigns signs() {
         return signs;
+    }
+
+    RemoveMode removeMode() {
+        return removeMode;
     }
 
     ShopChanges changes() {

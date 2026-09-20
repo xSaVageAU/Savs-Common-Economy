@@ -35,7 +35,7 @@ import java.util.UUID;
 
 /**
  * The /shop commands (D10). Same commands and permission nodes as v1.
- * Create, info, list, resign and admin. Remove needs the click handling and comes with M5.
+ * Create, info, list, remove, resign and admin. Remove only enters remove-mode; the click that removes is in ShopClickHandler.
  */
 final class ShopCommands {
 
@@ -61,6 +61,9 @@ final class ShopCommands {
                 .then(Commands.literal("list")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.list", true))
                         .executes(this::listShops))
+                .then(Commands.literal("remove")
+                        .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.remove", true))
+                        .executes(this::toggleRemoveMode))
                 .then(Commands.literal("resign")
                         .requires(source -> PermissionsHelper.check(source, "savscommoneconomy.shop.create", true))
                         .executes(this::resign))
@@ -212,6 +215,18 @@ final class ShopCommands {
             source.sendSuccess(() -> TranslationHelper.translate("shop.command.my_shops.entry_detail",
                     itemName, position, shop.anchor().dimension(), status), false);
         }
+        return 1;
+    }
+
+    /**
+     * Enters remove-mode, or leaves it if already in it. The click that removes a shop is handled by the click handler.
+     */
+    private int toggleRemoveMode(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayerOrException();
+        boolean entered = feature.removeMode().toggle(player.getUUID(), System.currentTimeMillis());
+        String key = entered ? "shop.command.remove_mode.enter_sign_or_container" : "shop.command.remove_mode.exit";
+        source.sendSuccess(() -> TranslationHelper.translate(key), false);
         return 1;
     }
 
