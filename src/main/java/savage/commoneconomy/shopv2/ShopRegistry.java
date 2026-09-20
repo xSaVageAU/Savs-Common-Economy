@@ -37,6 +37,13 @@ public final class ShopRegistry {
         return true;
     }
 
+    /**
+     * Swaps in a changed record of a shop that is already here. The anchor and the id must be the same as before.
+     */
+    public void replace(Shop shop) {
+        byAnchor.put(shop.anchor(), shop);
+    }
+
     public void remove(Shop shop) {
         byAnchor.remove(shop.anchor());
         items.remove(shop.id());

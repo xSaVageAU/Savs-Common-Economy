@@ -67,6 +67,23 @@ public final class ShopChanges {
     }
 
     /**
+     * Replaces a shop's record with a changed copy (a new sign, a new type, and so on) and saves shops.json.
+     * The item file never changes (D7).
+     *
+     * @throws IOException if shops.json could not be saved; the old record is then back in memory
+     */
+    public void update(Shop updated) throws IOException {
+        Shop previous = shops.get(updated.anchor());
+        shops.replace(updated);
+        try {
+            storage.save(shops.all());
+        } catch (IOException e) {
+            shops.replace(previous);
+            throw e;
+        }
+    }
+
+    /**
      * A leftover item file is harmless and is reported when the server next starts (D7), so a failure is only logged.
      */
     private void deleteItemFile(UUID shopId) {
