@@ -14,10 +14,15 @@ public final class Prices {
 
     private Prices() {}
 
+    public static boolean hasTooManyDecimals(BigDecimal price) {
+        return price.stripTrailingZeros().scale() > MAX_DECIMALS;
+    }
+
+    public static boolean isTooHigh(BigDecimal price) {
+        return price.compareTo(MAX_PRICE) > 0;
+    }
+
     public static boolean isValid(BigDecimal price) {
-        return price != null
-                && price.signum() >= 0
-                && price.compareTo(MAX_PRICE) <= 0
-                && price.stripTrailingZeros().scale() <= MAX_DECIMALS;
+        return price != null && price.signum() >= 0 && !isTooHigh(price) && !hasTooManyDecimals(price);
     }
 }
