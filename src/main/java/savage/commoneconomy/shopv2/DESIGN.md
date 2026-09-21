@@ -451,6 +451,7 @@ Still open:
 ## 7b. Polish after v2 works
 
 Things deliberately left for later, so they do not slow v2.0 down:
+- **Reorganise the flat `shopv2` root into a few subpackages** (about 24 files sit in it, next to `model`, `storage` and `mixin`). Purely cosmetic, and best done once as pure moves when the code has stopped changing, together with the rename to `shop` in section 8. The real cost is visibility: 15 of the 24 root classes are package-private, and moving related ones apart forces `public` on them and on the `ShopV2Feature` accessors they use (the two classes the mixins call, `ChestMergeRule` and `ContainerChanges`, already had to be public for that reason). A layout to consider then: `container/` (`ContainerRegistry`, `ContainerStock`, `ContainerMoves`, `ContainerChanges`, `PlayerItems`), `trade/` (`TradeService`, `TradeLocks`, `PendingTrades`, `ShopChatHandler`), `health/` (`ShopHealth`, `ShopChecker`, `MissingContainers`, `ReportedStatuses`) and `interaction/` (`ShopCommands`, `ShopClickHandler`, `ShopProtection`, `ChestMergeRule`, `RemoveMode`), with the feature, registry, changes, signs and `Positions` staying in the root.
 - **Buying more than the shop has is refused, but selling more than you have sells what you have** (D9). Make them consistent, one way or the other.
 - **Admin shops refuse "all" on purchases** (D9). Consider "as much as fits and can be afforded".
 - **Several shops on one container**, for example a buy shop and a sell shop for different items (D1).
@@ -482,6 +483,8 @@ Claims in this document that were reasoned from the code or the game's bytecode 
 
 When v1 is removed: delete the `shop` package and its mixin, drop its entry from the feature list, remove `ShopVersion` and the `shopVersion` setting, rename `shopv2` to `shop`, and remove the v1-only lang keys listed in D12 (the shared keys stay).
 
+**Also at that point (decided with the user): the import renames v1's `shops.json` to `shops.json.old`** once it has written v2's file, so a migration is visibly one and done. Until v1 is gone the file is left alone, because switching `shopVersion` back to `"v1"` needs it (v1 starts with no shops when the file is missing, and its next save would write a fresh one). The rename must only happen after a successful import, must never overwrite an existing `shops.json.old`, and a failed rename is a warning, not an error. The importer's "it stays in v1's file" wording and the D7 import text change with it: a shop the import could not convert is then only in `shops.json.old`.
+
 ---
 
 ## 9. Change log
@@ -489,6 +492,7 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
+- Decisions after the real-data migration test (user): v1's shops.json is left alone while shopVersion exists and is renamed to shops.json.old at retirement (section 8); reorganising the flat shopv2 root is a polish item for when the code has settled (7b). The user is taking their time to be sure before releasing and is doing the deeper multi-user testing when they have the energy.
 - Real-data migration (user): a world with v1 shop data from the latest release was migrated into the current build with shopVersion v2; the shops worked and the migrated data all existed. This is the first check of the import against a released version's data rather than the dev test folder.
 - Direction check after M8: the user does not want two shop versions to stay selectable. v2 replaces v1 outright when it is considered finished, and not before they are certain; the README and parity testing wait until then. M9 was rewritten as an open-ended use-and-polish phase, the "become the default" question was answered, and the README item in 7b now says shopVersion is temporary.
 - M8 done (built): `ShopChecker` (checks on use, on chunk load in one batch, and a 5-second sweep of loaded shops; deferred sign lookup for imported shops; two-sighting deletion of a shop whose container is gone with the record and item SNBT logged; once-only status reports), `MissingContainers`, `ReportedStatuses`, `ShopHealth.containerStateOf`, `ShopSigns.findAttached`. Only the `/setblock` deletion was checked in the game so far; the rest is listed in 7c.
