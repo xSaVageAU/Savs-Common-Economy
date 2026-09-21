@@ -96,7 +96,7 @@ final class ShopClickHandler {
         try {
             feature.changes().remove(shop);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not save shops.json after removing shop {}", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shop v2: could not delete the file of shop {}, so it was not removed", shop.id(), e);
             player.sendSystemMessage(TranslationHelper.translate("shop.command.save_failed"));
             return InteractionResult.FAIL;
         }

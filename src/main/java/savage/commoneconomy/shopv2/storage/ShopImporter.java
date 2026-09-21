@@ -53,16 +53,17 @@ public final class ShopImporter {
     private ShopImporter() {}
 
     /**
-     * Converts the shops in v1's file and writes them: the item files first, then shops.json (D7's order).
-     * Does nothing if v1's file is missing or if v2 already has a shops.json, so it can never overwrite one.
+     * Converts the shops in v1's file and writes them: the item files first, then the shop files (D7's order), which
+     * appear together or not at all (see {@link ShopFolder#createAll}).
+     * Does nothing if v1's file is missing or if v2 already has its shops folder, so it can never overwrite one.
      * If no shop could be imported, nothing is written, so a later start can try again.
      */
-    public static Report run(Path v1File, ShopsFile shopsFile, ShopItemStore itemStore, HolderLookup.Provider registries)
+    public static Report run(Path v1File, ShopFolder shopFolder, ShopItemStore itemStore, HolderLookup.Provider registries)
             throws IOException {
         List<String> problems = new ArrayList<>();
 
-        if (shopsFile.exists()) {
-            problems.add("v2 already has a shops.json, so nothing was imported.");
+        if (shopFolder.exists()) {
+            problems.add("v2 already has its shops folder, so nothing was imported.");
             return new Report(0, 0, problems);
         }
         if (!Files.exists(v1File)) {
@@ -107,7 +108,7 @@ public final class ShopImporter {
         }
 
         if (!shops.isEmpty()) {
-            shopsFile.save(shops);
+            shopFolder.createAll(shops);
         }
         return new Report(shops.size(), skipped, problems);
     }

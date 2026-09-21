@@ -74,7 +74,7 @@ final class ShopCommands {
 
     /**
      * Nothing is changed until every check has passed (D1, D4, D5, D10).
-     * Then the item file and shops.json are written (D7), and only then is the sign placed; if the sign cannot be
+     * Then the item file and the shop's file are written (D7), and only then is the sign placed; if the sign cannot be
      * placed after all, the shop is removed again (D5).
      */
     private int createShop(CommandContext<CommandSourceStack> context, ShopMode mode) throws CommandSyntaxException {

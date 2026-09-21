@@ -87,7 +87,7 @@ final class ShopProtection {
         try {
             feature.changes().remove(shop);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not save shops.json after a player broke the sign of shop {}", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shop v2: could not delete the file of shop {} after a player broke its sign, so it was not removed", shop.id(), e);
             serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.command.save_failed"));
             return false;
         }

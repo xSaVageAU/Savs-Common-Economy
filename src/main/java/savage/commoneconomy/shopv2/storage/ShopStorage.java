@@ -7,16 +7,17 @@ import savage.commoneconomy.shopv2.model.Shop;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Loads the shops at server start (D7): shops.json in the data folder plus the item files next to it.
- * The first time v2 runs, when shops.json does not exist yet, v1's shops are imported first.
- * It does no logging; the caller reports the problems. Call it from the server thread only.
+ * Loads the shops at server start (D7): the shop files in the shops folder plus the item files next to it, and saves
+ * a shop's file or item file right away. The first time v2 runs, when the shops folder does not exist yet, v1's shops
+ * are imported first. It does no logging; the caller reports the problems. Call it from the server thread only.
  */
 public final class ShopStorage {
 
@@ -28,12 +29,11 @@ public final class ShopStorage {
     public record Loaded(List<Shop> shops, Map<UUID, ItemStack> items, ShopImporter.Report imported, List<String> problems) {
     }
 
-    private final ShopsFile shopsFile;
+    private final ShopFolder shopFolder;
     private final ShopItemStore itemStore;
-    private boolean ready;
 
     public ShopStorage(Path dataFolder) {
-        this.shopsFile = new ShopsFile(dataFolder.resolve("shops.json"));
+        this.shopFolder = new ShopFolder(dataFolder.resolve("shops"));
         this.itemStore = new ShopItemStore(dataFolder.resolve("shopitems"));
     }
 
@@ -41,12 +41,12 @@ public final class ShopStorage {
         List<String> problems = new ArrayList<>();
 
         ShopImporter.Report imported = new ShopImporter.Report(0, 0, List.of());
-        if (!shopsFile.exists()) {
-            imported = ShopImporter.run(v1File, shopsFile, itemStore, registries);
+        if (!shopFolder.exists()) {
+            imported = ShopImporter.run(v1File, shopFolder, itemStore, registries);
             problems.addAll(imported.problems());
         }
 
-        ShopsFile.Loaded loaded = shopsFile.load();
+        ShopFolder.Loaded loaded = shopFolder.load();
         problems.addAll(loaded.problems());
 
         Map<UUID, ItemStack> items = new HashMap<>();
@@ -60,28 +60,25 @@ public final class ShopStorage {
             }
         }
 
-        // When nothing could be loaded every item file would look unused, which would only mislead
-        if (loaded.status() != ShopsFile.Status.CORRUPT && loaded.status() != ShopsFile.Status.NEWER_FORMAT) {
-            List<UUID> ids = loaded.shops().stream().map(Shop::id).toList();
-            for (String name : itemStore.findUnused(ids)) {
-                problems.add("The item file " + name + " is not used by any loaded shop. It was left in place.");
-            }
+        // The item of a shop whose file could not be read is still in use, so it is not reported as unused
+        Set<UUID> referenced = new HashSet<>(loaded.unreadable());
+        loaded.shops().forEach(shop -> referenced.add(shop.id()));
+        for (String name : itemStore.findUnused(referenced)) {
+            problems.add("The item file " + name + " is not used by any loaded shop. It was left in place.");
         }
-        ready = true;
         return new Loaded(loaded.shops(), items, imported, problems);
     }
 
     /**
-     * Saves shops.json right away (D7). Refused until the shops have been loaded completely, and for a file written
-     * by a newer version, so a shop that was never read can never be overwritten.
+     * Saves one shop's file right away (D7). Only that file is written, so a shop that was never loaded cannot be
+     * overwritten.
      */
-    public void save(Collection<Shop> shops) throws IOException {
-        if (!ready) {
-            throw new IOException("the shops were not loaded completely, so shops.json is not being changed");
-        }
-        if (!shopsFile.save(shops)) {
-            throw new IOException("shops.json was written by a newer version and is not being changed");
-        }
+    public void saveShop(Shop shop) throws IOException {
+        shopFolder.save(shop);
+    }
+
+    public void deleteShop(UUID shopId) throws IOException {
+        shopFolder.delete(shopId);
     }
 
     public void writeItem(UUID shopId, ItemStack item, HolderLookup.Provider registries) throws IOException {

@@ -2,7 +2,7 @@ package savage.commoneconomy.shopv2.model;
 
 /**
  * The state of a shop, worked out when needed and never saved (D8). A shop whose container is gone is deleted,
- * and a shop that could not be read from shops.json is not loaded, so neither has a status here.
+ * and a shop whose file could not be read is not loaded, so neither has a status here.
  */
 public enum ShopStatus {
     /** Everything is present. */

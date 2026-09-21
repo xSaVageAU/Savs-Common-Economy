@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * Converts a {@link Shop} to and from its entry in shops.json. Reading is strict: anything missing
- * or invalid throws, and the caller keeps that entry unchanged instead of guessing (D7).
+ * Converts a {@link Shop} to and from its JSON. Reading is strict: anything missing
+ * or invalid throws, and the caller leaves that file unchanged instead of guessing (D7).
  */
 final class ShopJson {
 

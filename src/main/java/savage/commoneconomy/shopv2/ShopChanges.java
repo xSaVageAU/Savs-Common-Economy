@@ -27,7 +27,7 @@ public final class ShopChanges {
     }
 
     /**
-     * Writes the item file first, then adds the shop and saves shops.json. The caller has already checked that no
+     * Writes the item file first, then adds the shop and saves its file. The caller has already checked that no
      * shop uses the same container.
      *
      * @param item the item to sell; a single-item copy is stored (D7)
@@ -41,7 +41,7 @@ public final class ShopChanges {
             throw new IllegalStateException("Another shop already has the container at " + shop.anchor());
         }
         try {
-            storage.save(shops.all());
+            storage.saveShop(shop);
         } catch (IOException e) {
             shops.remove(shop);
             deleteItemFile(shop.id());
@@ -50,15 +50,15 @@ public final class ShopChanges {
     }
 
     /**
-     * Saves shops.json first, then deletes the item file.
+     * Deletes the shop's file first, then the item file.
      *
-     * @throws IOException if shops.json could not be saved; the shop is then still there
+     * @throws IOException if the shop's file could not be deleted; the shop is then still there
      */
     public void remove(Shop shop) throws IOException {
         ItemStack item = shops.item(shop.id());
         shops.remove(shop);
         try {
-            storage.save(shops.all());
+            storage.deleteShop(shop.id());
         } catch (IOException e) {
             shops.add(shop, item);
             throw e;
@@ -67,16 +67,16 @@ public final class ShopChanges {
     }
 
     /**
-     * Replaces a shop's record with a changed copy (a new sign, a new type, and so on) and saves shops.json.
+     * Replaces a shop's record with a changed copy (a new sign, a new type, and so on) and saves its file.
      * The item file never changes (D7).
      *
-     * @throws IOException if shops.json could not be saved; the old record is then back in memory
+     * @throws IOException if the shop's file could not be saved; the old record is then back in memory
      */
     public void update(Shop updated) throws IOException {
         Shop previous = shops.get(updated.anchor());
         shops.replace(updated);
         try {
-            storage.save(shops.all());
+            storage.saveShop(updated);
         } catch (IOException e) {
             shops.replace(previous);
             throw e;

@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * A shop record, the part of a shop that is saved in shops.json (D7).
+ * A shop record, the part of a shop that is saved in its own file (D7).
  * The item is not here; it is stored in its own file named after the shop id.
  * Stock and status are never stored, they are worked out when needed.
  *
