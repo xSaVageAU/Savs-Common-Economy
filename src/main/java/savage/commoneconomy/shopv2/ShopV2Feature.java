@@ -44,6 +44,7 @@ public class ShopV2Feature implements Feature {
     @Override
     public void onInitialize() {
         ContainerChanges.activate();
+        new ShopProtection(this).register(); // before the click handler, so a refused click never reaches it
         new ShopClickHandler(this).register();
         new ShopChatHandler(this).register();
         SavsCommonEconomy.LOGGER.warn("Shop v2 is selected in config.json but is still under development and provides no shops yet. "

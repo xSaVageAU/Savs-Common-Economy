@@ -10,7 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.i18n.TranslationHelper;
-import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.shopv2.model.Shop;
 import savage.commoneconomy.shopv2.model.ShopMode;
 import savage.commoneconomy.shopv2.model.ShopStatus;
@@ -44,7 +43,7 @@ final class ShopClickHandler {
                 Shop shop = feature.shops().findByBlock(serverLevel, hit.getBlockPos());
                 return shop == null ? InteractionResult.PASS : removeClickedShop(serverPlayer, serverLevel, shop);
             }
-            // Only the sign starts a trade; a click on the container is left alone (protection comes with M7)
+            // Only the sign starts a trade; who may open the container is decided by ShopProtection
             Shop shop = feature.shops().findBySign(serverLevel, hit.getBlockPos());
             return shop == null ? InteractionResult.PASS : startTrade(serverPlayer, serverLevel, shop, now);
         });
@@ -79,7 +78,7 @@ final class ShopClickHandler {
      */
     private InteractionResult removeClickedShop(ServerPlayer player, ServerLevel level, Shop shop) {
         feature.removeMode().end(player.getUUID());
-        boolean allowed = shop.owner().equals(player.getUUID()) || PermissionsHelper.check(player, "savscommoneconomy.admin", 2);
+        boolean allowed = ShopProtection.mayManage(player, shop);
         if (!allowed) {
             player.sendSystemMessage(TranslationHelper.translate("shop.remove.not_owner"));
             return InteractionResult.FAIL;
