@@ -59,8 +59,10 @@ final class ShopClickHandler {
      * A click on a shop's sign starts a trade (D9): the player is asked to type an amount in chat. A shop that is not
      * OK says it is unavailable and starts nothing. The click never places a block or opens the sign editor.
      */
-    private InteractionResult startTrade(ServerPlayer player, ServerLevel level, Shop shop, long now) {
-        if (feature.health().statusOf(level.getServer(), shop) != ShopStatus.OK) {
+    private InteractionResult startTrade(ServerPlayer player, ServerLevel level, Shop clicked, long now) {
+        // The check that goes with using a shop (D8) may find that its container is gone and delete it
+        Shop shop = feature.checker().checkNow(level, clicked);
+        if (shop == null || feature.health().statusOf(level.getServer(), shop) != ShopStatus.OK) {
             player.sendSystemMessage(TranslationHelper.translate("shop.interaction.unavailable"));
             return InteractionResult.SUCCESS;
         }
@@ -99,14 +101,18 @@ final class ShopClickHandler {
     }
 
     /**
-     * Once a second: refreshes the signs of shops whose containers changed (D9), and tells players whose
-     * remove-mode ran out (D10).
+     * Once a second: refreshes the signs of shops whose containers changed (D9), checks the shops in chunks that
+     * loaded (D8), and tells players whose remove-mode ran out (D10). Every fifth second it sweeps all loaded shops (D8).
      */
     private void onTick(MinecraftServer server) {
         if (server.getTickCount() % 20 != 0) {
             return;
         }
         signRefresh.run(server);
+        feature.checker().checkLoadedChunks(server);
+        if (server.getTickCount() % 100 == 0) {
+            feature.checker().sweep(server);
+        }
         for (UUID expired : feature.removeMode().removeExpired(System.currentTimeMillis())) {
             ServerPlayer player = server.getPlayerList().getPlayer(expired);
             if (player != null) {

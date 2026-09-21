@@ -172,7 +172,7 @@ final class ShopCommands {
         }
 
         ServerLevel level = player.level();
-        Shop shop = feature.shops().findByBlock(level, blockHit.getBlockPos());
+        Shop shop = checked(level, feature.shops().findByBlock(level, blockHit.getBlockPos()));
         if (shop == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
@@ -244,7 +244,7 @@ final class ShopCommands {
         }
 
         ServerLevel level = player.level();
-        Shop shop = feature.shops().findByContainerBlock(level, blockHit.getBlockPos());
+        Shop shop = checked(level, feature.shops().findByContainerBlock(level, blockHit.getBlockPos()));
         if (shop == null) {
             source.sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
             return 0;
@@ -317,6 +317,16 @@ final class ShopCommands {
         feature.signs().refresh(level, converted, feature.shops().item(shop.id()));
         source.sendSuccess(() -> TranslationHelper.translate("shop.command.admin_convert"), true);
         return 1;
+    }
+
+    /**
+     * Runs the check that goes with using a shop (D8), which can find an imported shop's sign or delete a shop whose
+     * container is gone.
+     *
+     * @return the shop as it is now, or null if there was none or the check deleted it
+     */
+    private Shop checked(ServerLevel level, Shop found) {
+        return found == null ? null : feature.checker().checkNow(level, found);
     }
 
     /**

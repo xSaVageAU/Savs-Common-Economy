@@ -17,7 +17,7 @@ import java.nio.file.Path;
 
 /**
  * Chest shops, version 2. Runs instead of the v1 shop (shop package) when shopVersion is "v2".
- * Under development: shops, commands, clicks, chat and trades work; protection and the health checks are still to come.
+ * Under development: shops, commands, clicks, chat, trades, protection and the health checks work; parity testing is next.
  * The design and plan are in DESIGN.md next to this file.
  */
 public class ShopV2Feature implements Feature {
@@ -25,6 +25,7 @@ public class ShopV2Feature implements Feature {
     private final RemoveMode removeMode = new RemoveMode();
     private final PendingTrades pendingTrades = new PendingTrades();
     private final TradeService trades = new TradeService(this);
+    private final ShopChecker checker = new ShopChecker(this);
     private ContainerRegistry containers;
     private ShopRegistry shops;
     private ShopHealth health;
@@ -44,6 +45,7 @@ public class ShopV2Feature implements Feature {
     @Override
     public void onInitialize() {
         ContainerChanges.activate();
+        checker.register();
         new ShopProtection(this).register(); // before the click handler, so a refused click never reaches it
         new ShopClickHandler(this).register();
         new ShopChatHandler(this).register();
@@ -67,6 +69,10 @@ public class ShopV2Feature implements Feature {
 
     ShopSigns signs() {
         return signs;
+    }
+
+    ShopChecker checker() {
+        return checker;
     }
 
     TradeService trades() {
