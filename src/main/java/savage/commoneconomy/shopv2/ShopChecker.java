@@ -59,7 +59,9 @@ final class ShopChecker {
     }
 
     /**
-     * Checks the shops in the chunks that loaded since the last run.
+     * Checks the shops in the chunks that loaded since the last run, and regenerates their signs. A sign is a display
+     * that can always be regenerated (D5), so this catches anything that changed while the chunk was unloaded, such as
+     * an owner who was renamed. A sign that already shows the right text is left alone.
      */
     void checkLoadedChunks(MinecraftServer server) {
         Map<ResourceKey<Level>, LongOpenHashSet> chunks = loadedChunks;
@@ -72,7 +74,10 @@ final class ShopChecker {
             ServerLevel level = ShopHealth.levelOf(server, shop.anchor().dimension());
             LongOpenHashSet inDimension = level == null ? null : chunks.get(level.dimension());
             if (inDimension != null && inDimension.contains(ChunkPos.pack(Positions.toBlockPos(shop.anchor().position())))) {
-                check(level, shop, now);
+                Shop checked = check(level, shop, now);
+                if (checked != null) {
+                    feature.signs().refresh(level, checked, feature.shops().item(checked.id()));
+                }
             }
         }
     }
