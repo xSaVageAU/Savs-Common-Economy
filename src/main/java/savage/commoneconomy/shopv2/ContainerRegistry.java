@@ -1,6 +1,7 @@
 package savage.commoneconomy.shopv2;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -9,6 +10,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import savage.commoneconomy.SavsCommonEconomy;
@@ -31,6 +34,8 @@ public final class ContainerRegistry {
 
     /**
      * An entry that cannot be used (bad syntax, or an id or tag that does not exist) is logged and left out.
+     * An entry for a block with no inventory is logged too (D2) but kept: creating a shop on it is already refused,
+     * because there is no inventory to trade with.
      * Build this once the server is starting, so that tags are loaded.
      */
     public ContainerRegistry(List<String> entries) {
@@ -43,9 +48,16 @@ public final class ContainerRegistry {
             } else if (isTag) {
                 addTag(TagKey.create(Registries.BLOCK, id), entry);
             } else {
-                BuiltInRegistries.BLOCK.getOptional(id).ifPresentOrElse(blocks::add,
+                BuiltInRegistries.BLOCK.getOptional(id).ifPresentOrElse(block -> addBlock(block, entry),
                         () -> SavsCommonEconomy.LOGGER.warn("shopAllowedContainers: there is no block '{}', ignoring it.", entry));
             }
+        }
+    }
+
+    private void addBlock(Block block, String entry) {
+        blocks.add(block);
+        if (lacksInventory(block)) {
+            SavsCommonEconomy.LOGGER.warn("shopAllowedContainers: '{}' has no inventory, so shops cannot be created on it.", entry);
         }
     }
 
@@ -54,6 +66,36 @@ public final class ContainerRegistry {
             tags.add(tag);
         } else {
             SavsCommonEconomy.LOGGER.warn("shopAllowedContainers: there is no block tag '{}', ignoring it.", entry);
+            return;
+        }
+
+        List<String> withoutInventory = new ArrayList<>();
+        for (Holder<Block> holder : BuiltInRegistries.BLOCK.getTagOrEmpty(tag)) {
+            if (lacksInventory(holder.value())) {
+                withoutInventory.add(BuiltInRegistries.BLOCK.getKey(holder.value()).toString());
+            }
+        }
+        if (!withoutInventory.isEmpty()) {
+            SavsCommonEconomy.LOGGER.warn("shopAllowedContainers: '{}' includes blocks with no inventory, so shops cannot be created on them: {}",
+                    entry, withoutInventory);
+        }
+    }
+
+    /**
+     * Whether a block is positively known to have no inventory: it has no block entity, or its block entity is not
+     * a Container. It asks the game for a throwaway block entity in the block's default state, which needs no world.
+     * If that cannot be done, for example a modded block whose block entity cannot be built this way, the answer is
+     * no, so a block is only reported when it is certain.
+     */
+    static boolean lacksInventory(Block block) {
+        if (!(block instanceof EntityBlock entityBlock)) {
+            return true;
+        }
+        try {
+            BlockEntity blockEntity = entityBlock.newBlockEntity(BlockPos.ZERO, block.defaultBlockState());
+            return blockEntity != null && !(blockEntity instanceof Container);
+        } catch (RuntimeException e) {
+            return false;
         }
     }
 
