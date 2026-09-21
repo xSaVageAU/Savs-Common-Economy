@@ -112,7 +112,8 @@ final class ShopChatHandler {
     /**
      * What "all" means (D9). A purchase is limited by what the buyer can afford, what the shop has and what fits in
      * the buyer's inventory. A sale is limited by what the seller has and, in a player shop, by the shop's free
-     * space and by what the owner can pay for. The balances are the cached ones, so the real charge can still fail.
+     * space and by what the owner can pay for. A balance that is not known sets no limit, and the real charge can
+     * still fail.
      *
      * @return the amount, or empty if "all" is refused: an admin shop has infinite stock to buy
      */
@@ -125,7 +126,7 @@ final class ShopChatHandler {
                 return OptionalInt.empty();
             }
             int inStock = container == null ? 0 : ContainerStock.count(container, item);
-            int affordable = Prices.affordable(EconomyService.get().getCachedBalance(player.getUUID()), shop.price());
+            int affordable = Prices.affordable(EconomyService.get().peekBalance(player.getUUID()), shop.price());
             int fits = InventorySpace.getAvailableSpace(player, item);
             return OptionalInt.of(Math.min(Math.min(affordable, inStock), Math.min(fits, MAX_ALL_PURCHASE)));
         }
@@ -135,7 +136,7 @@ final class ShopChatHandler {
             return OptionalInt.of(carried);
         }
         int room = container == null ? 0 : ContainerStock.space(container, item);
-        int ownerCanPay = Prices.affordable(EconomyService.get().getCachedBalance(shop.owner()), shop.price());
+        int ownerCanPay = Prices.affordable(EconomyService.get().peekBalance(shop.owner()), shop.price());
         return OptionalInt.of(Math.min(carried, Math.min(room, ownerCanPay)));
     }
 }

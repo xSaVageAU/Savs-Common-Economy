@@ -1,6 +1,7 @@
 package savage.commoneconomy.shopv2.model;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 /**
  * The price rules from D10: from 0 up to a fixed maximum, with at most two decimals.
@@ -34,6 +35,14 @@ public final class Prices {
             return 0;
         }
         return balance.divideToIntegralValue(unitPrice).min(BigDecimal.valueOf(Integer.MAX_VALUE)).intValue();
+    }
+
+    /**
+     * The same, when the balance may not be known. An unknown balance sets no limit, so "all" is left to the real
+     * charge instead of a guess (D9).
+     */
+    public static int affordable(Optional<BigDecimal> balance, BigDecimal unitPrice) {
+        return balance.map(known -> affordable(known, unitPrice)).orElse(Integer.MAX_VALUE);
     }
 
     public static boolean isValid(BigDecimal price) {

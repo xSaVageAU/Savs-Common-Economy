@@ -93,7 +93,7 @@ final class TradeService {
                 InventorySpace.getAvailableSpace(player, item),
                 container == null ? 0 : ContainerStock.count(container, item),
                 container == null ? 0 : ContainerStock.space(container, item),
-                EconomyService.get().getCachedBalance(player.getUUID()));
+                EconomyService.get().peekBalance(player.getUUID()));
         TradePlan.Outcome outcome = TradePlan.plan(kind, shop.price(), requested, facts);
         if (!outcome.goesAhead()) {
             locks.release(shop.anchor(), token);

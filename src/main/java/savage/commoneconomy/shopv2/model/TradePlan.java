@@ -2,6 +2,7 @@ package savage.commoneconomy.shopv2.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 
 /**
  * The decisions of a trade as pure logic on plain values (D6): whether it can go ahead, how many items and what total,
@@ -18,9 +19,9 @@ public final class TradePlan {
      * @param playerRoom    how many more of the item fit in the player's inventory
      * @param shopStock     how many of the item the shop's container holds (player shops only)
      * @param shopRoom      how many more of the item the shop's container takes (player shops only)
-     * @param playerBalance the player's balance
+     * @param playerBalance the player's balance, or empty if it is not known
      */
-    public record Facts(int playerHas, int playerRoom, int shopStock, int shopRoom, BigDecimal playerBalance) {
+    public record Facts(int playerHas, int playerRoom, int shopStock, int shopRoom, Optional<BigDecimal> playerBalance) {
     }
 
     public enum Refusal {
@@ -81,7 +82,7 @@ public final class TradePlan {
     /**
      * Checks whether the trade can go ahead. A purchase that asks for more than the shop has is refused, but a sale
      * of more than the player carries sells what they carry (kept from v1, D9). The player's balance is only checked
-     * when the player pays; an owner's balance is left to the real charge.
+     * when the player pays and it is known; otherwise, and for an owner, the real charge decides.
      *
      * @param requested the amount asked for; zero or less can come from "all" finding nothing to trade, and the
      *                  refusal then names the limit it hit
@@ -105,7 +106,8 @@ public final class TradePlan {
             return Outcome.refused(Refusal.NO_SPACE);
         }
         BigDecimal total = total(unitPrice, requested);
-        if (facts.playerBalance().compareTo(total) < 0) {
+        // An unknown balance is not refused here: the real charge decides (D6)
+        if (facts.playerBalance().isPresent() && facts.playerBalance().get().compareTo(total) < 0) {
             return new Outcome(0, total, Refusal.INSUFFICIENT_FUNDS);
         }
         return Outcome.go(requested, total);
