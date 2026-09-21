@@ -66,13 +66,21 @@ public final class ShopItemStore {
      * Writes the item as a single-item template (D7), replacing any earlier file for the shop.
      */
     public void write(UUID shopId, ItemStack item, HolderLookup.Provider registries) throws IOException {
+        AtomicFiles.write(fileFor(shopId), toSnbt(item, registries).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * The item as it is written to its file: the single-item template as SNBT text with the current DataVersion.
+     * Also lets a deleted shop's item be logged in a form that can be restored by hand.
+     */
+    public static String toSnbt(ItemStack item, HolderLookup.Provider registries) {
         Tag encoded = ItemStack.CODEC.encodeStart(registries.createSerializationContext(NbtOps.INSTANCE), item.copyWithCount(1))
                 .getOrThrow();
         if (!(encoded instanceof CompoundTag tag)) {
             throw new IllegalStateException("An item was not encoded as a compound: " + encoded);
         }
         NbtUtils.addCurrentDataVersion(tag);
-        AtomicFiles.write(fileFor(shopId), new SnbtPrinterTagVisitor().visit(tag).getBytes(StandardCharsets.UTF_8));
+        return new SnbtPrinterTagVisitor().visit(tag);
     }
 
     public Loaded read(UUID shopId, HolderLookup.Provider registries) throws IOException {
