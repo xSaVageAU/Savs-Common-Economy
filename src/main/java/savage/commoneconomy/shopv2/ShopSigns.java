@@ -18,6 +18,9 @@ import savage.commoneconomy.shopv2.model.Shop;
 import savage.commoneconomy.shopv2.model.ShopMode;
 import savage.commoneconomy.shopv2.model.ShopType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * A shop's sign (D5). The sign is only a display: its text is generated from the shop and can always be regenerated.
  * Uses the same sign language keys as v1, so admins' custom wording carries over (D12).
@@ -74,6 +77,49 @@ public final class ShopSigns {
     public static boolean isPresent(ServerLevel level, Position signPosition) {
         BlockPos pos = Positions.toBlockPos(signPosition);
         return level.hasChunkAt(pos) && level.getBlockState(pos).getBlock() instanceof WallSignBlock;
+    }
+
+    /**
+     * The wall signs found on a container by {@link #findAttached}.
+     *
+     * @param signs    in the order north, south, east, west for the anchor block, then for the other half of a double chest
+     * @param complete false if some place to look was in a chunk that is not loaded, so finding nothing is not final
+     */
+    public record AttachedSigns(List<Position> signs, boolean complete) {
+    }
+
+    /**
+     * Looks for wall signs attached to a container, for an imported shop that never recorded its sign (D5, D7).
+     * Both halves of a double chest count. A wall sign is attached to the block behind it, so a sign next to a
+     * block that faces away from it is attached to that block. Never loads a chunk.
+     */
+    public static AttachedSigns findAttached(ServerLevel level, BlockPos anchor) {
+        List<BlockPos> blocks = new ArrayList<>();
+        blocks.add(anchor);
+        BlockPos partner = ContainerRegistry.partnerOf(level.getBlockState(anchor), anchor);
+        if (partner != null) {
+            blocks.add(partner);
+        }
+
+        List<Position> signs = new ArrayList<>();
+        boolean complete = true;
+        for (BlockPos block : blocks) {
+            for (Direction side : new Direction[] {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST}) {
+                BlockPos candidate = block.relative(side);
+                if (blocks.contains(candidate)) {
+                    continue;
+                }
+                if (!level.hasChunkAt(candidate)) {
+                    complete = false;
+                    continue;
+                }
+                BlockState state = level.getBlockState(candidate);
+                if (state.getBlock() instanceof WallSignBlock && state.getValue(WallSignBlock.FACING) == side) {
+                    signs.add(Positions.toPosition(candidate));
+                }
+            }
+        }
+        return new AttachedSigns(signs, complete);
     }
 
     /**
