@@ -403,7 +403,7 @@ Rule for pure logic: trade planning, identity, and the storage format take plain
 - [x] **M6b** Change-driven sign refresh (added after M5; D9). A mixin on `BlockEntity.setChanged()` notes every container change (chests and barrels do not override it, so one hook covers all; v1's mixin was chests only), and a once-a-second batch rewrites the sign of each shop whose container changed, either half of a double chest. Done and checked in the game.
 - [x] **M7** Protection, including the merge rule (a mixin that keeps a chest placed next to someone else's shop chest single). Done and checked in the game. Opening a container is refused for everyone but the owner and admins in either hand (v1 checked the main hand only); nobody can break a container; breaking a sign removes the shop for its owner or an admin. The merge rule is `ChestPlacementMixin` on `ChestBlock.getStateForPlacement` with `ChestMergeRule`; the chest it makes single faces as a lone chest would.
 - [x] **M8** Shop health checks (on use, on chunk load, and a sweep of loaded chunks), the status model and reporting, automatic removal when the container is gone, and the deferred sign lookup for imported shops. Built (`ShopChecker`, `MissingContainers`, `ReportedStatuses`, `ShopHealth.containerStateOf`, `ShopSigns.findAttached`). Checked in the game so far: a shop whose container was removed with `/setblock` is deleted after a few seconds. The rest is checked outside the game (the two-sighting guard and once-only reporting, 16 cases) or not yet tested, see the list in 7c.
-- [ ] **M9** Parity testing against v1, README entry, decide when to make v2 the default.
+- [ ] **M9** Use it, question the choices, refine and polish. Parity testing against v1, the README, and the switch-over are all held back until you consider v2 finished. There is no fixed date: gaps, edge cases and better ways to reach a goal are expected to turn up through play, and each is discussed before it changes an agreed decision.
 
 ---
 
@@ -444,7 +444,7 @@ Rule for pure logic: trade planning, identity, and the storage format take plain
 Answered during the design pass: a free shop (price 0) stays allowed (D10); there is no per-player shop limit (D10); v2.0 is parity plus the safety and recovery additions listed in D4, D5, D9 and D10.
 
 Still open:
-- Should v2 become the default at M9, or only after real-world testing on your server?
+- ~~Should v2 become the default at M9, or only after real-world testing on your server?~~ Answered: v2 does not stay as a second option. When it replaces v1 it replaces it outright (section 8), but only once you are 100% certain, and v1 and its shops are not removed before then. Until then `shopVersion` stays as a safety net so real data can go back to v1.
 
 ---
 
@@ -460,7 +460,7 @@ Things deliberately left for later, so they do not slow v2.0 down:
 - **Notices for owners who are offline** (D8, D12): store a short notice per owner and show it at their next login, so a shop lost to an explosion overnight is not a silent surprise. D8 currently tells the owner only if they are online.
 - **Hopper and explosion protection**, if you ever want it (D4).
 - **Items with durability match strictly** (D6). A shop created while holding a used tool only matches tools with exactly that damage. Consider ignoring durability when matching.
-- **The README entry for `shopVersion` and `shopAllowedContainers`**, once v2 does something.
+- **The README entry, once v2 is considered finished.** Only `shopAllowedContainers` and the behaviour changes need documenting. `shopVersion` is temporary and goes when v1 is retired (section 8), so it is not documented as a setting. The v1 import (`ShopImporter`) reads v1's shops.json as plain JSON and does not use v1's classes, so deleting v1 does not break migration for existing servers.
 
 ---
 
@@ -489,6 +489,7 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
+- Direction check after M8: the user does not want two shop versions to stay selectable. v2 replaces v1 outright when it is considered finished, and not before they are certain; the README and parity testing wait until then. M9 was rewritten as an open-ended use-and-polish phase, the "become the default" question was answered, and the README item in 7b now says shopVersion is temporary.
 - M8 done (built): `ShopChecker` (checks on use, on chunk load in one batch, and a 5-second sweep of loaded shops; deferred sign lookup for imported shops; two-sighting deletion of a shop whose container is gone with the record and item SNBT logged; once-only status reports), `MissingContainers`, `ReportedStatuses`, `ShopHealth.containerStateOf`, `ShopSigns.findAttached`. Only the `/setblock` deletion was checked in the game so far; the rest is listed in 7c.
 - M7 done: `ShopProtection` (open, break container, break sign; both hands), `ChestMergeRule` and `ChestPlacementMixin`. Checked in the game. The copper chest question in 7c is answered from the bytecode.
 - M6b done: `ContainerChanges` + `ContainerChangeMixin` (second mixin config `savs-common-economy.shopv2.mixins.json`) and `SignRefresh` on the once-a-second tick. Checked in the game.
