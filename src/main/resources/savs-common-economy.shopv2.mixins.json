@@ -3,6 +3,7 @@
 	"package": "savage.commoneconomy.shopv2.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"ChestPlacementMixin",
 		"ContainerChangeMixin"
 	],
 	"injectors": {

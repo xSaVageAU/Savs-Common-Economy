@@ -93,6 +93,7 @@ public class ShopV2Feature implements Feature {
     public void onServerStarting(MinecraftServer server) {
         containers = new ContainerRegistry(ConfigManager.getConfig().shopAllowedContainers);
         shops = new ShopRegistry();
+        ChestMergeRule.attach(shops);
         health = new ShopHealth(containers, shops);
         signs = new ShopSigns(containers);
         ShopStorage storage = new ShopStorage(DataFolder.get());
