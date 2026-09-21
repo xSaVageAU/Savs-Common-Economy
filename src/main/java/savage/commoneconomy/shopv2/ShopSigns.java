@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import savage.commoneconomy.core.EconomyService;
@@ -168,12 +169,18 @@ public final class ShopSigns {
         Component itemName = item.getHoverName();
         Component price = TranslationHelper.translate("shop.sign.price_line", action, EconomyService.get().format(shop.price()));
 
-        sign.setText(sign.getText(SignTextSlot.FRONT).asMutable()
+        SignText current = sign.getText(SignTextSlot.FRONT);
+        SignText updated = current.asMutable()
                 .setLine(0, header)
                 .setLine(1, itemName)
                 .setLine(2, price)
                 .setLine(3, stockLine)
-                .asImmutable(), SignTextSlot.FRONT);
+                .asImmutable();
+        if (updated.equals(current)) {
+            // Nothing changed, so leave the chunk clean and send nothing
+            return;
+        }
+        sign.setText(updated, SignTextSlot.FRONT);
         BlockState state = level.getBlockState(signPos);
         level.sendBlockUpdated(signPos, state, state, 3);
     }
