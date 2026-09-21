@@ -46,6 +46,7 @@ public class ShopV2Feature implements Feature {
     public void onInitialize() {
         ContainerChanges.activate();
         checker.register();
+        new OwnerNames(this).register();
         new ShopProtection(this).register(); // before the click handler, so a refused click never reaches it
         new ShopClickHandler(this).register();
         new ShopChatHandler(this).register();
