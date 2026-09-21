@@ -118,6 +118,7 @@ final class TradeService {
                     : TranslationHelper.translate("shop.transaction.insufficient_funds_detail", EconomyService.get().format(outcome.total()));
             case NO_ITEMS -> TranslationHelper.translate("shop.transaction.no_items");
             case SHOP_NO_SPACE -> TranslationHelper.translate("shop.transaction.shop_no_space");
+            case OWNER_OUT_OF_FUNDS -> TranslationHelper.translate("shop.transaction.owner_out_of_funds");
         };
     }
 

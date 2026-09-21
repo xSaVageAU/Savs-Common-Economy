@@ -28,7 +28,9 @@ public final class TradePlan {
         NO_SPACE,
         INSUFFICIENT_FUNDS,
         NO_ITEMS,
-        SHOP_NO_SPACE
+        SHOP_NO_SPACE,
+        /** A sale of "all" came to zero with items carried and room in the shop, so only the owner's funds can be the limit (D9). */
+        OWNER_OUT_OF_FUNDS
     }
 
     /**
@@ -81,7 +83,8 @@ public final class TradePlan {
      * of more than the player carries sells what they carry (kept from v1, D9). The player's balance is only checked
      * when the player pays; an owner's balance is left to the real charge.
      *
-     * @param requested the amount asked for; zero or less can come from "all" finding nothing to trade
+     * @param requested the amount asked for; zero or less can come from "all" finding nothing to trade, and the
+     *                  refusal then names the limit it hit
      */
     public static Outcome plan(TradeKind kind, BigDecimal unitPrice, int requested, Facts facts) {
         return kind.playerBuys() ? planPurchase(kind, unitPrice, requested, facts) : planSale(kind, unitPrice, requested, facts);
@@ -109,6 +112,17 @@ public final class TradePlan {
     }
 
     private static Outcome planSale(TradeKind kind, BigDecimal unitPrice, int requested, Facts facts) {
+        if (requested <= 0) {
+            // "all" found nothing to sell. Like a purchase, the refusal names the limit it hit: what the player carries,
+            // then the shop's room, and what is left is the owner's funds (D9)
+            if (facts.playerHas() < 1) {
+                return Outcome.refused(Refusal.NO_ITEMS);
+            }
+            if (!kind.isAdminShop() && facts.shopRoom() < 1) {
+                return Outcome.refused(Refusal.SHOP_NO_SPACE);
+            }
+            return Outcome.refused(Refusal.OWNER_OUT_OF_FUNDS);
+        }
         int amount = Math.min(requested, facts.playerHas());
         if (amount <= 0) {
             return Outcome.refused(Refusal.NO_ITEMS);
