@@ -19,16 +19,18 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * The event side of clicking and chatting with shops (D9, D10): remove-mode and starting a trade; the chat amount comes next.
+ * The event side of clicking shops (D9, D10): remove-mode and starting a trade, plus the once-a-second tick.
  * Registers its events once at start-up; they do nothing until the server has started and the feature's
  * state exists.
  */
 final class ShopClickHandler {
 
     private final ShopV2Feature feature;
+    private final SignRefresh signRefresh;
 
     ShopClickHandler(ShopV2Feature feature) {
         this.feature = feature;
+        this.signRefresh = new SignRefresh(feature);
     }
 
     void register() {
@@ -98,12 +100,14 @@ final class ShopClickHandler {
     }
 
     /**
-     * Once a second, tells players whose remove-mode ran out (D10).
+     * Once a second: refreshes the signs of shops whose containers changed (D9), and tells players whose
+     * remove-mode ran out (D10).
      */
     private void onTick(MinecraftServer server) {
         if (server.getTickCount() % 20 != 0) {
             return;
         }
+        signRefresh.run(server);
         for (UUID expired : feature.removeMode().removeExpired(System.currentTimeMillis())) {
             ServerPlayer player = server.getPlayerList().getPlayer(expired);
             if (player != null) {
