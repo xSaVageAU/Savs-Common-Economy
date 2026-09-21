@@ -78,12 +78,19 @@ final class ShopClickHandler {
      * A click on a shop's sign or container while in remove-mode (D5, D10). The owner or an admin removes the shop
      * and its sign; anyone else is refused. Either way the mode ends, as in v1.
      */
-    private InteractionResult removeClickedShop(ServerPlayer player, ServerLevel level, Shop shop) {
+    private InteractionResult removeClickedShop(ServerPlayer player, ServerLevel level, Shop clicked) {
         feature.removeMode().end(player.getUUID());
-        boolean allowed = ShopProtection.mayManage(player, shop);
-        if (!allowed) {
+        if (!ShopProtection.mayManage(player, clicked)) {
             player.sendSystemMessage(TranslationHelper.translate("shop.remove.not_owner"));
             return InteractionResult.FAIL;
+        }
+
+        // The check that goes with using a shop (D8) runs first. It records the sign of an imported shop that has not
+        // had it looked up yet, so the sign is cleared with the shop, and it deletes a shop whose container is gone.
+        Shop shop = feature.checker().checkNow(level, clicked);
+        if (shop == null) {
+            player.sendSystemMessage(TranslationHelper.translate("shop.remove.success"));
+            return InteractionResult.SUCCESS;
         }
 
         try {
