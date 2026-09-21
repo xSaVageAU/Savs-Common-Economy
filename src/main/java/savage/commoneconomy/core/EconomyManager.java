@@ -97,6 +97,19 @@ public class EconomyManager implements EconomyService {
     }
 
     /**
+     * The balance from the cache or, if the storage keeps every account in memory, from the storage. Empty when
+     * neither has it. Unlike {@link #getCachedBalance} it never makes up the default balance.
+     */
+    @Override
+    public Optional<BigDecimal> peekBalance(UUID uuid) {
+        AccountData cached = accountCache.getIfPresent(uuid);
+        if (cached != null) {
+            return Optional.ofNullable(cached.getBalance());
+        }
+        return storage.peekAccount(uuid).map(AccountData::getBalance);
+    }
+
+    /**
      * Adds balance to a player's account asynchronously with optimistic locking.
      * @return CompletableFuture completing with true if successful.
      */

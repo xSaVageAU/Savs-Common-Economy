@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +28,7 @@ public class JsonStorage implements EconomyStorage {
             .resolve("savs-common-economy").resolve("balances.json").toFile();
 
     private final ExecutorService executor;
-    private Map<UUID, AccountData> cachedData = new HashMap<>();
+    private volatile Map<UUID, AccountData> cachedData = new HashMap<>();
 
     public JsonStorage(ExecutorService executor) {
         this.executor = executor;
@@ -82,6 +83,15 @@ public class JsonStorage implements EconomyStorage {
     @Override
     public CompletableFuture<AccountData> loadAccount(UUID uuid) {
         return CompletableFuture.completedFuture(cachedData.get(uuid));
+    }
+
+    /**
+     * Every account is in memory, so this answers for any account. It does not take the lock a save holds while it
+     * writes the file: a save builds a new map and swaps it in (the field is volatile), so the current map is read as is.
+     */
+    @Override
+    public Optional<AccountData> peekAccount(UUID uuid) {
+        return Optional.ofNullable(cachedData.get(uuid));
     }
 
     @Override

@@ -3,6 +3,7 @@ package savage.commoneconomy.core.storage;
 import savage.commoneconomy.core.model.AccountData;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -14,6 +15,14 @@ public interface EconomyStorage {
      * Loads an account from storage asynchronously.
      */
     CompletableFuture<AccountData> loadAccount(UUID uuid);
+
+    /**
+     * The account if this storage already holds it in memory, without reading a file or querying a database.
+     * Storage that keeps every account in memory answers. Storage that has to query does not, and returns empty.
+     */
+    default Optional<AccountData> peekAccount(UUID uuid) {
+        return Optional.empty();
+    }
 
     /**
      * Saves an account to storage asynchronously.
