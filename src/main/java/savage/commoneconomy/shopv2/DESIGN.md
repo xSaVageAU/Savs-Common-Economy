@@ -92,7 +92,7 @@ The sign is a **display**: its text is generated from the shop and can always be
 - If they are aiming at the top or bottom face, use the side **opposite the direction the player is facing** (v1's rule), so the sign faces the player.
 - The spot must be air or a replaceable block, and a wall sign must be able to stand there.
 - **If the spot is not usable, creation is refused** with a message that says why, for example "There is no room for the shop sign on that side. Clear the space in front of that face." Nothing is created. No other side is tried, and a shop is never created without its sign.
-- Order of work: check the spot first, create the shop (D7's order: the item file, then `shops.json`), then place the sign. If placing fails after the record exists, remove the shop again (D7's removal order: `shops.json` first, then the item file).
+- Order of work: check the spot first, create the shop (D7's order: the item file, then the shop's file), then place the sign. If placing fails after the record exists, remove the shop again (D7's removal order: `shops.json` first, then the item file).
 - New message key: `shop.command.create_no_sign_space` (see D12).
 
 **Difference from v1:** v1 always used the side opposite the player's facing. If that side was blocked it tried north, south, east, west in a fixed order (so the sign could face away), and it still created the shop if no side worked.
@@ -150,18 +150,18 @@ Why this order:
 **Your notes:** Agreed: the ordering, dropping leftovers on a full inventory, abort and refund when the player is gone, the busy rule, rounding totals to two decimals and two-decimal prices, and the owner trading with their own shop.
 
 ### D7 — Storage
-**Status:** Agreed
+**Status:** Agreed (the layout was changed after M8 to one file per shop, see Your notes)
 **Layout** (all under `config/savs-common-economy/data/`, see `DataFolder`):
-- `shops.json`: the shop records, with a `formatVersion`.
+- `shops/<shopId>.json`: one file per shop holding its record, with a `formatVersion`. Only that file is written when the shop changes.
 - `shopitems/<shopId>.snbt`: one file per shop holding its item. The shop's own ID is the pointer, so a shop record has no item field. A shop sells exactly one item, so it is one file per shop.
 
 **Shop record (sketch):** `id`, `dimension`, `anchor {x,y,z}`, `owner`, `ownerName`, `type`, `mode`, `price` (a string, two decimals), `sign {x,y,z}` or null, and `needsSignLookup` for imported shops (see Import).
 **Not stored:** stock and status. Stock is recalculated from the container whenever it is needed. v1 saves it, but only `/shop info` reads it, which is why v1 rewrites the whole file every second while stock changes. Status (D8) is worked out at run time.
 
 **Saving:**
-- Saved **immediately** whenever a shop's record changes: create, remove (including automatic removal, D8), re-place a sign, the deferred sign lookup for an imported shop, convert to admin, or an owner's name refresh. These are rare, so there is no timer or debounce and nothing is lost on a crash.
+- Saved **immediately** whenever a shop's record changes: create, remove (including automatic removal, D8), re-place a sign, the deferred sign lookup for an imported shop, convert to admin, or an owner's name refresh. These are rare, so there is no timer or debounce and nothing is lost on a crash. A save writes only that shop's file.
 - **Atomic:** write a temporary file, flush it to disk, then move it into place.
-- **One previous copy is kept** as `shops.json.bak` on every save.
+- **One previous copy is kept** next to each file as `<id>.json.bak` when it is saved over, only if the file being replaced is valid, so a damaged file can never replace the last good copy. It is deleted with the shop.
 - Runs on the main thread (the events are rare and the file is small).
 
 **Item files (SNBT):**
@@ -173,19 +173,19 @@ Why this order:
 - **Verified (M1):** the data fixer upgrades old items correctly. Two hand-written files, one from data version 3700 (the 1.20.4 layout with `Count` and `tag`) and one from 3955 (1.21.1 components), were loaded on the current version (5023). Both came out with the right item, name, damage and enchantment, and the file was rewritten in the current format. The check ran the game's own registries and data fixer outside the game. It covers those two eras; other versions rely on Mojang's fixers.
 
 **Consistency between the two:** item files are written once and never change, except for a version upgrade.
-- Creating a shop: write the item file first, then save `shops.json`.
-- Removing a shop: save `shops.json` first, then delete the item file.
+- Creating a shop: write the item file first, then save the shop's file.
+- Removing a shop: delete the shop's file first, then the item file.
 - A crash between the two leaves at most an unused item file, never a broken shop.
 - A shop whose item file is missing, unreadable or undecodable is **Unreadable**: kept, reported, and not used until it can be read.
 - **Unused item files** (not referenced by any shop) are **reported at startup and never deleted automatically.**
 
 **Safety, carried over from v1's fixes:**
-- **A shop that cannot be read is kept exactly as it was** in `shops.json` (the raw entry is retained and written back), not dropped.
-- **A file written by a newer version is never overwritten.** If `formatVersion` is higher than this version understands, v2 leaves it alone and reports it, so switching to an older jar cannot destroy data.
-- A backup copy of `shops.json` is made whenever anything fails to load.
+- **A shop that cannot be read is kept exactly as it was:** its file is left untouched and reported, and the other shops still load. Its item file is not reported as unused.
+- **A file written by a newer version is never overwritten.** If a shop file's `formatVersion` is higher than this version understands, v2 leaves that file alone and reports it, so switching to an older jar cannot destroy data.
+- A file that fails to load is left where it is and reported; nothing rewrites it, so no separate backup copy is made (the single-file design copied the whole file aside).
 
 **Import from v1** (one time, one way):
-- Runs the first time v2 starts and `shops.json` does not exist in the data folder. v1's file is never modified. The importer itself refuses to run if a v2 `shops.json` exists, and writes nothing if no shop could be imported, so a later start can try again. v1's shop ids are kept, so the item files are named after them.
+- Runs the first time v2 starts and the shops folder does not exist in the data folder. v1's file is never modified. The importer itself refuses to run if the folder exists, and writes nothing if no shop could be imported, so a later start can try again. The folder existing is the marker, so an empty folder counts as done: removing every shop never brings the import back. The shop files are written into a staging folder (`shops.importing`) that is moved into place in one step, so a crash cannot leave a half-imported folder that looks finished; a staging folder left by a crash is cleared at the next import. v1's shop ids are kept, so the item files are named after them.
 - For each v1 shop: the dimension, position, owner, type and price carry over, and the mode comes from v1's `buying` flag. The item is decoded from v1's base64 and rewritten as an SNBT file with a count of 1, stamped with the current `DataVersion` (v1 never recorded one, so it is assumed current). A v1 item that cannot be decoded leaves that shop out of the import, reported; it stays in v1's file.
 - Prices with more than two decimals are **rounded to two decimals (half up) on import**, and each change is logged as a warning, especially any price that becomes 0 (a free shop). This keeps imported prices consistent with the two-decimal rule (D6, D10), so a total can never round to zero while the sign shows a price. A price outside 0 to 1,000,000,000 leaves that shop out of the import (reported).
 - **The import does not read blocks**, because that would mean loading chunks. It records the shop with no sign and marks it `needsSignLookup`. The first time its chunk is checked (D8), the sign is looked up: exactly one attached wall sign is recorded, several record the first and log the rest, none becomes "No sign".
@@ -194,19 +194,19 @@ Why this order:
 **Loading timing:** on server start, once the registries are available (decoding an item needs them).
 **Why:** v1 rewrites the whole file on the main thread every second while stock changes, saves a stock number nobody needs, loses shops that fail to load, and stores items as an opaque blob that breaks across Minecraft updates.
 **Alternatives considered:**
-- The item as a base64 string inside `shops.json` (v1's way): a single file, but opaque.
-- The item as SNBT text inside `shops.json`: a single file, but the quotes are escaped and it is hard to read.
+- The item as a base64 string inside the shop's file (v1's way): one file, but opaque.
+- The item as SNBT text inside the shop's file: one file, but the quotes are escaped and it is hard to read.
 - Compressed binary NBT files: smaller, but not readable.
 - A separate item UUID: only useful if shops shared an item file.
 - Debounced saving: not needed once stock is no longer stored.
 
-**Your notes:** Agreed: not storing stock or status and saving immediately; one previous copy as `.bak`; item files as SNBT named by the shop ID; unused item files reported and never auto-deleted; the import is one-time and one-way.
+**Your notes:** Agreed: not storing stock or status and saving immediately; one previous copy as `.bak`; item files as SNBT named by the shop ID; unused item files reported and never auto-deleted; the import is one-time and one-way. **Changed after M8, with the user's OK: one file per shop instead of a single `shops.json`.** The reasons: a save touches only that shop, so the guard that stopped a partly loaded set from being saved over the file is no longer needed; a corrupt file affects one shop and not all of them; an unreadable file is simply left alone, with no raw entries to write back; and a shop can be inspected or restored by copying one file. The first design (one file) was fine for a few shops, and nothing had shipped, so there was nothing to migrate.
 
 ### D8 — How a shop notices its container or sign is gone
 **Status:** Agreed
 **Recommendation:** A shop's parts are checked at four points, and **none of them ever forces a chunk to load**:
 1. **When a player breaks it** (an event, immediate).
-2. **On use:** a sign click, a trade, `/shop info`, `/shop list`, `/shop resign`, `/shop remove`. Built for a sign click (which starts a trade), `/shop info`, `/shop resign` and a remove-mode click. **`/shop list` stays read-only on purpose:** it already shows the live status, most of the shops it lists are in unloaded chunks where a check does nothing, and a read-only command should not delete shops or write `shops.json`. The sweep covers the shops near a player within 5 seconds.
+2. **On use:** a sign click, a trade, `/shop info`, `/shop list`, `/shop resign`, `/shop remove`. Built for a sign click (which starts a trade), `/shop info`, `/shop resign` and a remove-mode click. **`/shop list` stays read-only on purpose:** it already shows the live status, most of the shops it lists are in unloaded chunks where a check does nothing, and a read-only command should not delete shops or write shop files. The sweep covers the shops near a player within 5 seconds.
 3. **When the shop's chunk loads** (catches anything that changed while it was unloaded, such as offline edits). Fabric has a chunk-load event; to be confirmed when implementing.
 4. **A periodic sweep of shops whose chunk is already loaded**, every few seconds (about 5 to start, tunable). It skips any shop in an unloaded chunk. Verified in the game code: the "is this chunk loaded" check is a pure lookup and does not load it.
 
@@ -351,7 +351,7 @@ A shop can only be physically broken while its chunk is loaded (offline edits ar
 
 ## 3. Data model (sketch)
 
-A shop record (saved in `shops.json`, D7):
+A shop record (saved in its own file, `shops/<id>.json`, D7):
 - `id` (UUID)
 - `dimension` (for example `minecraft:overworld`) and `anchor` position
 - `owner` (UUID) and cached `ownerName`
@@ -431,9 +431,9 @@ Everything is in `savage.commoneconomy.shopv2` unless a package is named. Most c
 | `ShopChecker` | The checks on use, on chunk load and in a sweep: the sign lookup for imported shops, deleting a shop whose container is gone, and reporting a change of status (D8) |
 | `MissingContainers`, `ReportedStatuses` | Plain state for the two-sighting guard before a deletion, and for reporting a status once (D8) |
 
-**`model`** (plain values, no game): `Shop` (the record saved in `shops.json`), `BlockLocation` and `Position`, `ShopType`, `ShopMode`, `ShopStatus`, `Prices` (the price rules and how many items a balance pays for), `TradeKind` and `TradePlan` (the trade decisions, D6).
+**`model`** (plain values, no game): `Shop` (the record saved in its own file), `BlockLocation` and `Position`, `ShopType`, `ShopMode`, `ShopStatus`, `Prices` (the price rules and how many items a balance pays for), `TradeKind` and `TradePlan` (the trade decisions, D6).
 
-**`storage`**: `ShopStorage` (loads at start, saves, writes item files, runs the import first), `ShopsFile` (`shops.json`: atomic saves, one backup, unreadable entries kept), `ShopJson` (a record to and from its JSON), `ShopItemStore` (the SNBT item files and the data fixer), `ShopImporter` (the one-time import from v1) and `AtomicFiles`.
+**`storage`**: `ShopStorage` (loads at start, saves and deletes a shop's file, writes item files, runs the import first), `ShopFolder` (one JSON file per shop: atomic saves, one previous copy, unreadable files left alone, the import's staging folder), `ShopJson` (a record to and from its JSON), `ShopItemStore` (the SNBT item files and the data fixer), `ShopImporter` (the one-time import from v1) and `AtomicFiles`.
 
 **`mixin`**: `ChestPlacementMixin` (the merge rule) and `ContainerChangeMixin` (noting container changes). Their config is `savs-common-economy.shopv2.mixins.json`.
 
@@ -444,7 +444,7 @@ Rule for pure logic: trade planning, identity, and the storage format take plain
 ## 5. Milestones (each a small, reviewable commit series)
 
 - [x] **M0** Scaffold: `shopv2` package, `shopVersion` selector, data folder.
-- [x] **M1** Data model and storage (`shops.json` and the SNBT item files), including the import from v1 and the check that the data fixer upgrades an old-format item (no game hooks yet). Done; nothing calls it yet, that is M2 onwards.
+- [x] **M1** Data model and storage (`shops.json` and the SNBT item files), including the import from v1 and the check that the data fixer upgrades an old-format item (no game hooks yet). Done; nothing calls it yet, that is M2 onwards. The single `shops.json` was later replaced by one file per shop (D7).
 - [x] **M2** Container registry and inventory resolving (chest, trapped chest, barrel, double chest), and the shared "is this position part of a shop" lookup (D3). Done and checked in the game; shops are loaded (and the v1 import runs) at server start. Item files are read with the shops from M3 onwards.
 - [x] **M3** Sign rendering and placement. Done and checked in the game. Item files are read at startup and held in `ShopRegistry`; a shop whose item file cannot be used stays registered without an item. `ContainerStock` counts an item and the room for it (M6 reuses it). `ShopSigns` writes the sign text (same language keys as v1) and chooses and places the wall sign; nothing records the sign position yet, that is M4.
 - [x] **M4** Commands: create (with the one-shop-per-container, sign-space, access and price checks), info, list, resign, admin. Done and checked in the game, except the access check against a real claim mod (still open in 7c). `/shop remove` is remove-mode, which is click handling, so it is built in M5. The status is worked out on use from the item, the container type and whether the recorded sign block is still a wall sign; the periodic checks stay in M8.
@@ -533,7 +533,7 @@ Claims in this document that were reasoned from the code or the game's bytecode 
 
 When v1 is removed: delete the `shop` package and its mixin, drop its entry from the feature list, remove `ShopVersion` and the `shopVersion` setting, rename `shopv2` to `shop`, and remove the v1-only lang keys listed in D12 (the shared keys stay).
 
-**Also at that point (decided with the user): the import renames v1's `shops.json` to `shops.json.old`** once it has written v2's file, so a migration is visibly one and done. Until v1 is gone the file is left alone, because switching `shopVersion` back to `"v1"` needs it (v1 starts with no shops when the file is missing, and its next save would write a fresh one). The rename must only happen after a successful import, must never overwrite an existing `shops.json.old`, and a failed rename is a warning, not an error. The importer's "it stays in v1's file" wording and the D7 import text change with it: a shop the import could not convert is then only in `shops.json.old`.
+**Also at that point (decided with the user): the import renames v1's `shops.json` to `shops.json.old`** once it has created v2's shops folder, so a migration is visibly one and done. Until v1 is gone the file is left alone, because switching `shopVersion` back to `"v1"` needs it (v1 starts with no shops when the file is missing, and its next save would write a fresh one). The rename must only happen after a successful import, must never overwrite an existing `shops.json.old`, and a failed rename is a warning, not an error. The importer's "it stays in v1's file" wording and the D7 import text change with it: a shop the import could not convert is then only in `shops.json.old`.
 
 ---
 
@@ -542,6 +542,7 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
+- Storage changed to one file per shop (D7), with the user's OK: `ShopFolder` replaces `ShopsFile` and `shops.json`; `shops/<id>.json` next to `shopitems/<id>.snbt`. The import is guarded by the shops folder existing and is written through a staging folder. Checked outside the game: 28 cases on `ShopFolder` and 21 on the real `ShopStorage` with a copy of real v1 data (7 shops: import, reload, a change, one corrupt file, every shop removed). A `data/shops.json` from before the change is not read; delete the data folder to import from v1 again.
 - Owner name refresh built (D5 gap found in an audit of this document): `OwnerNames` on join, sign regeneration in the chunk-load pass, and refresh skipping unchanged text (checked outside the game that reloaded sign text equals a fresh refresh). The startup warning for an allowed block with no inventory (D2) was built after that. The stale "provides no shops yet" startup line and the stale layout table in section 4 were fixed after that. The on-use check was added to remove-mode, and /shop list was left read-only on purpose (D8). Nothing else from that audit is open. The native review of the zh_cn drafts is set aside by the user for now.
 - Decisions after the real-data migration test (user): v1's shops.json is left alone while shopVersion exists and is renamed to shops.json.old at retirement (section 8); reorganising the flat shopv2 root is a polish item for when the code has settled (7b). The user is taking their time to be sure before releasing and is doing the deeper multi-user testing when they have the energy.
 - Real-data migration (user): a world with v1 shop data from the latest release was migrated into the current build with shopVersion v2; the shops worked and the migrated data all existed. This is the first check of the import against a released version's data rather than the dev test folder.
