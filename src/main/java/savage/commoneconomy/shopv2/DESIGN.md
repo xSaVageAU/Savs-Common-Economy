@@ -4,6 +4,14 @@ Living document. Edit anything. The "Recommendation" in each block is a proposed
 
 **Status legend:** `Proposed` (default suggested, not reviewed) · `Agreed` (you signed off) · `Changed` (you replaced the default; write what in Your notes) · `Open` (needs a decision)
 
+## Where things stand (updated 2026-09-22)
+
+- **Built:** M0 to M8 and M6b (section 5), with the storage changed to one file per shop (D7). Everything compiles. The parts that are plain Java, or need only the game's registries, were checked outside the game. The rest was checked by the user in the game; what is still unconfirmed is listed in 7c.
+- **Phase:** M9, an open-ended use-and-polish phase. The user tests and refines at their own pace and will decide when v2 is finished. Nothing waits on a date.
+- **Held back on purpose:** the README, the parity checklist and the switch-over (section 8) wait until the user considers v2 finished. The native review of the `zh_cn` drafts is set aside. Everything in 7b is deferred by choice.
+- **How to work on it:** discuss before changing anything marked `Agreed`. Small commits, one behaviour each. Say what was and was not verified. Do not ask for a big test session: the user tests multi-player cases only when they have the energy. `shopVersion` is a temporary safety net, and v1 and its data stay untouched until v2 replaces it outright.
+- **Where to look:** 7b for ideas and deferred features, 7c for what is untested, section 8 for the retirement checklist, and the change log at the end for the history.
+
 ---
 
 ## 1. Goals and principles
@@ -502,6 +510,8 @@ Still open:
 
 Things deliberately left for later, so they do not slow v2.0 down:
 - **Reorganise the flat `shopv2` root into a few subpackages** (about 24 files sit in it, next to `model`, `storage` and `mixin`). Purely cosmetic, and best done once as pure moves when the code has stopped changing, together with the rename to `shop` in section 8. The real cost is visibility: 15 of the 24 root classes are package-private, and moving related ones apart forces `public` on them and on the `ShopV2Feature` accessors they use (the two classes the mixins call, `ChestMergeRule` and `ContainerChanges`, already had to be public for that reason). A layout to consider then: `container/` (`ContainerRegistry`, `ContainerStock`, `ContainerMoves`, `ContainerChanges`, `PlayerItems`), `trade/` (`TradeService`, `TradeLocks`, `PendingTrades`, `ShopChatHandler`), `health/` (`ShopHealth`, `ShopChecker`, `MissingContainers`, `ReportedStatuses`) and `interaction/` (`ShopCommands`, `ShopClickHandler`, `ShopProtection`, `ChestMergeRule`, `RemoveMode`), with the feature, registry, changes, signs and `Positions` staying in the root.
+- **Keep removed shops instead of deleting their files.** Now that each shop is its own file, `/shop remove`, a broken sign and the automatic deletion of a shop whose container is gone could move the shop's record and item file into a `removed/` folder, so restoring one is moving two files back. Today a manual removal deletes both and only the automatic deletion logs the record.
+- **One file per shop holding the record and the item together** (D7). It would remove the two-file rules (write the item first, unused item files, a missing item file) at the cost of a bigger rewrite and an SNBT record instead of JSON. Only worth it if the two-file rules ever cause trouble.
 - **Buying more than the shop has is refused, but selling more than you have sells what you have** (D9). Make them consistent, one way or the other.
 - **Admin shops refuse "all" on purchases** (D9). Consider "as much as fits and can be afforded".
 - **Several shops on one container**, for example a buy shop and a sell shop for different items (D1).
@@ -525,6 +535,8 @@ Claims in this document that were reasoned from the code or the game's bytecode 
 - **The exact pickup and drop-off rules of the Copper Golem** (D2).
 - Fabric's chunk-load event exists as assumed (it compiles against `ServerChunkEvents.CHUNK_LOAD`) and the sweep's loaded-chunk check works: a shop whose container was removed with `/setblock` was deleted after a few seconds (D8). **Not yet seen in the game:** the chunk-load batch itself.
 - **M8 cases not yet tested in the game (left for the polish phase):** an imported shop finding its old v1 sign (one sign, several signs, none, and a sign in an unloaded chunk); a lost sign reported once and `/shop resign` bringing the status back to OK; the two-sighting guard (put the container back within a few seconds and the shop survives); a container type removed from `shopAllowedContainers` giving Disabled without deleting; the deleted shop's logged record and SNBT being complete enough to restore by hand; the owner being told when online. The two-sighting guard and the report-once logic were checked outside the game (16 cases). **Partly covered by the user's real-data test:** they migrated a world holding v1 shop data from the latest release into the current build (shopVersion v2), the shops worked afterwards and the migrated data was all there. That covers the import against real release data and, since the shops work, most likely the sign lookup in the common case; which shops and which cases (several signs, none) were tried is not known.
+- **Built after the last detailed in-game test, so unconfirmed:** the owner name refresh on join (D5); regenerating a sign when its chunk loads, and skipping a sign whose text has not changed; the startup warning for a block with no inventory, especially the tag branch (D2); remove-mode running the on-use check first (D8); the new startup log line. The user tested the test server after the switch to one file per shop and reported it looks good, but did not list the cases.
+- **v1 mode with this jar.** The two v2 mixins (`ContainerChangeMixin`, `ChestPlacementMixin`) are always loaded, and are meant to do nothing unless v2 is selected. Booting with `shopVersion` set to `"v1"` and making one trade would confirm v1 is unaffected.
 - ~~Whether the merge-rule mixin on the base chest applies to chests that override placement, such as copper chests (D4)~~: `CopperChestBlock.getStateForPlacement` calls the base `ChestBlock` method first (checked in the bytecode), so the injection covers it; trapped chests use the base method as is. Not tested with a copper chest in the game.
 
 ---
