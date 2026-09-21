@@ -1,5 +1,6 @@
 package savage.commoneconomy.shopv2;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -255,12 +256,14 @@ final class TradeService {
      */
     private void creditPayee(Trade trade) {
         if (trade.kind().payee() == TradeKind.Party.NONE) {
+            logCompleted(trade);
             return;
         }
         UUID payee = payeeId(trade);
         String payeeName = payeeName(trade);
         EconomyService.get().addBalance(payee, trade.total()).whenComplete((credited, error) -> {
             if (error == null && Boolean.TRUE.equals(credited)) {
+                trade.server().execute(() -> logCompleted(trade));
                 return;
             }
             trade.server().execute(() -> {
@@ -272,6 +275,27 @@ final class TradeService {
                 tell(trade, payee, TranslationHelper.translate("shop.transaction.payment_not_credited", EconomyService.get().format(trade.total())));
             });
         });
+    }
+
+    /**
+     * Logs a trade that went through completely (D11), following the convention /buy and /sell use: the source is
+     * whoever provides the items, and the server for an admin shop. The reason names the item by its id and the shop
+     * by its dimension and position, so an admin can find the shop. A trade that was refused, abandoned or left
+     * someone owed is not logged here.
+     */
+    private void logCompleted(Trade trade) {
+        Shop shop = trade.shop();
+        String owner = trade.kind().isAdminShop() ? "Server" : shop.ownerName();
+        String buyerOrSeller = trade.player().getName().getString();
+        String where = shop.anchor().dimension() + " " + shop.anchor().position().x() + " " + shop.anchor().position().y() + " "
+                + shop.anchor().position().z();
+        String itemId = BuiltInRegistries.ITEM.getKey(trade.item().getItem()).toString();
+
+        if (trade.kind().playerBuys()) {
+            TransactionLogger.log("SHOP_BUY", owner, buyerOrSeller, trade.total(), "Bought " + trade.amount() + "x " + itemId + " at " + where);
+        } else {
+            TransactionLogger.log("SHOP_SELL", buyerOrSeller, owner, trade.total(), "Sold " + trade.amount() + "x " + itemId + " at " + where);
+        }
     }
 
     /**
