@@ -369,25 +369,75 @@ Identity for lookups: `(dimension, position)`.
 
 ---
 
-## 4. Proposed layout (names may change)
+## 4. Layout (as built)
+
+Everything is in `savage.commoneconomy.shopv2` unless a package is named. Most classes are package-private, so they read as internal to v2. The classes the mixins call are public.
+
+**Wiring and state**
 
 | Class | Job |
 |---|---|
-| `ShopV2Feature` | Feature hooks: registers commands and events when v2 is selected |
-| `ShopRegistry` | The shops in memory; lookups by identity, sign and owner; "is this position part of a shop?" (D3) |
-| `ContainerRegistry` | Allowed container types (D2), and resolving the real inventory including double chests (D3) |
-| `ShopSigns` | Generates sign text; places, refreshes and re-places signs (D5) |
-| `ShopCommands` | `/shop ...`, including create's checks (D1, D4, D5, D10) |
-| `ShopClickHandler` | Sign and container clicks, the chat amount flow, pending trades and remove-mode (D9, D10) |
-| `ShopProtection` | Open and break rules, and the creation access check (D4) |
-| `ChestPlacementMixin` | The merge rule (D4) |
-| `TradePlan` | The trade plan as pure logic: totals, steps, and the outcome of each failure (D6) |
-| `TradeService` | Runs a trade: the busy rule, the payments, moving the goods (D6) |
-| `ShopHealth` | The status model; checks on use, on chunk load and by the loaded-chunk sweep; reporting; automatic removal (D8) |
-| `ShopStorage` | `shops.json` and the item files (D7) |
-| `ShopImporter` | The one-time import from v1 (D7) |
+| `ShopV2Feature` | The feature hooks: registers commands and events when v2 is selected, builds the shared state and loads the shops when the server starts |
+| `ShopRegistry` | The shops and their items in memory; lookups by anchor, by sign and by owner, and "is this block part of a shop?" for either half of a double chest (D1, D3, D5) |
+| `ShopChanges` | Creates, updates and removes a shop in memory and on disk together, in D7's order, undoing the change if saving fails |
+| `Positions` | Converts between the model's `Position` and the game's `BlockPos` |
 
-Rule for pure logic: trade planning, identity, and the storage format take plain values, so they can be exercised without the game.
+**Containers and inventories**
+
+| Class | Job |
+|---|---|
+| `ContainerRegistry` | Which blocks can hold a shop (D2), the startup warnings about the setting, and finding a position's inventory including a double chest (D3) |
+| `ContainerStock` | Counts an item in a container and the room for it, by the container's own rules (D6) |
+| `ContainerMoves` | Puts items into a container and takes them out, all-or-nothing (D6) |
+| `PlayerItems` | Counts, takes and gives a player's items, main slots only (D6) |
+| `ContainerChanges` | Notes every container change, called by `ContainerChangeMixin` (D9) |
+
+**Signs**
+
+| Class | Job |
+|---|---|
+| `ShopSigns` | The sign text, the side choice, placing, clearing and finding attached signs (D5) |
+| `SignRefresh` | Once a second, rewrites the signs of shops whose containers changed (D9) |
+| `OwnerNames` | Corrects a renamed owner's cached name when they join (D5) |
+
+**Commands, clicks and chat**
+
+| Class | Job |
+|---|---|
+| `ShopCommands` | `/shop create`, `info`, `list`, `remove`, `resign` and `admin`, including create's checks (D1, D4, D5, D10) |
+| `ShopClickHandler` | Clicks on a sign (remove-mode, starting a trade), clean-up on disconnect and the once-a-second tick (D9, D10) |
+| `ShopChatHandler` | The amount typed in chat, "all", and the range and re-validation rules (D9) |
+| `PendingTrades`, `RemoveMode` | Plain state: a started trade and remove-mode, each with its 30-second expiry (D9, D10) |
+
+**Protection**
+
+| Class | Job |
+|---|---|
+| `ShopProtection` | Who may open a container, and breaking a container or a sign (D4) |
+| `ChestMergeRule` | The merge rule, called by `ChestPlacementMixin` (D4) |
+
+**Trades**
+
+| Class | Job |
+|---|---|
+| `TradeService` | Runs a trade: lock, plan, charge, move the goods, credit, log (D6, D11) |
+| `TradeLocks` | One trade at a time per shop, with a watchdog (D6) |
+
+**Health checks**
+
+| Class | Job |
+|---|---|
+| `ShopHealth` | A shop's status, and what is at its anchor block (D8) |
+| `ShopChecker` | The checks on use, on chunk load and in a sweep: the sign lookup for imported shops, deleting a shop whose container is gone, and reporting a change of status (D8) |
+| `MissingContainers`, `ReportedStatuses` | Plain state for the two-sighting guard before a deletion, and for reporting a status once (D8) |
+
+**`model`** (plain values, no game): `Shop` (the record saved in `shops.json`), `BlockLocation` and `Position`, `ShopType`, `ShopMode`, `ShopStatus`, `Prices` (the price rules and how many items a balance pays for), `TradeKind` and `TradePlan` (the trade decisions, D6).
+
+**`storage`**: `ShopStorage` (loads at start, saves, writes item files, runs the import first), `ShopsFile` (`shops.json`: atomic saves, one backup, unreadable entries kept), `ShopJson` (a record to and from its JSON), `ShopItemStore` (the SNBT item files and the data fixer), `ShopImporter` (the one-time import from v1) and `AtomicFiles`.
+
+**`mixin`**: `ChestPlacementMixin` (the merge rule) and `ContainerChangeMixin` (noting container changes). Their config is `savs-common-economy.shopv2.mixins.json`.
+
+Rule for pure logic: trade planning, identity, and the storage format take plain values, so they can be exercised without the game. That is how `TradePlan`, `TradeKind`, `TradeLocks`, `PendingTrades`, `RemoveMode`, `MissingContainers`, `ReportedStatuses` and `Prices` were checked outside the game, and the storage classes in M1. `ContainerMoves`, `ContainerStock` and the block checks in `ContainerRegistry` were checked outside the game against the real item and block registries.
 
 ---
 
@@ -492,7 +542,7 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Initial draft with recommended defaults (all decisions `Proposed`).
 - Design pass: D1 to D13 discussed and agreed one by one (see each block's "Your notes").
 - Consistency pass: brought section 3 (data model), section 4 (layout), the milestones, section 7 and section 8 in line with the decisions; fixed stale wording in D4, D5, D6 and D7; added a known limitation to D8 and section 7c (still to verify). Two gaps closed: imported v1 prices are rounded to two decimals (D7), and protection applies in every status except deleted (D4, D8).
-- Owner name refresh built (D5 gap found in an audit of this document): `OwnerNames` on join, sign regeneration in the chunk-load pass, and refresh skipping unchanged text (checked outside the game that reloaded sign text equals a fresh refresh). The startup warning for an allowed block with no inventory (D2) was built after that. Still open from the same audit: the stale "provides no shops yet" log line, the on-use check for /shop list and remove-mode, the stale layout table in section 4. The native review of the zh_cn drafts is set aside by the user for now.
+- Owner name refresh built (D5 gap found in an audit of this document): `OwnerNames` on join, sign regeneration in the chunk-load pass, and refresh skipping unchanged text (checked outside the game that reloaded sign text equals a fresh refresh). The startup warning for an allowed block with no inventory (D2) was built after that. The stale "provides no shops yet" startup line and the stale layout table in section 4 were fixed after that. Still open from the same audit: the on-use check for /shop list and remove-mode. The native review of the zh_cn drafts is set aside by the user for now.
 - Decisions after the real-data migration test (user): v1's shops.json is left alone while shopVersion exists and is renamed to shops.json.old at retirement (section 8); reorganising the flat shopv2 root is a polish item for when the code has settled (7b). The user is taking their time to be sure before releasing and is doing the deeper multi-user testing when they have the energy.
 - Real-data migration (user): a world with v1 shop data from the latest release was migrated into the current build with shopVersion v2; the shops worked and the migrated data all existed. This is the first check of the import against a released version's data rather than the dev test folder.
 - Direction check after M8: the user does not want two shop versions to stay selectable. v2 replaces v1 outright when it is considered finished, and not before they are certain; the README and parity testing wait until then. M9 was rewritten as an open-ended use-and-polish phase, the "become the default" question was answered, and the README item in 7b now says shopVersion is temporary.
