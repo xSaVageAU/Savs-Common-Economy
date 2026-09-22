@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.shopv2.model.Shop;
 
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import java.util.Set;
 final class SignRefresh {
 
     private final ShopV2Feature feature;
+    private final FailedChecks failed = new FailedChecks();
 
     SignRefresh(ShopV2Feature feature) {
         this.feature = feature;
@@ -39,7 +41,16 @@ final class SignRefresh {
             for (long packed : entry.getValue()) {
                 Shop shop = feature.shops().findByContainerBlock(level, BlockPos.of(packed));
                 if (shop != null && refreshed.add(shop)) {
-                    feature.signs().refresh(level, shop, feature.shops().item(shop.id()));
+                    // A broken shop must not stop the others' signs from refreshing, or crash the server
+                    try {
+                        feature.signs().refresh(level, shop, feature.shops().item(shop.id()));
+                        failed.clear(shop.id());
+                    } catch (RuntimeException e) {
+                        if (failed.shouldReport(shop.id())) {
+                            SavsCommonEconomy.LOGGER.error("Shop v2: refreshing the sign of the shop of {} at {} in {} failed; it will be skipped until it works again.",
+                                    shop.ownerName(), shop.anchor().position(), shop.anchor().dimension(), e);
+                        }
+                    }
                 }
             }
         }

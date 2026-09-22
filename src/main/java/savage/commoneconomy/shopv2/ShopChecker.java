@@ -34,12 +34,16 @@ import java.util.Map;
  *   <li>deletes the shop if its container is gone, after seeing it missing twice ({@link MissingContainers});
  *   <li>reports a change of status once ({@link ReportedStatuses}): to the console, and to the owner if online.
  * </ul>
+ *
+ * A shop that throws while it is checked is logged once and skipped, not let through to crash the server
+ * ({@link FailedChecks}).
  */
 final class ShopChecker {
 
     private final ShopV2Feature feature;
     private final MissingContainers missing = new MissingContainers();
     private final ReportedStatuses reported = new ReportedStatuses();
+    private final FailedChecks failed = new FailedChecks();
     private Map<ResourceKey<Level>, LongOpenHashSet> loadedChunks = new HashMap<>();
 
     ShopChecker(ShopV2Feature feature) {
@@ -74,10 +78,12 @@ final class ShopChecker {
             ServerLevel level = ShopHealth.levelOf(server, shop.anchor().dimension());
             LongOpenHashSet inDimension = level == null ? null : chunks.get(level.dimension());
             if (inDimension != null && inDimension.contains(ChunkPos.pack(Positions.toBlockPos(shop.anchor().position())))) {
-                Shop checked = check(level, shop, now);
-                if (checked != null) {
-                    feature.signs().refresh(level, checked, feature.shops().item(checked.id()));
-                }
+                safely(shop, () -> {
+                    Shop checked = check(level, shop, now);
+                    if (checked != null) {
+                        feature.signs().refresh(level, checked, feature.shops().item(checked.id()));
+                    }
+                });
             }
         }
     }
@@ -93,9 +99,26 @@ final class ShopChecker {
         for (Shop shop : List.copyOf(feature.shops().all())) {
             ServerLevel level = ShopHealth.levelOf(server, shop.anchor().dimension());
             if (level == null) {
-                report(server, shop);
+                safely(shop, () -> report(server, shop));
             } else if (level.hasChunkAt(Positions.toBlockPos(shop.anchor().position()))) {
-                check(level, shop, now);
+                safely(shop, () -> check(level, shop, now));
+            }
+        }
+    }
+
+    /**
+     * Runs one shop's periodic check. A broken shop must not stop the others from being checked, or let an
+     * exception escape the tick and crash the server. The failure is logged once and not repeated while the same
+     * shop keeps failing ({@link FailedChecks}).
+     */
+    private void safely(Shop shop, Runnable task) {
+        try {
+            task.run();
+            failed.clear(shop.id());
+        } catch (RuntimeException e) {
+            if (failed.shouldReport(shop.id())) {
+                SavsCommonEconomy.LOGGER.error("Shop v2: checking the shop of {} at {} in {} failed; it will be skipped until it works again.",
+                        shop.ownerName(), describe(shop.anchor().position()), shop.anchor().dimension(), e);
             }
         }
     }
