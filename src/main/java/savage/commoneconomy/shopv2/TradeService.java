@@ -176,7 +176,9 @@ final class TradeService {
         // The goods have moved, so nothing here may stop the payee from being paid
         try {
             trade.player().sendSystemMessage(successMessage(trade));
-            feature.signs().refresh(trade.player().level(), trade.shop(), trade.item());
+            // The shop's own dimension, not wherever the player is now (D1): they may have left it while the payment was in flight
+            ServerLevel level = ShopHealth.levelOf(trade.player().level().getServer(), trade.shop().anchor().dimension());
+            feature.signs().refresh(level, trade.shop(), trade.item());
         } catch (RuntimeException e) {
             SavsCommonEconomy.LOGGER.error("Shop v2: a trade at {} in {} went through but telling the player or refreshing the sign failed.",
                     trade.shop().anchor().position(), trade.shop().anchor().dimension(), e);
@@ -197,7 +199,9 @@ final class TradeService {
             return false;
         }
         Shop shop = trade.shop();
-        if (!shop.equals(feature.shops().get(shop.anchor()))
+        // The shop's own dimension, not wherever the player is now (D1): they may have left it while the payment was in flight
+        ServerLevel level = ShopHealth.levelOf(player.level().getServer(), shop.anchor().dimension());
+        if (level == null || !shop.equals(feature.shops().get(shop.anchor()))
                 || feature.health().statusOf(player.level().getServer(), shop) != ShopStatus.OK) {
             return false;
         }
@@ -206,7 +210,7 @@ final class TradeService {
         int amount = trade.amount();
         Container container = null;
         if (!trade.kind().isAdminShop()) {
-            container = feature.containers().resolve(player.level(), Positions.toBlockPos(shop.anchor().position()));
+            container = feature.containers().resolve(level, Positions.toBlockPos(shop.anchor().position()));
             if (container == null) {
                 return false;
             }
