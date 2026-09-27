@@ -6,7 +6,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
 import savage.commoneconomy.SavsCommonEconomy;
 import savage.commoneconomy.core.config.ConfigManager;
-import savage.commoneconomy.core.config.ShopVersion;
 import savage.commoneconomy.core.data.DataFolder;
 import savage.commoneconomy.core.feature.Feature;
 import savage.commoneconomy.shopv2.model.Shop;
@@ -16,9 +15,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * Chest shops, version 2. Runs instead of the v1 shop (shop package) when shopVersion is "v2".
- * Still being tested before it replaces v1: shops, commands, clicks, chat, trades, protection and the health checks are all built.
- * The design and plan are in DESIGN.md next to this file.
+ * Chest shops. They run when enableChestShops is on, and replaced the original chest shops: those are imported once
+ * from the old shops.json (see ShopImporter). The design is in DESIGN.md next to this file.
  */
 public class ShopV2Feature implements Feature {
 
@@ -39,7 +37,7 @@ public class ShopV2Feature implements Feature {
 
     @Override
     public boolean isEnabled() {
-        return ConfigManager.getConfig().enableChestShops && ConfigManager.getShopVersion() == ShopVersion.V2;
+        return ConfigManager.getConfig().enableChestShops;
     }
 
     @Override
@@ -50,8 +48,6 @@ public class ShopV2Feature implements Feature {
         new ShopProtection(this).register(); // before the click handler, so a refused click never reaches it
         new ShopClickHandler(this).register();
         new ShopChatHandler(this).register();
-        SavsCommonEconomy.LOGGER.warn("Shop v2, the new chest shop implementation, is selected in config.json and is still being tested. "
-                + "Set \"shopVersion\" back to \"v1\" to use the previous chest shops; v1's shops.json is left untouched. Its data folder is {}", DataFolder.get());
     }
 
     @Override

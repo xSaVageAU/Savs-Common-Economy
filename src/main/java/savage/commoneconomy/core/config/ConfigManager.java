@@ -26,14 +26,12 @@ public class ConfigManager {
     private static EconomyConfig currentConfig = new EconomyConfig();
     private static WorthConfig worthConfig = new WorthConfig();
     private static PermissionsConfig permissionsConfig = new PermissionsConfig();
-    private static ShopVersion shopVersion = ShopVersion.V1;
 
     /**
      * Loads the config from disk, or saves default if it doesn't exist.
      */
     public static void load() {
         loadMain();
-        resolveShopVersion();
         loadWorth();
         loadPermissions();
     }
@@ -205,22 +203,6 @@ public class ConfigManager {
      */
     public static PermissionsConfig getPermissions() {
         return permissionsConfig;
-    }
-
-    /**
-     * @return The chest shop implementation selected by the shopVersion setting.
-     */
-    public static ShopVersion getShopVersion() {
-        return shopVersion;
-    }
-
-    private static void resolveShopVersion() {
-        ShopVersion parsed = ShopVersion.parse(currentConfig.shopVersion);
-        if (parsed == null) {
-            SavsCommonEconomy.LOGGER.warn("Unknown shopVersion '{}' in config.json; using 'v1'. Valid values are 'v1' and 'v2'.", currentConfig.shopVersion);
-            parsed = ShopVersion.V1;
-        }
-        shopVersion = parsed;
     }
 
     private static void loadPermissions() {

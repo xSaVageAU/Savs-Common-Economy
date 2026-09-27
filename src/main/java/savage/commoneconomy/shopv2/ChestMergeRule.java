@@ -16,7 +16,7 @@ import savage.commoneconomy.shopv2.model.Shop;
  * joining it, so nobody can attach a chest to another player's shop to get at its contents. The owner placing a chest
  * next to their own shop chest merges normally, which extends the shop. The chest is still placed; it just does not join.
  *
- * The chest placement mixin calls this. It does nothing until v2 has started, so it has no effect when v1 is selected.
+ * The chest placement mixin calls this. It does nothing until the shops have started, so it has no effect when chest shops are off.
  */
 public final class ChestMergeRule {
 
@@ -25,7 +25,7 @@ public final class ChestMergeRule {
     private ChestMergeRule() {}
 
     /**
-     * Starts applying the rule to the shops in this registry. Called when the server starts and shop v2 is selected.
+     * Starts applying the rule to the shops in this registry. Called when the server starts with chest shops enabled.
      */
     static void attach(ShopRegistry registry) {
         shops = registry;

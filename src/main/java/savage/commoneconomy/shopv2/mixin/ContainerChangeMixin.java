@@ -10,7 +10,7 @@ import savage.commoneconomy.shopv2.ContainerChanges;
 /**
  * Notes every block entity change so shop signs can follow their container (D9). Every container funnels its
  * changes through BlockEntity.setChanged(), which chests and barrels do not override, so one hook covers them all.
- * The hook only records the position and does nothing unless shop v2 is selected.
+ * The hook only records the position and does nothing unless chest shops are enabled.
  */
 @Mixin(BlockEntity.class)
 public abstract class ContainerChangeMixin {

@@ -17,7 +17,7 @@ import java.util.Map;
  * once a second, in the batch.
  *
  * Only changes on the server thread are noted, which also leaves out block entities touched by world generation.
- * Nothing is noted unless v2 is the selected shop version.
+ * Nothing is noted unless chest shops are enabled.
  */
 public final class ContainerChanges {
 
@@ -27,7 +27,7 @@ public final class ContainerChanges {
     private ContainerChanges() {}
 
     /**
-     * Starts noting changes. Called once when v2 is selected, so v1 and servers that use neither pay nothing.
+     * Starts noting changes. Called once when chest shops are enabled, so a server with them off pays nothing.
      */
     static void activate() {
         active = true;
