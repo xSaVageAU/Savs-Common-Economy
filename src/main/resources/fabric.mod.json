@@ -20,7 +20,6 @@
 		]
 	},
 	"mixins": [
-		"savs-common-economy.mixins.json",
 		"savs-common-economy.shopv2.mixins.json"
 	],
 	"depends": {
