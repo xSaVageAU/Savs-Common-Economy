@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,8 +38,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * The one-time import of v1's shops.json into v2 (D7). v1's file is only ever read.
- * A v1 shop that cannot be converted is left out and reported; it stays in v1's file.
+ * The one-time import of v1's shops.json into v2 (D7). v1's file is only read, and once the import is done it is
+ * renamed to shops.json.old. A v1 shop that cannot be converted is left out and reported; it stays in that file.
  * The import never reads blocks (that could load chunks), so every imported shop has no sign yet
  * and is marked to have it looked up when its chunk is first checked (D8).
  */
@@ -56,7 +57,8 @@ public final class ShopImporter {
      * Converts the shops in v1's file and writes them: the item files first, then the shop files (D7's order), which
      * appear together or not at all (see {@link ShopFolder#createAll}).
      * Does nothing if v1's file is missing or if v2 already has its shops folder, so it can never overwrite one.
-     * If no shop could be imported, nothing is written, so a later start can try again.
+     * If no shop could be imported, nothing is written, so a later start can try again. Once the shops are written,
+     * v1's file is renamed to shops.json.old (see {@link #renameToOld}).
      */
     public static Report run(Path v1File, ShopFolder shopFolder, ShopItemStore itemStore, HolderLookup.Provider registries)
             throws IOException {
@@ -109,8 +111,27 @@ public final class ShopImporter {
 
         if (!shops.isEmpty()) {
             shopFolder.createAll(shops);
+            renameToOld(v1File, problems);
         }
         return new Report(shops.size(), skipped, problems);
+    }
+
+    /**
+     * Renames v1's file to shops.json.old once the import is done, so the migration is visibly one and done (DESIGN
+     * section 8). An existing shops.json.old is never overwritten. A rename that fails is only reported: the import has
+     * already succeeded, and it will not run again because the shops folder now exists.
+     */
+    private static void renameToOld(Path v1File, List<String> problems) {
+        Path old = v1File.resolveSibling(v1File.getFileName() + ".old");
+        try {
+            Files.move(v1File, old);
+        } catch (FileAlreadyExistsException e) {
+            problems.add("v1's " + v1File.getFileName() + " was imported but not renamed, because " + old.getFileName()
+                    + " already exists. Both were left as they are.");
+        } catch (IOException e) {
+            problems.add("v1's " + v1File.getFileName() + " was imported but could not be renamed to " + old.getFileName()
+                    + " (" + e.getMessage() + "). It was left as it is.");
+        }
     }
 
     private static Shop convert(JsonObject json, String label, List<String> problems) {
