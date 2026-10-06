@@ -20,10 +20,10 @@ import java.util.Set;
  */
 final class SignRefresh {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
     private final FailedChecks failed = new FailedChecks();
 
-    SignRefresh(ShopV2Feature feature) {
+    SignRefresh(ShopFeature feature) {
         this.feature = feature;
     }
 
@@ -47,7 +47,7 @@ final class SignRefresh {
                         failed.clear(shop.id());
                     } catch (RuntimeException e) {
                         if (failed.shouldReport(shop.id())) {
-                            SavsCommonEconomy.LOGGER.error("Shop v2: refreshing the sign of the shop of {} at {} in {} failed; it will be skipped until it works again.",
+                            SavsCommonEconomy.LOGGER.error("Shops: refreshing the sign of the shop of {} at {} in {} failed; it will be skipped until it works again.",
                                     shop.ownerName(), shop.anchor().position(), shop.anchor().dimension(), e);
                         }
                     }

@@ -20,7 +20,7 @@
 		]
 	},
 	"mixins": [
-		"savs-common-economy.shopv2.mixins.json"
+		"savs-common-economy.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.19.5",

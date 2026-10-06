@@ -20,15 +20,15 @@ import savage.commoneconomy.shop.model.Shop;
 import java.io.IOException;
 
 /**
- * What v2 protects (D4). It follows the shop record, whatever the shop's status, and covers both halves of a double
+ * What the shops protect (D4). It follows the shop record, whatever the shop's status, and covers both halves of a double
  * chest. Not protected, and left to claim and protection mods: hoppers, explosions, copper golems and other ways of
  * removing items.
  */
 final class ShopProtection {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
 
-    ShopProtection(ShopV2Feature feature) {
+    ShopProtection(ShopFeature feature) {
         this.feature = feature;
     }
 
@@ -87,7 +87,7 @@ final class ShopProtection {
         try {
             feature.changes().remove(shop);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not delete the file of shop {} after a player broke its sign, so it was not removed", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not delete the file of shop {} after a player broke its sign, so it was not removed", shop.id(), e);
             serverPlayer.sendSystemMessage(TranslationHelper.translate("shop.command.save_failed"));
             return false;
         }

@@ -33,10 +33,10 @@ import java.util.UUID;
  */
 final class TradeService {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
     private final TradeLocks locks = new TradeLocks();
 
-    TradeService(ShopV2Feature feature) {
+    TradeService(ShopFeature feature) {
         this.feature = feature;
     }
 
@@ -68,7 +68,7 @@ final class TradeService {
             return;
         }
         if (attempt.stuckLockFreed()) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: a trade at {} in {} was holding the shop for over {} seconds and was freed. "
+            SavsCommonEconomy.LOGGER.error("Shops: a trade at {} in {} was holding the shop for over {} seconds and was freed. "
                     + "A payment probably never completed.", shop.anchor().position(), shop.anchor().dimension(), TradeLocks.WATCHDOG_MILLIS / 1000);
         }
 
@@ -129,7 +129,7 @@ final class TradeService {
         EconomyService.get().removeBalance(payerId(trade), trade.total()).whenComplete((charged, error) -> trade.server().execute(() -> {
             try {
                 if (error != null) {
-                    SavsCommonEconomy.LOGGER.error("Shop v2: charging {} for a trade at {} in {} ended in an error, so the trade was cancelled. "
+                    SavsCommonEconomy.LOGGER.error("Shops: charging {} for a trade at {} in {} ended in an error, so the trade was cancelled. "
                             + "Check whether they were charged.", payerId(trade), trade.shop().anchor().position(), trade.shop().anchor().dimension(), error);
                 }
                 if (error != null || !Boolean.TRUE.equals(charged)) {
@@ -156,7 +156,7 @@ final class TradeService {
         try {
             moved = tryMoveGoods(trade);
         } catch (RuntimeException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: moving the goods of a trade at {} in {} failed with an error.",
+            SavsCommonEconomy.LOGGER.error("Shops: moving the goods of a trade at {} in {} failed with an error.",
                     trade.shop().anchor().position(), trade.shop().anchor().dimension(), e);
             moved = false;
         }
@@ -180,7 +180,7 @@ final class TradeService {
             ServerLevel level = ShopHealth.levelOf(trade.player().level().getServer(), trade.shop().anchor().dimension());
             feature.signs().refresh(level, trade.shop(), trade.item());
         } catch (RuntimeException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: a trade at {} in {} went through but telling the player or refreshing the sign failed.",
+            SavsCommonEconomy.LOGGER.error("Shops: a trade at {} in {} went through but telling the player or refreshing the sign failed.",
                     trade.shop().anchor().position(), trade.shop().anchor().dimension(), e);
         }
         creditPayee(trade);
@@ -272,7 +272,7 @@ final class TradeService {
                 return;
             }
             trade.server().execute(() -> {
-                SavsCommonEconomy.LOGGER.error("Shop v2: a trade by {} ({}) at {} in {} completed but crediting {} ({}) with {} failed; they are owed this amount.",
+                SavsCommonEconomy.LOGGER.error("Shops: a trade by {} ({}) at {} in {} completed but crediting {} ({}) with {} failed; they are owed this amount.",
                         trade.player().getName().getString(), trade.player().getUUID(), trade.shop().anchor().position(),
                         trade.shop().anchor().dimension(), payeeName, payee, trade.total().toPlainString(), error);
                 TransactionLogger.log("TRANSFER_FAILED", payerName(trade), payeeName, trade.total(),
@@ -315,7 +315,7 @@ final class TradeService {
                 return;
             }
             trade.server().execute(() -> {
-                SavsCommonEconomy.LOGGER.error("Shop v2: a trade at {} in {} failed and refunding {} ({}) with {} also failed; they are owed this amount.",
+                SavsCommonEconomy.LOGGER.error("Shops: a trade at {} in {} failed and refunding {} ({}) with {} also failed; they are owed this amount.",
                         trade.shop().anchor().position(), trade.shop().anchor().dimension(), refundedName, payer, trade.total().toPlainString(), error);
                 TransactionLogger.log("TRANSFER_FAILED", "Shop", refundedName, trade.total(),
                         "Shop refund failed so " + refundedName + " is owed this amount");
@@ -329,7 +329,7 @@ final class TradeService {
      */
     private void failed(ServerPlayer player, Shop shop, long token, RuntimeException error) {
         locks.release(shop.anchor(), token);
-        SavsCommonEconomy.LOGGER.error("Shop v2: a trade at {} in {} ended in an error.", shop.anchor().position(), shop.anchor().dimension(), error);
+        SavsCommonEconomy.LOGGER.error("Shops: a trade at {} in {} ended in an error.", shop.anchor().position(), shop.anchor().dimension(), error);
         if (!player.hasDisconnected()) {
             player.sendSystemMessage(TranslationHelper.translate("shop.transaction.item_transfer_error"));
         }

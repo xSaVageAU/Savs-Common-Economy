@@ -18,7 +18,7 @@ import java.nio.file.Path;
  * Chest shops. They run when enableChestShops is on, and replaced the original chest shops: those are imported once
  * from the old shops.json (see ShopImporter). The design is in DESIGN.md next to this file.
  */
-public class ShopV2Feature implements Feature {
+public class ShopFeature implements Feature {
 
     private final RemoveMode removeMode = new RemoveMode();
     private final PendingTrades pendingTrades = new PendingTrades();
@@ -32,7 +32,7 @@ public class ShopV2Feature implements Feature {
 
     @Override
     public String id() {
-        return "shops-v2";
+        return "shops";
     }
 
     @Override
@@ -107,17 +107,17 @@ public class ShopV2Feature implements Feature {
             ShopStorage.Loaded loaded = storage.load(v1File, server.registryAccess());
             loaded.problems().forEach(SavsCommonEconomy.LOGGER::warn);
             if (loaded.imported().imported() > 0 || loaded.imported().skipped() > 0) {
-                SavsCommonEconomy.LOGGER.info("Shop v2: imported {} shop(s) from v1, left out {}.", loaded.imported().imported(), loaded.imported().skipped());
+                SavsCommonEconomy.LOGGER.info("Shops: imported {} shop(s) from v1, left out {}.", loaded.imported().imported(), loaded.imported().skipped());
             }
             for (Shop shop : loaded.shops()) {
                 if (!shops.add(shop, loaded.items().get(shop.id()))) {
-                    SavsCommonEconomy.LOGGER.warn("Shop v2: shop {} has the same container as another shop at {} in {} and was left out of memory.",
+                    SavsCommonEconomy.LOGGER.warn("Shops: shop {} has the same container as another shop at {} in {} and was left out of memory.",
                             shop.id(), shop.anchor().position(), shop.anchor().dimension());
                 }
             }
-            SavsCommonEconomy.LOGGER.info("Shop v2: loaded {} shop(s).", shops.size());
+            SavsCommonEconomy.LOGGER.info("Shops: loaded {} shop(s).", shops.size());
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not load the shops.", e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not load the shops.", e);
         }
     }
 }

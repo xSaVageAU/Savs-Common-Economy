@@ -40,13 +40,13 @@ import java.util.Map;
  */
 final class ShopChecker {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
     private final MissingContainers missing = new MissingContainers();
     private final ReportedStatuses reported = new ReportedStatuses();
     private final FailedChecks failed = new FailedChecks();
     private Map<ResourceKey<Level>, LongOpenHashSet> loadedChunks = new HashMap<>();
 
-    ShopChecker(ShopV2Feature feature) {
+    ShopChecker(ShopFeature feature) {
         this.feature = feature;
     }
 
@@ -117,7 +117,7 @@ final class ShopChecker {
             failed.clear(shop.id());
         } catch (RuntimeException e) {
             if (failed.shouldReport(shop.id())) {
-                SavsCommonEconomy.LOGGER.error("Shop v2: checking the shop of {} at {} in {} failed; it will be skipped until it works again.",
+                SavsCommonEconomy.LOGGER.error("Shops: checking the shop of {} at {} in {} failed; it will be skipped until it works again.",
                         shop.ownerName(), describe(shop.anchor().position()), shop.anchor().dimension(), e);
             }
         }
@@ -182,11 +182,11 @@ final class ShopChecker {
         try {
             feature.changes().update(updated);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not save the sign lookup of shop {}; it will be tried again.", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not save the sign lookup of shop {}; it will be tried again.", shop.id(), e);
             return shop;
         }
         if (free.size() > 1) {
-            SavsCommonEconomy.LOGGER.warn("Shop v2: shop {} at {} in {} has {} signs attached; the first at {} was recorded and the others were left alone: {}.",
+            SavsCommonEconomy.LOGGER.warn("Shops: shop {} at {} in {} has {} signs attached; the first at {} was recorded and the others were left alone: {}.",
                     shop.id(), describe(shop.anchor().position()), shop.anchor().dimension(), free.size(), describe(free.get(0)),
                     free.subList(1, free.size()).stream().map(ShopChecker::describe).toList());
         }
@@ -207,10 +207,10 @@ final class ShopChecker {
         }
         String where = describe(shop.anchor().position()) + " in " + shop.anchor().dimension();
         if (status == ShopStatus.OK) {
-            SavsCommonEconomy.LOGGER.info("Shop v2: the shop of {} at {} is OK again.", shop.ownerName(), where);
+            SavsCommonEconomy.LOGGER.info("Shops: the shop of {} at {} is OK again.", shop.ownerName(), where);
             return;
         }
-        SavsCommonEconomy.LOGGER.warn("Shop v2: the shop of {} ({}) at {} is now {}.", shop.ownerName(), shop.owner(), where, status);
+        SavsCommonEconomy.LOGGER.warn("Shops: the shop of {} ({}) at {} is now {}.", shop.ownerName(), shop.owner(), where, status);
         if (status == ShopStatus.NO_SIGN) {
             tell(server, shop, TranslationHelper.translate("shop.notice.sign_missing", describe(shop.anchor().position())));
         }
@@ -225,7 +225,7 @@ final class ShopChecker {
     private boolean delete(ServerLevel level, Shop shop) {
         ItemStack item = feature.shops().item(shop.id());
         String itemText = item == null ? "unreadable" : ShopItemStore.toSnbt(item, level.getServer().registryAccess());
-        SavsCommonEconomy.LOGGER.warn("Shop v2: deleting shop {} because its container is gone. Record: owner {} ({}), dimension {}, container at {}, "
+        SavsCommonEconomy.LOGGER.warn("Shops: deleting shop {} because its container is gone. Record: owner {} ({}), dimension {}, container at {}, "
                 + "type {}, mode {}, price {}, sign {}, item {}", shop.id(), shop.ownerName(), shop.owner(), shop.anchor().dimension(),
                 describe(shop.anchor().position()), shop.type(), shop.mode(), shop.price().toPlainString(),
                 shop.hasSign() ? describe(shop.sign()) : "none", itemText);
@@ -233,7 +233,7 @@ final class ShopChecker {
         try {
             feature.changes().remove(shop);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not delete shop {}; it will be tried again.", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not delete shop {}; it will be tried again.", shop.id(), e);
             return false;
         }
         if (shop.hasSign()) {

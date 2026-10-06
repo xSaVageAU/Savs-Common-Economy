@@ -90,7 +90,7 @@ public final class ShopChanges {
         try {
             storage.deleteItem(shopId);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.warn("Shop v2: could not delete the item file of shop {}; it is now unused.", shopId, e);
+            SavsCommonEconomy.LOGGER.warn("Shops: could not delete the item file of shop {}; it is now unused.", shopId, e);
         }
     }
 }

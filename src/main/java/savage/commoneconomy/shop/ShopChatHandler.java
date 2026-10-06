@@ -29,9 +29,9 @@ final class ShopChatHandler {
     /** "All" for a purchase never goes above this, which is 36 slots of 64. Inventory space already implies it. */
     private static final int MAX_ALL_PURCHASE = 2304;
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
 
-    ShopChatHandler(ShopV2Feature feature) {
+    ShopChatHandler(ShopFeature feature) {
         this.feature = feature;
     }
 

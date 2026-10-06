@@ -17,7 +17,7 @@ public abstract class ContainerChangeMixin {
 
     // The descriptor picks the instance method; BlockEntity also has a static setChanged(Level, BlockPos, BlockState)
     @Inject(method = "setChanged()V", at = @At("TAIL"))
-    private void shopv2$noteChange(CallbackInfo ci) {
+    private void shop$noteChange(CallbackInfo ci) {
         ContainerChanges.mark((BlockEntity) (Object) this);
     }
 }

@@ -39,9 +39,9 @@ import java.util.UUID;
  */
 final class ShopCommands {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
 
-    ShopCommands(ShopV2Feature feature) {
+    ShopCommands(ShopFeature feature) {
         this.feature = feature;
     }
 
@@ -131,7 +131,7 @@ final class ShopCommands {
         try {
             feature.changes().create(shop, held);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not save the new shop at {} in {}", pos.toShortString(), shop.anchor().dimension(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not save the new shop at {} in {}", pos.toShortString(), shop.anchor().dimension(), e);
             source.sendFailure(TranslationHelper.translate("shop.command.create_failed"));
             return 0;
         }
@@ -150,7 +150,7 @@ final class ShopCommands {
         try {
             feature.changes().remove(shop);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: shop {} was created but its sign could not be placed, and the shop could not be removed again.", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: shop {} was created but its sign could not be placed, and the shop could not be removed again.", shop.id(), e);
         }
     }
 
@@ -271,7 +271,7 @@ final class ShopCommands {
         try {
             feature.changes().update(resigned);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not save shop {} after placing a new sign", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not save shop {} after placing a new sign", shop.id(), e);
             source.sendFailure(TranslationHelper.translate("shop.command.save_failed"));
             return 0;
         }
@@ -310,7 +310,7 @@ final class ShopCommands {
         try {
             feature.changes().update(converted);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not save shop {} after converting it to an admin shop", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not save shop {} after converting it to an admin shop", shop.id(), e);
             source.sendFailure(TranslationHelper.translate("shop.command.save_failed"));
             return 0;
         }

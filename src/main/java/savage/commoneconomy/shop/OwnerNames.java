@@ -16,9 +16,9 @@ import java.io.IOException;
  */
 final class OwnerNames {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
 
-    OwnerNames(ShopV2Feature feature) {
+    OwnerNames(ShopFeature feature) {
         this.feature = feature;
     }
 
@@ -43,7 +43,7 @@ final class OwnerNames {
                 feature.changes().update(updated);
             } catch (IOException e) {
                 // The old name is back in memory, so the next time this player joins it is tried again
-                SavsCommonEconomy.LOGGER.error("Shop v2: could not save the new owner name of shop {}; it will be tried again at the next join.", shop.id(), e);
+                SavsCommonEconomy.LOGGER.error("Shops: could not save the new owner name of shop {}; it will be tried again at the next join.", shop.id(), e);
                 return;
             }
             previousName = shop.ownerName();
@@ -57,7 +57,7 @@ final class OwnerNames {
         }
 
         if (updatedCount > 0) {
-            SavsCommonEconomy.LOGGER.info("Shop v2: {} is now called {}; updated {} shop(s).", previousName, name, updatedCount);
+            SavsCommonEconomy.LOGGER.info("Shops: {} is now called {}; updated {} shop(s).", previousName, name, updatedCount);
         }
     }
 }

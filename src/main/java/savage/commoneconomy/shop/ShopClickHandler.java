@@ -24,10 +24,10 @@ import java.util.UUID;
  */
 final class ShopClickHandler {
 
-    private final ShopV2Feature feature;
+    private final ShopFeature feature;
     private final SignRefresh signRefresh;
 
-    ShopClickHandler(ShopV2Feature feature) {
+    ShopClickHandler(ShopFeature feature) {
         this.feature = feature;
         this.signRefresh = new SignRefresh(feature);
     }
@@ -96,7 +96,7 @@ final class ShopClickHandler {
         try {
             feature.changes().remove(shop);
         } catch (IOException e) {
-            SavsCommonEconomy.LOGGER.error("Shop v2: could not delete the file of shop {}, so it was not removed", shop.id(), e);
+            SavsCommonEconomy.LOGGER.error("Shops: could not delete the file of shop {}, so it was not removed", shop.id(), e);
             player.sendSystemMessage(TranslationHelper.translate("shop.command.save_failed"));
             return InteractionResult.FAIL;
         }
