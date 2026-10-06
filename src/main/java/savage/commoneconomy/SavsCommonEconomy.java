@@ -19,7 +19,7 @@ import savage.commoneconomy.core.i18n.TranslationHelper;
 import savage.commoneconomy.core.log.LogCommand;
 import savage.commoneconomy.core.log.TransactionLogger;
 import savage.commoneconomy.sell.SellFeature;
-import savage.commoneconomy.shopv2.ShopV2Feature;
+import savage.commoneconomy.shop.ShopV2Feature;
 
 import java.util.List;
 
