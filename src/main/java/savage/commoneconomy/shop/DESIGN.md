@@ -4,13 +4,14 @@ Living document. Edit anything. The "Recommendation" in each block is a proposed
 
 **Status legend:** `Proposed` (default suggested, not reviewed) · `Agreed` (you signed off) · `Changed` (you replaced the default; write what in Your notes) · `Open` (needs a decision)
 
-## Where things stand (updated 2026-09-22)
+## Where things stand (updated 2026-10-07)
 
 - **Built:** M0 to M8 and M6b (section 5), with the storage changed to one file per shop (D7). Everything compiles. The parts that are plain Java, or need only the game's registries, were checked outside the game. The rest was checked by the user in the game; what is still unconfirmed is listed in 7c.
-- **Phase:** M9, an open-ended use-and-polish phase. The user tests and refines at their own pace and will decide when v2 is finished. Nothing waits on a date.
-- **Held back on purpose:** the README, the parity checklist and the switch-over (section 8) wait until the user considers v2 finished. The native review of the `zh_cn` drafts is set aside. Everything in 7b is deferred by choice.
-- **How to work on it:** discuss before changing anything marked `Agreed`. Small commits, one behaviour each. Say what was and was not verified. Do not ask for a big test session: the user tests multi-player cases only when they have the energy. `shopVersion` is a temporary safety net, and v1 and its data stay untouched until v2 replaces it outright.
-- **Where to look:** 7b for ideas and deferred features, 7c for what is untested, section 8 for the retirement checklist, and the change log at the end for the history.
+- **v1 is retired** (section 8): v2 is the only chest shop, the `shopVersion` setting and v1's code are gone, the package is `shop`, the import renames v1's `shops.json` to `shops.json.old`, and the README describes the shops.
+- **Phase:** M9 continues as use and polish. The user tests this build against the last release on Modrinth (v1.7.1-26.3) before releasing it. Nothing waits on a date.
+- **Held back on purpose:** the native review of the `zh_cn` drafts is set aside. Everything in 7b is deferred by choice.
+- **How to work on it:** discuss before changing anything marked `Agreed`. Small commits, one behaviour each. Say what was and was not verified. Do not ask for a big test session: the user tests multi-player cases only when they have the energy.
+- **Where to look:** 7b for ideas and deferred features, 7c for what is untested, and the change log at the end for the history.
 
 ---
 
@@ -19,7 +20,7 @@ Living document. Edit anything. The "Recommendation" in each block is a proposed
 1. **Drop-in for players.** Same commands, permission nodes and click-then-type-in-chat flow as v1. Players should only notice that bugs are gone. New features come after parity. The only exceptions are the safety and recovery additions agreed in D4, D5, D9 and D10 (for example `/shop resign`, the range rule when typing an amount, and remove-mode expiring).
 2. **Correct before fast.** Performance work is deferred unless it also fixes a correctness problem.
 3. **Small, readable pieces.** Each class does one job. Game-touching code stays thin, and decision logic (identity, trade planning, storage format) is written so it can be checked without starting Minecraft.
-4. **Safe to switch back.** v2 never modifies v1's files. Setting `shopVersion` back to `"v1"` always works.
+4. ~~**Safe to switch back.** v2 never modifies v1's files. Setting `shopVersion` back to `"v1"` always works.~~ Held until v1 was retired (section 8); going back to an older release is now described in the README.
 5. **Money moves only through `EconomyService`.** That keeps the option open to ship shops as a separate addon later. Logging, permissions and translations still use the core helpers (D11), so an addon would need those too.
 
 Non-goals for v2.0: changing the player experience, co-owners, editing an existing shop's price or item, several shops on one container, protecting against hoppers or explosions.
@@ -78,7 +79,7 @@ Not "any Container". That includes hoppers, droppers, dispensers, furnaces, brew
 - Non-owners (and non-admins) cannot open a shop container.
 - Nobody, including the owner, can break the container. The owner removes the shop by breaking its sign, or by using `/shop remove` and clicking the sign or the container (D5).
 - Breaking the sign: owner or admin removes the shop, others are refused.
-- **New, merge rule (option B):** a chest placed next to someone else's shop chest comes out as a normal single chest instead of merging. This is a small mixin on the chest's placement state: if the new chest would connect to a shop chest whose owner is not the player placing it, it is made single. The chest is still placed; it just does not join. The owner placing a chest next to their own shop chest merges normally, which extends the shop. The mixin must do nothing when v2 is not the active shop version. Chests that override placement (copper chests, and possibly modded chests) may not be covered by a mixin on the base chest; to be checked if copper chests ever become a default.
+- **New, merge rule (option B):** a chest placed next to someone else's shop chest comes out as a normal single chest instead of merging. This is a small mixin on the chest's placement state: if the new chest would connect to a shop chest whose owner is not the player placing it, it is made single. The chest is still placed; it just does not join. The owner placing a chest next to their own shop chest merges normally, which extends the shop. The mixin must do nothing when chest shops are off. Chests that override placement (copper chests, and possibly modded chests) may not be covered by a mixin on the base chest; to be checked if copper chests ever become a default.
 - **New, creation access check:** before a shop is created, fire the normal block-interaction event (Fabric `UseBlockCallback`) for the player and the aimed container. If any mod cancels it, creation is refused with a message. Limitations: only mods that use that event are consulted, and other mods' callbacks may show their own "protected" message to the player. Both need testing with the common claim mods.
 - **Not protected, documented as out of scope:** hoppers pulling from a shop, explosions, copper golems, and other ways of removing items. Leave those to claim or protection mods.
 
@@ -100,7 +101,7 @@ The sign is a **display**: its text is generated from the shop and can always be
 - If they are aiming at the top or bottom face, use the side **opposite the direction the player is facing** (v1's rule), so the sign faces the player.
 - The spot must be air or a replaceable block, and a wall sign must be able to stand there.
 - **If the spot is not usable, creation is refused** with a message that says why, for example "There is no room for the shop sign on that side. Clear the space in front of that face." Nothing is created. No other side is tried, and a shop is never created without its sign.
-- Order of work: check the spot first, create the shop (D7's order: the item file, then the shop's file), then place the sign. If placing fails after the record exists, remove the shop again (D7's removal order: `shops.json` first, then the item file).
+- Order of work: check the spot first, create the shop (D7's order: the item file, then the shop's file), then place the sign. If placing fails after the record exists, remove the shop again (D7's removal order: the shop's file first, then the item file).
 - New message key: `shop.command.create_no_sign_space` (see D12).
 
 **Difference from v1:** v1 always used the side opposite the player's facing. If that side was blocked it tried north, south, east, west in a fixed order (so the sign could face away), and it still created the shop if no side worked.
@@ -193,8 +194,8 @@ Why this order:
 - A file that fails to load is left where it is and reported; nothing rewrites it, so no separate backup copy is made (the single-file design copied the whole file aside).
 
 **Import from v1** (one time, one way):
-- Runs the first time v2 starts and the shops folder does not exist in the data folder. v1's file is never modified. The importer itself refuses to run if the folder exists, and writes nothing if no shop could be imported, so a later start can try again. The folder existing is the marker, so an empty folder counts as done: removing every shop never brings the import back. The shop files are written into a staging folder (`shops.importing`) that is moved into place in one step, so a crash cannot leave a half-imported folder that looks finished; a staging folder left by a crash is cleared at the next import. v1's shop ids are kept, so the item files are named after them.
-- For each v1 shop: the dimension, position, owner, type and price carry over, and the mode comes from v1's `buying` flag. The item is decoded from v1's base64 and rewritten as an SNBT file with a count of 1, stamped with the current `DataVersion` (v1 never recorded one, so it is assumed current). A v1 item that cannot be decoded leaves that shop out of the import, reported; it stays in v1's file.
+- Runs the first time v2 starts and the shops folder does not exist in the data folder. v1's file is only read, and once the import has succeeded it is renamed to `shops.json.old` (section 8). The importer itself refuses to run if the folder exists, and writes nothing if no shop could be imported, so a later start can try again. The folder existing is the marker, so an empty folder counts as done: removing every shop never brings the import back. The shop files are written into a staging folder (`shops.importing`) that is moved into place in one step, so a crash cannot leave a half-imported folder that looks finished; a staging folder left by a crash is cleared at the next import. v1's shop ids are kept, so the item files are named after them.
+- For each v1 shop: the dimension, position, owner, type and price carry over, and the mode comes from v1's `buying` flag. The item is decoded from v1's base64 and rewritten as an SNBT file with a count of 1, stamped with the current `DataVersion` (v1 never recorded one, so it is assumed current). A v1 item that cannot be decoded leaves that shop out of the import, reported; it stays in `shops.json.old`.
 - Prices with more than two decimals are **rounded to two decimals (half up) on import**, and each change is logged as a warning, especially any price that becomes 0 (a free shop). This keeps imported prices consistent with the two-decimal rule (D6, D10), so a total can never round to zero while the sign shows a price. A price outside 0 to 1,000,000,000 leaves that shop out of the import (reported).
 - **The import does not read blocks**, because that would mean loading chunks. It records the shop with no sign and marks it `needsSignLookup`. The first time its chunk is checked (D8), the sign is looked up: exactly one attached wall sign is recorded, several record the first and log the rest, none becomes "No sign".
 - After the first import, v1 and v2 files do not sync. Shops made in one do not appear in the other if you switch back. This is documented. An admin command to pull in missing shops from v1 is possible later.
@@ -236,7 +237,7 @@ A shop can only be physically broken while its chunk is loaded (offline edits ar
 - It must be seen missing on **two consecutive checks** before it is deleted, as a guard against a transient state.
 - The full record (owner, item, price, position) is written to the log when it is deleted, so it can be restored by hand.
 - The owner is told if online.
-- **Known limitation:** because the check is against the block that is there now (D2), if a destroyed container is replaced by a different allowed container within those two checks (about 10 seconds), the shop treats the new one as its container. It is a narrow window and needs a container placed in exactly that spot.
+- **Known limitation:** because the check is against the block that is there now (D2), if a destroyed container is replaced by a different allowed container within those two checks (about 5 seconds), the shop treats the new one as its container. It is a narrow window and needs a container placed in exactly that spot.
 
 **Reporting happens once, when the status changes**, not on every check: a console warning with the owner and position, a message to the owner if online (for example "your shop lost its sign, use `/shop resign`"). `/shop list` and `/shop info` always show the current status.
 **Why:** verified in the game code: v1's cleanup calls `getBlockState` for every shop every 5 seconds, and that forces the chunk to load (it adds a 1-tick ticket and blocks the main thread until loaded). The fix is not to stop checking; it is to check only chunks that are already loaded. Keeping a record for a container that no longer exists would leave an unusable shop with no way back, so it is deleted, but never silently: it is logged and the owner is told.
@@ -316,7 +317,7 @@ A shop can only be physically broken while its chunk is loaded (offline edits ar
 1. **Same `shop.` prefix for everything.** No `shopv2.*`. When v1 is retired, renaming every key would drop every admin's overrides, and it contradicts the plan to rename the `shopv2` package to `shop` (section 8).
 2. **Reuse a v1 key when the message and its placeholders are identical.** Most transaction, protection, sign and info messages qualify, so an admin's custom wording carries over.
 3. **When the meaning or the placeholders differ, add a new key with a descriptive name.** No version suffixes.
-4. **v1-only keys are deleted from the jar's lang files when v1 is retired** (`shop.command.create_sign_failed`, which v2 never uses, plus `shop.command.remove_mode.enter` and `shop.command.my_shops.entry`, which are replaced below). Servers' own copies keep them, which is harmless.
+4. **v1-only keys are deleted from the jar's lang files when v1 is retired** (`shop.command.create_sign_failed`, which v2 never uses, plus `shop.command.remove_mode.enter`, `shop.command.my_shops.entry` and `shop.command.shop_exists`, which are replaced below; the last was missing from this list and found when v1 was retired). Servers' own copies keep them, which is harmless. Done (section 8).
 5. **Every new key also gets a `zh_cn` translation.** These are drafted by me and would benefit from a native speaker's review; the user has set that aside for now, so the drafts stay as they are and it is not raised again unless they bring it up. A missing translation falls back to English, not to a raw key.
 6. `/shop resign` reuses `shop.remove.not_owner` for the wrong-owner case.
 
@@ -379,13 +380,13 @@ Identity for lookups: `(dimension, position)`.
 
 ## 4. Layout (as built)
 
-Everything is in `savage.commoneconomy.shopv2` unless a package is named. Most classes are package-private, so they read as internal to v2. The classes the mixins call are public.
+Everything is in `savage.commoneconomy.shop` unless a package is named. Most classes are package-private, so they read as internal to the shops. The classes the mixins call are public.
 
 **Wiring and state**
 
 | Class | Job |
 |---|---|
-| `ShopV2Feature` | The feature hooks: registers commands and events when v2 is selected, builds the shared state and loads the shops when the server starts |
+| `ShopFeature` | The feature hooks: registers commands and events when chest shops are enabled, builds the shared state and loads the shops when the server starts |
 | `ShopRegistry` | The shops and their items in memory; lookups by anchor, by sign and by owner, and "is this block part of a shop?" for either half of a double chest (D1, D3, D5) |
 | `ShopChanges` | Creates, updates and removes a shop in memory and on disk together, in D7's order, undoing the change if saving fails |
 | `Positions` | Converts between the model's `Position` and the game's `BlockPos` |
@@ -437,15 +438,15 @@ Everything is in `savage.commoneconomy.shopv2` unless a package is named. Most c
 |---|---|
 | `ShopHealth` | A shop's status, and what is at its anchor block (D8) |
 | `ShopChecker` | The checks on use, on chunk load and in a sweep: the sign lookup for imported shops, deleting a shop whose container is gone, and reporting a change of status (D8) |
-| `MissingContainers`, `ReportedStatuses` | Plain state for the two-sighting guard before a deletion, and for reporting a status once (D8) |
+| `MissingContainers`, `ReportedStatuses`, `FailedChecks` | Plain state for the two-sighting guard before a deletion, for reporting a status once (D8), and for logging a shop whose periodic check throws once instead of on every run |
 
 **`model`** (plain values, no game): `Shop` (the record saved in its own file), `BlockLocation` and `Position`, `ShopType`, `ShopMode`, `ShopStatus`, `Prices` (the price rules and how many items a balance pays for), `TradeKind` and `TradePlan` (the trade decisions, D6).
 
 **`storage`**: `ShopStorage` (loads at start, saves and deletes a shop's file, writes item files, runs the import first), `ShopFolder` (one JSON file per shop: atomic saves, one previous copy, unreadable files left alone, the import's staging folder), `ShopJson` (a record to and from its JSON), `ShopItemStore` (the SNBT item files and the data fixer), `ShopImporter` (the one-time import from v1) and `AtomicFiles`.
 
-**`mixin`**: `ChestPlacementMixin` (the merge rule) and `ContainerChangeMixin` (noting container changes). Their config is `savs-common-economy.shopv2.mixins.json`.
+**`mixin`**: `ChestPlacementMixin` (the merge rule) and `ContainerChangeMixin` (noting container changes). Their config is `savs-common-economy.mixins.json`.
 
-Rule for pure logic: trade planning, identity, and the storage format take plain values, so they can be exercised without the game. That is how `TradePlan`, `TradeKind`, `TradeLocks`, `PendingTrades`, `RemoveMode`, `MissingContainers`, `ReportedStatuses` and `Prices` were checked outside the game, and the storage classes in M1. `ContainerMoves`, `ContainerStock` and the block checks in `ContainerRegistry` were checked outside the game against the real item and block registries.
+Rule for pure logic: trade planning, identity, and the storage format take plain values, so they can be exercised without the game. That is how `TradePlan`, `TradeKind`, `TradeLocks`, `PendingTrades`, `RemoveMode`, `MissingContainers`, `ReportedStatuses`, `FailedChecks` and `Prices` were checked outside the game, and the storage classes in M1. `ContainerMoves`, `ContainerStock` and the block checks in `ContainerRegistry` were checked outside the game against the real item and block registries.
 
 ---
 
@@ -461,7 +462,7 @@ Rule for pure logic: trade planning, identity, and the storage format take plain
 - [x] **M6b** Change-driven sign refresh (added after M5; D9). A mixin on `BlockEntity.setChanged()` notes every container change (chests and barrels do not override it, so one hook covers all; v1's mixin was chests only), and a once-a-second batch rewrites the sign of each shop whose container changed, either half of a double chest. Done and checked in the game.
 - [x] **M7** Protection, including the merge rule (a mixin that keeps a chest placed next to someone else's shop chest single). Done and checked in the game. Opening a container is refused for everyone but the owner and admins in either hand (v1 checked the main hand only); nobody can break a container; breaking a sign removes the shop for its owner or an admin. The merge rule is `ChestPlacementMixin` on `ChestBlock.getStateForPlacement` with `ChestMergeRule`; the chest it makes single faces as a lone chest would.
 - [x] **M8** Shop health checks (on use, on chunk load, and a sweep of loaded chunks), the status model and reporting, automatic removal when the container is gone, and the deferred sign lookup for imported shops. Built (`ShopChecker`, `MissingContainers`, `ReportedStatuses`, `ShopHealth.containerStateOf`, `ShopSigns.findAttached`). Checked in the game so far: a shop whose container was removed with `/setblock` is deleted after a few seconds. The rest is checked outside the game (the two-sighting guard and once-only reporting, 16 cases) or not yet tested, see the list in 7c.
-- [ ] **M9** Use it, question the choices, refine and polish. Parity testing against v1, the README, and the switch-over are all held back until you consider v2 finished. There is no fixed date: gaps, edge cases and better ways to reach a goal are expected to turn up through play, and each is discussed before it changes an agreed decision.
+- [ ] **M9** Use it, question the choices, refine and polish. The switch-over and the README are done (section 8); the user tests against the last Modrinth release before releasing. There is no fixed date: gaps, edge cases and better ways to reach a goal are expected to turn up through play, and each is discussed before it changes an agreed decision.
 
 ---
 
@@ -509,7 +510,7 @@ Still open:
 ## 7b. Polish after v2 works
 
 Things deliberately left for later, so they do not slow v2.0 down:
-- **Reorganise the flat `shopv2` root into a few subpackages** (about 24 files sit in it, next to `model`, `storage` and `mixin`). Purely cosmetic, and best done once as pure moves when the code has stopped changing, together with the rename to `shop` in section 8. The real cost is visibility: 15 of the 24 root classes are package-private, and moving related ones apart forces `public` on them and on the `ShopV2Feature` accessors they use (the two classes the mixins call, `ChestMergeRule` and `ContainerChanges`, already had to be public for that reason). A layout to consider then: `container/` (`ContainerRegistry`, `ContainerStock`, `ContainerMoves`, `ContainerChanges`, `PlayerItems`), `trade/` (`TradeService`, `TradeLocks`, `PendingTrades`, `ShopChatHandler`), `health/` (`ShopHealth`, `ShopChecker`, `MissingContainers`, `ReportedStatuses`) and `interaction/` (`ShopCommands`, `ShopClickHandler`, `ShopProtection`, `ChestMergeRule`, `RemoveMode`), with the feature, registry, changes, signs and `Positions` staying in the root.
+- **Reorganise the flat `shop` root into a few subpackages** (26 files sit in it, next to `model`, `storage` and `mixin`). Purely cosmetic; it was skipped when the package was renamed from `shopv2` (section 8). The real cost is visibility: 17 of the 26 root classes are package-private, and moving related ones apart forces `public` on them and on the `ShopFeature` accessors they use (the two classes the mixins call, `ChestMergeRule` and `ContainerChanges`, already had to be public for that reason). A layout to consider then: `container/` (`ContainerRegistry`, `ContainerStock`, `ContainerMoves`, `ContainerChanges`, `PlayerItems`), `trade/` (`TradeService`, `TradeLocks`, `PendingTrades`, `ShopChatHandler`), `health/` (`ShopHealth`, `ShopChecker`, `MissingContainers`, `ReportedStatuses`, `FailedChecks`) and `interaction/` (`ShopCommands`, `ShopClickHandler`, `ShopProtection`, `ChestMergeRule`, `RemoveMode`), with the feature, registry, changes, signs and `Positions` staying in the root.
 - **Keep removed shops instead of deleting their files.** Now that each shop is its own file, `/shop remove`, a broken sign and the automatic deletion of a shop whose container is gone could move the shop's record and item file into a `removed/` folder, so restoring one is moving two files back. Today a manual removal deletes both and only the automatic deletion logs the record.
 - **One file per shop holding the record and the item together** (D7). It would remove the two-file rules (write the item first, unused item files, a missing item file) at the cost of a bigger rewrite and an SNBT record instead of JSON. Only worth it if the two-file rules ever cause trouble.
 - **Buying more than the shop has is refused, but selling more than you have sells what you have** (D9). Make them consistent, one way or the other.
@@ -521,7 +522,7 @@ Things deliberately left for later, so they do not slow v2.0 down:
 - **Notices for owners who are offline** (D8, D12): store a short notice per owner and show it at their next login, so a shop lost to an explosion overnight is not a silent surprise. D8 currently tells the owner only if they are online.
 - **Hopper and explosion protection**, if you ever want it (D4).
 - **Items with durability match strictly** (D6). A shop created while holding a used tool only matches tools with exactly that damage. Consider ignoring durability when matching.
-- **The README entry, once v2 is considered finished.** Only `shopAllowedContainers` and the behaviour changes need documenting. `shopVersion` is temporary and goes when v1 is retired (section 8), so it is not documented as a setting. The v1 import (`ShopImporter`) reads v1's shops.json as plain JSON and does not use v1's classes, so deleting v1 does not break migration for existing servers.
+- ~~**The README entry, once v2 is considered finished.**~~ Done when v1 was retired (section 8). The v1 import (`ShopImporter`) reads v1's shops.json as plain JSON and does not use v1's classes, so deleting v1 did not break migration for existing servers.
 
 ---
 
@@ -536,12 +537,15 @@ Claims in this document that were reasoned from the code or the game's bytecode 
 - Fabric's chunk-load event exists as assumed (it compiles against `ServerChunkEvents.CHUNK_LOAD`) and the sweep's loaded-chunk check works: a shop whose container was removed with `/setblock` was deleted after a few seconds (D8). **Not yet seen in the game:** the chunk-load batch itself.
 - **M8 cases not yet tested in the game (left for the polish phase):** an imported shop finding its old v1 sign (one sign, several signs, none, and a sign in an unloaded chunk); a lost sign reported once and `/shop resign` bringing the status back to OK; the two-sighting guard (put the container back within a few seconds and the shop survives); a container type removed from `shopAllowedContainers` giving Disabled without deleting; the deleted shop's logged record and SNBT being complete enough to restore by hand; the owner being told when online. The two-sighting guard and the report-once logic were checked outside the game (16 cases). **Partly covered by the user's real-data test:** they migrated a world holding v1 shop data from the latest release into the current build (shopVersion v2), the shops worked afterwards and the migrated data was all there. That covers the import against real release data and, since the shops work, most likely the sign lookup in the common case; which shops and which cases (several signs, none) were tried is not known.
 - **Built after the last detailed in-game test, so unconfirmed:** the owner name refresh on join (D5); regenerating a sign when its chunk loads, and skipping a sign whose text has not changed; the startup warning for a block with no inventory, especially the tag branch (D2); remove-mode running the on-use check first (D8); the new startup log line. The user tested the test server after the switch to one file per shop and reported it looks good, but did not list the cases.
-- **v1 mode with this jar.** The two v2 mixins (`ContainerChangeMixin`, `ChestPlacementMixin`) are always loaded, and are meant to do nothing unless v2 is selected. Booting with `shopVersion` set to `"v1"` and making one trade would confirm v1 is unaffected.
+- ~~**v1 mode with this jar.** The two v2 mixins (`ContainerChangeMixin`, `ChestPlacementMixin`) are always loaded, and are meant to do nothing unless v2 is selected. Booting with `shopVersion` set to `"v1"` and making one trade would confirm v1 is unaffected.~~ Moot: v1 was removed (section 8).
+- **Changes after 2026-09-22, checked by compiling and outside the game but not yet in the game:** the fixes from that day's review (a "sell all" that comes to zero names the real limit; balance shortcuts use only a balance that is known; a shop whose check throws is logged and skipped instead of crashing the server; a trade resolves the shop's own dimension after the payment) and v1's retirement (section 8). The user's test against the last Modrinth release covers them.
 - ~~Whether the merge-rule mixin on the base chest applies to chests that override placement, such as copper chests (D4)~~: `CopperChestBlock.getStateForPlacement` calls the base `ChestBlock` method first (checked in the bytecode), so the injection covers it; trapped chests use the base method as is. Not tested with a copper chest in the game.
 
 ---
 
-## 8. Retiring v1 (reminder)
+## 8. Retiring v1 (done)
+
+**Done (2026-09-28 to 2026-10-07)**, when the user chose to test this build against the last Modrinth release instead of keeping v1 in the jar. Everything below is built; the commits are in the change log.
 
 When v1 is removed: delete the `shop` package and its mixin, drop its entry from the feature list, remove `ShopVersion` and the `shopVersion` setting, rename `shopv2` to `shop`, and remove the v1-only lang keys listed in D12 (the shared keys stay).
 
@@ -560,6 +564,8 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Real-data migration (user): a world with v1 shop data from the latest release was migrated into the current build with shopVersion v2; the shops worked and the migrated data all existed. This is the first check of the import against a released version's data rather than the dev test folder.
 - Direction check after M8: the user does not want two shop versions to stay selectable. v2 replaces v1 outright when it is considered finished, and not before they are certain; the README and parity testing wait until then. M9 was rewritten as an open-ended use-and-polish phase, the "become the default" question was answered, and the README item in 7b now says shopVersion is temporary.
 - Balance shortcuts now use `peekBalance` (the purchase quick refusal in D6 and the "all" limits in D9): an unknown balance is skipped instead of being read as the default balance, so the real charge decides. This replaces the "by cached balance" wording in the M6 note.
+- Fixes from the 2026-09-22 review: a "sell all" that comes to zero names the real limit (1eb3843); a shop whose check throws is logged once and skipped instead of crashing the server (`FailedChecks`, a715065); a trade resolves the shop's own dimension once the payment returns (06b09f9). The balance change above is 3d8220d, 367015c and f7ee95b.
+- v1 retired (section 8): `shopVersion` removed and v2 always on (0058cfd); v1's code, its mixin and four v1-only keys deleted (4e2eb9c); the import renames `shops.json` to `shops.json.old` (d131812, checked outside the game on a copy of real v1 data, 23 checks); the package renamed from `shopv2` to `shop` and the v2 naming dropped (86f1c6e, 8af0d1f); the README rewritten (25fc09b).
 - M8 done (built): `ShopChecker` (checks on use, on chunk load in one batch, and a 5-second sweep of loaded shops; deferred sign lookup for imported shops; two-sighting deletion of a shop whose container is gone with the record and item SNBT logged; once-only status reports), `MissingContainers`, `ReportedStatuses`, `ShopHealth.containerStateOf`, `ShopSigns.findAttached`. Only the `/setblock` deletion was checked in the game so far; the rest is listed in 7c.
 - M7 done: `ShopProtection` (open, break container, break sign; both hands), `ChestMergeRule` and `ChestPlacementMixin`. Checked in the game. The copper chest question in 7c is answered from the bytecode.
 - M6b done: `ContainerChanges` + `ContainerChangeMixin` (second mixin config `savs-common-economy.shopv2.mixins.json`) and `SignRefresh` on the once-a-second tick. Checked in the game.
