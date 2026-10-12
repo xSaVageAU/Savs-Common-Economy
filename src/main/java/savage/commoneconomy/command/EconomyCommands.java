@@ -17,7 +17,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.config.ConfigManager;
 import savage.commoneconomy.model.AccountData;
+import savage.commoneconomy.util.NotificationHelper;
 import savage.commoneconomy.util.PermissionsHelper;
 import savage.commoneconomy.util.TransactionLogger;
 import savage.commoneconomy.util.TranslationHelper;
@@ -134,7 +136,7 @@ public class EconomyCommands {
                         
                         ServerPlayer targetPlayer = context.getSource().getServer().getPlayerList().getPlayer(targetUUID);
                         if (targetPlayer != null) {
-                            targetPlayer.sendSystemMessage(TranslationHelper.translate("command.economy.pay.received", formatted, sender.getName().getString()));
+                            NotificationHelper.send(targetPlayer, TranslationHelper.translate("command.economy.pay.received", formatted, sender.getName().getString()), ConfigManager.getConfig().commandNotificationMode);
                         }
                         
                         TransactionLogger.log("PAY", sender.getName().getString(), targetName, amount, "Player Payment");
