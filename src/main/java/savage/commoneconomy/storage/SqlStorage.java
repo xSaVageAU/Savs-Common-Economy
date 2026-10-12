@@ -8,6 +8,7 @@ import savage.commoneconomy.model.AccountData;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -64,27 +65,43 @@ public class SqlStorage implements EconomyStorage {
 
     private void setupTable() {
         String prefix = ConfigManager.getConfig().storage.tablePrefix;
-        String sql;
-        if ("POSTGRESQL".equalsIgnoreCase(ConfigManager.getConfig().storage.type)) {
-            sql = "CREATE TABLE IF NOT EXISTS " + prefix + "balances (" +
-                  "uuid UUID PRIMARY KEY, " +
-                  "name VARCHAR(255), " +
-                  "balance DECIMAL(30, 2), " +
-                  "version BIGINT DEFAULT 0)";
-        } else {
-            // MariaDB and SQLite both use VARCHAR/TEXT for UUIDs
-            sql = "CREATE TABLE IF NOT EXISTS " + prefix + "balances (" +
-                  "uuid VARCHAR(36) PRIMARY KEY, " +
-                  "name VARCHAR(255), " +
-                  "balance DECIMAL(30, 2), " +
-                  "version BIGINT DEFAULT 0)";
-        }
+        // All backends store UUIDs as text, since every query binds them with setString
+        String sql = "CREATE TABLE IF NOT EXISTS " + prefix + "balances (" +
+                     "uuid VARCHAR(36) PRIMARY KEY, " +
+                     "name VARCHAR(255), " +
+                     "balance DECIMAL(30, 2), " +
+                     "version BIGINT DEFAULT 0)";
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            if ("POSTGRESQL".equalsIgnoreCase(ConfigManager.getConfig().storage.type)) {
+                migratePostgresUuidColumn(conn, prefix);
+            }
         } catch (SQLException e) {
             SavsCommonEconomy.LOGGER.error("Failed to setup SQL tables!", e);
         }
+    }
+
+    /**
+     * Versions up to 1.7.1 created the PostgreSQL uuid column with the native UUID type,
+     * which the string-bound queries cannot match. Convert such a column to VARCHAR(36).
+     */
+    private void migratePostgresUuidColumn(Connection conn, String prefix) throws SQLException {
+        String table = (prefix + "balances").toLowerCase(Locale.ROOT); // Postgres folds unquoted names to lower case
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT data_type FROM information_schema.columns " +
+                "WHERE table_schema = current_schema() AND table_name = ? AND column_name = 'uuid'")) {
+            stmt.setString(1, table);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next() || !"uuid".equals(rs.getString("data_type"))) {
+                    return;
+                }
+            }
+        }
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("ALTER TABLE " + prefix + "balances ALTER COLUMN uuid TYPE VARCHAR(36) USING uuid::text");
+        }
+        SavsCommonEconomy.LOGGER.info("Converted the uuid column of " + table + " from UUID to VARCHAR(36)");
     }
 
     @Override
