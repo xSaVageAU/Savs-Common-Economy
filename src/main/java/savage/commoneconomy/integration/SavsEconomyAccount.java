@@ -9,6 +9,8 @@ import eu.pb4.common.economy.api.EconomyCurrency;
 import eu.pb4.common.economy.api.EconomyProvider;
 import eu.pb4.common.economy.api.EconomyTransaction;
 import savage.commoneconomy.EconomyManager;
+import savage.commoneconomy.config.ConfigManager;
+import savage.commoneconomy.util.NotificationHelper;
 import savage.commoneconomy.util.TranslationHelper;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -98,10 +100,9 @@ public class SavsEconomyAccount implements EconomyAccount {
         if (server != null) {
             net.minecraft.server.level.ServerPlayer player = server.getPlayerList().getPlayer(profile.id());
             if (player != null) {
-                var config = savage.commoneconomy.config.ConfigManager.getConfig();
-                boolean overlay = (config.apiNotificationMode == savage.commoneconomy.config.EconomyConfig.NotificationMode.ACTION_BAR);
+                var mode = ConfigManager.getConfig().apiNotificationMode;
                 server.execute(() -> {
-                    player.sendSystemMessage(message, overlay);
+                    NotificationHelper.send(player, message, mode);
                 });
             }
         }
