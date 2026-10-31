@@ -147,16 +147,22 @@ public class ShopCommands {
     private static int makeAdmin(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         HitResult hit = player.pick(5.0, 0.0f, false);
-        if (hit.getType() != HitResult.Type.BLOCK) return 0;
-        
+        if (hit.getType() != HitResult.Type.BLOCK) {
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.look_at_chest"));
+            return 0;
+        }
+
         BlockPos pos = ((BlockHitResult) hit).getBlockPos();
         Shop shop = ShopManager.getInstance().getShop(pos);
-        if (shop != null) {
-            shop.setType(ShopType.ADMIN);
-            ShopManager.getInstance().save();
-            context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.admin_convert"), true);
-            ShopSignHelper.updateSign((net.minecraft.server.level.ServerLevel)player.level(), ShopSignHelper.findSignForChest(player.level(), pos), shop);
+        if (shop == null) {
+            context.getSource().sendFailure(TranslationHelper.translate("shop.command.no_shop_found"));
+            return 0;
         }
+
+        shop.setType(ShopType.ADMIN);
+        ShopManager.getInstance().save();
+        context.getSource().sendSuccess(() -> TranslationHelper.translate("shop.command.admin_convert"), true);
+        ShopSignHelper.updateSign((net.minecraft.server.level.ServerLevel)player.level(), ShopSignHelper.findSignForChest(player.level(), pos), shop);
         return 1;
     }
 
