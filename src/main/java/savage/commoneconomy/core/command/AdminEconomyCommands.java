@@ -12,6 +12,8 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import savage.commoneconomy.core.EconomyManager;
+import savage.commoneconomy.core.config.ConfigManager;
+import savage.commoneconomy.core.notify.NotificationHelper;
 import savage.commoneconomy.core.permissions.PermissionsHelper;
 import savage.commoneconomy.core.log.TransactionLogger;
 import savage.commoneconomy.core.i18n.TranslationHelper;
@@ -168,7 +170,7 @@ public class AdminEconomyCommands {
     private static void notifyTarget(CommandContext<CommandSourceStack> context, UUID targetUUID, Component message) {
         ServerPlayer target = context.getSource().getServer().getPlayerList().getPlayer(targetUUID);
         if (target != null) {
-            target.sendSystemMessage(message);
+            NotificationHelper.send(target, message, ConfigManager.getConfig().commandNotificationMode);
         }
     }
 }
