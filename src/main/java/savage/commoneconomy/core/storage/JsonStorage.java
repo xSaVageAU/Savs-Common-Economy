@@ -9,9 +9,9 @@ import savage.commoneconomy.core.model.AccountData;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -65,12 +65,7 @@ public class JsonStorage implements EconomyStorage {
 
     private synchronized void saveMap(Map<UUID, AccountData> map) {
         try {
-            File parent = STORAGE_FILE.getParentFile();
-            if (!parent.exists()) parent.mkdirs();
-
-            try (FileWriter writer = new FileWriter(STORAGE_FILE)) {
-                GSON.toJson(map, writer);
-            }
+            AtomicFiles.write(STORAGE_FILE.toPath(), GSON.toJson(map).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             SavsCommonEconomy.LOGGER.error("Failed to save balances to JSON!", e);
         }
