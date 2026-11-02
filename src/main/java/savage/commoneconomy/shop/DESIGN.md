@@ -442,7 +442,7 @@ Everything is in `savage.commoneconomy.shop` unless a package is named. Most cla
 
 **`model`** (plain values, no game): `Shop` (the record saved in its own file), `BlockLocation` and `Position`, `ShopType`, `ShopMode`, `ShopStatus`, `Prices` (the price rules and how many items a balance pays for), `TradeKind` and `TradePlan` (the trade decisions, D6).
 
-**`storage`**: `ShopStorage` (loads at start, saves and deletes a shop's file, writes item files, runs the import first), `ShopFolder` (one JSON file per shop: atomic saves, one previous copy, unreadable files left alone, the import's staging folder), `ShopJson` (a record to and from its JSON), `ShopItemStore` (the SNBT item files and the data fixer), `ShopImporter` (the one-time import from v1) and `AtomicFiles`.
+**`storage`**: `ShopStorage` (loads at start, saves and deletes a shop's file, writes item files, runs the import first), `ShopFolder` (one JSON file per shop: atomic saves, one previous copy, unreadable files left alone, the import's staging folder), `ShopJson` (a record to and from its JSON), `ShopItemStore` (the SNBT item files and the data fixer), `ShopImporter` (the one-time import from v1). Atomic writes go through `core/storage/AtomicFiles`.
 
 **`mixin`**: `ChestPlacementMixin` (the merge rule) and `ContainerChangeMixin` (noting container changes). Their config is `savs-common-economy.mixins.json`.
 

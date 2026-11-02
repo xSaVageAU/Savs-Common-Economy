@@ -1,4 +1,4 @@
-package savage.commoneconomy.shop.storage;
+package savage.commoneconomy.core.storage;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,11 +13,11 @@ import java.nio.file.StandardOpenOption;
  * Writes a file so a crash part-way through never leaves it truncated (D7): the bytes go to a
  * temporary file next to it, are flushed to disk, and are then moved into place.
  */
-final class AtomicFiles {
+public final class AtomicFiles {
 
     private AtomicFiles() {}
 
-    static void write(Path target, byte[] bytes) throws IOException {
+    public static void write(Path target, byte[] bytes) throws IOException {
         Files.createDirectories(target.toAbsolutePath().getParent());
         Path temp = target.resolveSibling(target.getFileName() + ".tmp");
 

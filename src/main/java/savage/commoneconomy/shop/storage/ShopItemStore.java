@@ -14,6 +14,7 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.util.datafix.fixes.References;
 import net.minecraft.world.item.ItemStack;
+import savage.commoneconomy.core.storage.AtomicFiles;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
