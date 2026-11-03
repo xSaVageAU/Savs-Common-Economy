@@ -33,6 +33,7 @@
   "shop.sign.stock_line": "&0库存: %s",
   "shop.sign.space_line": "&0空间: %s",
   "shop.sign.stock_infinite": "&0库存: ∞",
+  "shop.sign.space_infinite": "&0空间: ∞",
   
   "shop.action.verb_buy": "购买",
   "shop.action.verb_sell": "出售",

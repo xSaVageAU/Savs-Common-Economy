@@ -190,7 +190,7 @@ public final class ShopSigns {
      */
     private Component stockLine(ServerLevel level, Shop shop, ItemStack item) {
         if (shop.type() == ShopType.ADMIN) {
-            return TranslationHelper.translate("shop.sign.stock_infinite");
+            return TranslationHelper.translate(shop.mode() == ShopMode.BUY ? "shop.sign.space_infinite" : "shop.sign.stock_infinite");
         }
         Container container = containers.resolve(level, Positions.toBlockPos(shop.anchor().position()));
         if (container == null) {

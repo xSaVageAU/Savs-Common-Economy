@@ -189,8 +189,8 @@ final class ShopCommands {
                 TranslationHelper.translateString(shop.mode() == ShopMode.BUY ? "shop.action.verb_buy" : "shop.action.verb_sell")), false);
         Object stock = liveStock(level, shop, item);
         if (stock != null) {
-            // Like the sign: a player shop that buys shows its free room as "Space", an admin shop always says "Stock".
-            String stockKey = shop.type() != ShopType.ADMIN && shop.mode() == ShopMode.BUY ? "shop.command.info.space" : "shop.command.info.stock";
+            // Like the sign: a shop that buys shows its free room as "Space".
+            String stockKey = shop.mode() == ShopMode.BUY ? "shop.command.info.space" : "shop.command.info.stock";
             source.sendSuccess(() -> TranslationHelper.translate(stockKey, stock), false);
         }
         ShopStatus status = feature.health().statusOf(source.getServer(), shop);
