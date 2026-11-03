@@ -252,7 +252,7 @@ A shop can only be physically broken while its chunk is loaded (offline edits ar
 - Right-click the shop's sign, then type the amount in chat (or `all`). The typed message is consumed. It expires after 30 seconds, checked when the player next chats (an expired one lets that message through as normal chat).
 - Any chat line while a trade is pending counts as the amount. An invalid amount cancels it with a message.
 - Only the main hand triggers it. Clicking a shop sign never places a block or opens the sign editor.
-- "All" for purchases is limited by what the buyer can afford, the shop's stock and the buyer's inventory space. The 2304 cap is implied by inventory space (36 slots x 64) and is kept only as a defensive limit. An admin shop refuses "all" for purchases (infinite stock).
+- "All" for purchases is limited by what the buyer can afford, the shop's stock (player shops) and the buyer's inventory space. The 2304 cap is implied by inventory space (36 slots x 64) and is kept only as a defensive limit.
 - "All" for sales is limited by what the player has and by the shop's free space (player shops).
 - Sign layout: owner (or admin header), item name, price line ("Selling/Buying: $X"), stock line ("Stock: N", "Space: N", or infinite). Change-driven refreshes are batched about once a second. The sign is a generated display (D5).
 
@@ -264,7 +264,7 @@ A shop can only be physically broken while its chunk is loaded (offline edits ar
 
 **Kept as in v1 for v2.0 (to revisit when polishing, see section 7b):**
 - Asking to sell more than you have silently sells what you have, while asking to buy more than the shop has is refused.
-- Admin shops refuse "all" for purchases.
+- ~~Admin shops refuse "all" for purchases.~~ Changed with the user's OK: "all" at an admin shop buys as much as fits and can be afforded.
 
 **Why:** v1 keeps a reference to the shop and the player's current world from the moment they type, so a removed shop, a changed dimension or a far-away player can still produce a trade.
 **Your notes:** Agreed: the range rule (same dimension, within about 16 blocks), re-validation on submit, "all" for sales limited by the owner's funds, and keeping v1's small quirks for v2.0.
@@ -514,7 +514,7 @@ Things deliberately left for later, so they do not slow v2.0 down:
 - **Keep removed shops instead of deleting their files.** Now that each shop is its own file, `/shop remove`, a broken sign and the automatic deletion of a shop whose container is gone could move the shop's record and item file into a `removed/` folder, so restoring one is moving two files back. Today a manual removal deletes both and only the automatic deletion logs the record.
 - **One file per shop holding the record and the item together** (D7). It would remove the two-file rules (write the item first, unused item files, a missing item file) at the cost of a bigger rewrite and an SNBT record instead of JSON. Only worth it if the two-file rules ever cause trouble.
 - **Buying more than the shop has is refused, but selling more than you have sells what you have** (D9). Make them consistent, one way or the other.
-- **Admin shops refuse "all" on purchases** (D9). Consider "as much as fits and can be afforded".
+- ~~**Admin shops refuse "all" on purchases** (D9). Consider "as much as fits and can be afforded".~~ Done (D9).
 - **Several shops on one container**, for example a buy shop and a sell shop for different items (D1).
 - **Copper golems** and a clean way to handle them, then reconsider copper chests as a default container (D2).
 - **An admin command to pull in shops missing from v2 out of v1's file** (D7).
@@ -566,6 +566,7 @@ When v1 is removed: delete the `shop` package and its mixin, drop its entry from
 - Balance shortcuts now use `peekBalance` (the purchase quick refusal in D6 and the "all" limits in D9): an unknown balance is skipped instead of being read as the default balance, so the real charge decides. This replaces the "by cached balance" wording in the M6 note.
 - Fixes from the 2026-09-22 review: a "sell all" that comes to zero names the real limit (1eb3843); a shop whose check throws is logged once and skipped instead of crashing the server (`FailedChecks`, a715065); a trade resolves the shop's own dimension once the payment returns (06b09f9). The balance change above is 3d8220d, 367015c and f7ee95b.
 - v1 retired (section 8): `shopVersion` removed and v2 always on (0058cfd); v1's code, its mixin and four v1-only keys deleted (4e2eb9c); the import renames `shops.json` to `shops.json.old` (d131812, checked outside the game on a copy of real v1 data, 23 checks); the package renamed from `shopv2` to `shop` and the v2 naming dropped (86f1c6e, 8af0d1f); the README rewritten (25fc09b).
+- "All" at an admin shop now buys as much as fits and can be afforded instead of being refused (D9, 7b); the `admin_infinite` message was removed.
 - M8 done (built): `ShopChecker` (checks on use, on chunk load in one batch, and a 5-second sweep of loaded shops; deferred sign lookup for imported shops; two-sighting deletion of a shop whose container is gone with the record and item SNBT logged; once-only status reports), `MissingContainers`, `ReportedStatuses`, `ShopHealth.containerStateOf`, `ShopSigns.findAttached`. Only the `/setblock` deletion was checked in the game so far; the rest is listed in 7c.
 - M7 done: `ShopProtection` (open, break container, break sign; both hands), `ChestMergeRule` and `ChestPlacementMixin`. Checked in the game. The copper chest question in 7c is answered from the bytecode.
 - M6b done: `ContainerChanges` + `ContainerChangeMixin` (second mixin config `savs-common-economy.shopv2.mixins.json`) and `SignRefresh` on the once-a-second tick. Checked in the game.

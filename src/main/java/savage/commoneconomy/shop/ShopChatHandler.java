@@ -15,8 +15,6 @@ import savage.commoneconomy.shop.model.ShopMode;
 import savage.commoneconomy.shop.model.ShopStatus;
 import savage.commoneconomy.shop.model.ShopType;
 
-import java.util.OptionalInt;
-
 /**
  * The chat side of a trade (D9): the amount a player types after clicking a shop's sign.
  * While a trade is pending, the next chat line is the amount and is not shown as chat.
@@ -75,12 +73,7 @@ final class ShopChatHandler {
 
         ItemStack item = feature.shops().item(shop.id());
         if (all) {
-            OptionalInt everything = amountForAll(player, level, shop, item);
-            if (everything.isEmpty()) {
-                player.sendSystemMessage(TranslationHelper.translate("shop.interaction.admin_infinite"));
-                return true;
-            }
-            amount = everything.getAsInt();
+            amount = amountForAll(player, level, shop, item);
         }
         feature.trades().start(player, shop, amount);
         return true;
@@ -110,33 +103,29 @@ final class ShopChatHandler {
     }
 
     /**
-     * What "all" means (D9). A purchase is limited by what the buyer can afford, what the shop has and what fits in
-     * the buyer's inventory. A sale is limited by what the seller has and, in a player shop, by the shop's free
-     * space and by what the owner can pay for. A balance that is not known sets no limit, and the real charge can
-     * still fail.
-     *
-     * @return the amount, or empty if "all" is refused: an admin shop has infinite stock to buy
+     * What "all" means (D9). A purchase is limited by what the buyer can afford, what fits in the buyer's inventory
+     * and, in a player shop, what the shop has. A sale is limited by what the seller has and, in a player shop, by
+     * the shop's free space and by what the owner can pay for. A balance that is not known sets no limit, and the
+     * real charge can still fail.
      */
-    private OptionalInt amountForAll(ServerPlayer player, ServerLevel level, Shop shop, ItemStack item) {
+    private int amountForAll(ServerPlayer player, ServerLevel level, Shop shop, ItemStack item) {
         boolean admin = shop.type() == ShopType.ADMIN;
         Container container = admin ? null : feature.containers().resolve(level, Positions.toBlockPos(shop.anchor().position()));
 
         if (shop.mode() == ShopMode.SELL) {
-            if (admin) {
-                return OptionalInt.empty();
-            }
-            int inStock = container == null ? 0 : ContainerStock.count(container, item);
+            // An admin shop's stock is infinite, so only the buyer's money and inventory limit it
+            int inStock = admin ? Integer.MAX_VALUE : container == null ? 0 : ContainerStock.count(container, item);
             int affordable = Prices.affordable(EconomyService.get().peekBalance(player.getUUID()), shop.price());
             int fits = InventorySpace.getAvailableSpace(player, item);
-            return OptionalInt.of(Math.min(Math.min(affordable, inStock), Math.min(fits, MAX_ALL_PURCHASE)));
+            return Math.min(Math.min(affordable, inStock), Math.min(fits, MAX_ALL_PURCHASE));
         }
 
         int carried = PlayerItems.count(player, item);
         if (admin) {
-            return OptionalInt.of(carried);
+            return carried;
         }
         int room = container == null ? 0 : ContainerStock.space(container, item);
         int ownerCanPay = Prices.affordable(EconomyService.get().peekBalance(shop.owner()), shop.price());
-        return OptionalInt.of(Math.min(carried, Math.min(room, ownerCanPay)));
+        return Math.min(carried, Math.min(room, ownerCanPay));
     }
 }

@@ -20,7 +20,6 @@
   "shop.interaction.prompt_amount": "&e请在聊天框输入你想 %s 的数量。",
   "shop.interaction.prompt_all": "&e输入 'all' 以 %s 所有物品。",
   "shop.interaction.invalid_amount": "&c无效的数量！交易已取消。",
-  "shop.interaction.admin_infinite": "&c系统商店库存无限！请输入具体要购买的数量。",
   "shop.protect.break_chest": "&c你无法破坏商店箱子！请先使用 /shop remove 或破坏告示牌。",
   "shop.remove.sign_broken": "&e商店已移除（告示牌被破坏）。",
   "shop.protect.break_sign": "&c你无法破坏该商店告示牌！请改用 /shop remove。",

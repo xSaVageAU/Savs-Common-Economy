@@ -20,7 +20,6 @@
   "shop.interaction.prompt_amount": "&eType the amount you want to %s in chat.",
   "shop.interaction.prompt_all": "&eType 'all' to %s everything.",
   "shop.interaction.invalid_amount": "&cInvalid amount! Transaction cancelled.",
-  "shop.interaction.admin_infinite": "&cAdmin shops have infinite stock! Please type a specific amount to buy.",
   "shop.protect.break_chest": "&cYou cannot break shop chests! Use /shop remove or break the sign first.",
   "shop.remove.sign_broken": "&eShop removed (sign broken).",
   "shop.protect.break_sign": "&cYou cannot break this shop sign! Use /shop remove instead.",
