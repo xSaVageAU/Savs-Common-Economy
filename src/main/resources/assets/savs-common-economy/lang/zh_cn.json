@@ -49,6 +49,7 @@
   "shop.command.info.price": "&e价格: &f%s",
   "shop.command.info.type": "&e类型: &f%s",
   "shop.command.info.stock": "&e库存: &f%s",
+  "shop.command.info.space": "&e空间: &f%s",
   "shop.command.info.stock.unlimited": "无限",
   "shop.command.my_shops.none": "&e你并不拥有任何商店。",
   "shop.command.my_shops.header": "&6--- 你的商店 ---",
