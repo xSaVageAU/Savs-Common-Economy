@@ -83,22 +83,8 @@ public class EconomyManager implements EconomyService {
     }
 
     /**
-     * Gets a player's balance synchronously from the cache.
-     * Returns default balance if no cached entry exists.
-     * Safe to call from the server thread without blocking.
-     */
-    @Override
-    public BigDecimal getCachedBalance(UUID uuid) {
-        AccountData data = accountCache.getIfPresent(uuid);
-        if (data != null) {
-            return data.getBalance();
-        }
-        return ConfigManager.getConfig().defaultBalance;
-    }
-
-    /**
      * The balance from the cache or, if the storage keeps every account in memory, from the storage. Empty when
-     * neither has it. Unlike {@link #getCachedBalance} it never makes up the default balance.
+     * neither has it; it never makes up the default balance.
      */
     @Override
     public Optional<BigDecimal> peekBalance(UUID uuid) {
