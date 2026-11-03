@@ -116,7 +116,7 @@ public class EconomyManager implements EconomyService {
     @Override
     public CompletableFuture<Boolean> addBalance(UUID uuid, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) return CompletableFuture.completedFuture(false);
-        return retryBalanceUpdate(uuid, amount, true, 5);
+        return retryBalanceUpdate(uuid, amount, true, 5).exceptionally(error -> updateFailed(uuid, error));
     }
 
     /**
@@ -126,7 +126,16 @@ public class EconomyManager implements EconomyService {
     @Override
     public CompletableFuture<Boolean> removeBalance(UUID uuid, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) return CompletableFuture.completedFuture(false);
-        return retryBalanceUpdate(uuid, amount, false, 5);
+        return retryBalanceUpdate(uuid, amount, false, 5).exceptionally(error -> updateFailed(uuid, error));
+    }
+
+    /**
+     * An update that failed with an error (such as a storage read that failed) counts as not done, so callers that
+     * took items or notes before paying give them back.
+     */
+    private boolean updateFailed(UUID uuid, Throwable error) {
+        SavsCommonEconomy.LOGGER.error("Balance update failed for UUID: " + uuid + " (" + error.getMessage() + ")");
+        return false;
     }
 
     /**

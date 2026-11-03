@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -119,7 +120,10 @@ public class SqlStorage implements EconomyStorage {
                     }
                 }
             } catch (SQLException e) {
+                // Fail rather than return null: null means "no account", and the caller would then create one,
+                // overwriting the real balance with the default.
                 SavsCommonEconomy.LOGGER.error("Failed to load account from SQL: " + uuid, e);
+                throw new CompletionException(e);
             }
             return null;
         }, executor);
